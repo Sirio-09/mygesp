@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  brand       String
+  category    String
+  activities  String[]  // tag per filtro attività: agricoltura, allevamento...
+  variants    Variant[]
+  images      String[]
+  waterColumn Int?      // colonna d'acqua in mm, per gli specifici tecnici
+  minTemp     Int?      // temperatura minima per gli stivali
+  createdAt   DateTime  @default(now())
+}
+
+model Variant {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  size      String
+  color     String?
+  sku       String   @unique
+  priceCents Int
+  stock     Int      @default(0)
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  customerEmail String
+  items       OrderItem[]
+  totalCents  Int
+  status      String      @default("pending")
+  createdAt   DateTime    @default(now())
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  variantId String
+  quantity  Int
+  priceCents Int
+}
