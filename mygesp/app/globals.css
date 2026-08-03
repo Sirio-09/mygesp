@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme {
   --color-loden: #2B3428;
   --color-loden-deep: #1E251A;
@@ -16,19 +11,13 @@
   --color-mud: #6B5842;
   --color-signal: #D9A62E;
 
-  --font-display: 'Oswald', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-oswald);
+  --font-body: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-slate);
+  font-family: var(--font-body);
 }

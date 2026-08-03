@@ -39,12 +39,14 @@ model Variant {
 }
 
 model Order {
-  id          String      @id @default(cuid())
+  id            String      @id @default(cuid())
   customerEmail String
-  items       OrderItem[]
-  totalCents  Int
-  status      String      @default("pending")
-  createdAt   DateTime    @default(now())
+  customerId    String?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  items         OrderItem[]
+  totalCents    Int
+  status        String      @default("pending")
+  createdAt     DateTime    @default(now())
 }
 
 model OrderItem {
@@ -54,4 +56,19 @@ model OrderItem {
   variantId String
   quantity  Int
   priceCents Int
+}
+
+model Admin {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String // hash, mai testo in chiaro
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  orders    Order[]
+  createdAt DateTime @default(now())
 }
