@@ -26,7 +26,13 @@ export async function POST(req: Request) {
     console.log("Sto per creare l'ordine per la sessione:", session.id);
 
     try {
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+      const itemsFromMetadata: { variantId: string; quantity: number }[] = JSON.parse(
+        session.metadata?.items ?? "[]"
+      );
+
+      const variants = await prisma.variant.findMany({
+        where: { id: { in: itemsFromMetadata.map((i) => i.variantId) } },
+      });
 
       const order = await prisma.order.create({
         data: {
@@ -35,11 +41,14 @@ export async function POST(req: Request) {
           totalCents: session.amount_total ?? 0,
           status: "paid",
           items: {
-            create: lineItems.data.map((li) => ({
-              variantId: "N/A",
-              quantity: li.quantity ?? 1,
-              priceCents: li.amount_total ?? 0,
-            })),
+            create: itemsFromMetadata.map((item) => {
+              const variant = variants.find((v) => v.id === item.variantId);
+              return {
+                variantId: item.variantId,
+                quantity: item.quantity,
+                priceCents: variant?.priceCents ?? 0,
+              };
+            }),
           },
         },
       });

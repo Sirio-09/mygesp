@@ -49,6 +49,12 @@ export async function POST(req: Request) {
     cancel_url: `${origin}/carrello`,
     metadata: {
       customerId: isCustomer ? (session!.user as { id: string }).id : "",
+      items: JSON.stringify(
+        items.map((item: { variantId: string; quantity: number }) => ({
+          variantId: item.variantId,
+          quantity: item.quantity,
+        }))
+      ),
     },
   });
 

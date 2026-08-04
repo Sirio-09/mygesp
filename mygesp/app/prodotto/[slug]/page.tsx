@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import AddToCartButton from "@/components/product/AddToCartButton";
+import Link from "next/link";
 
 export default async function ProductPage({
   params,
@@ -20,9 +22,21 @@ export default async function ProductPage({
 
   return (
     <main className="max-w-[1200px] mx-auto px-8 py-12">
+      <Link href="/" className="text-sm text-mud hover:text-rust mb-6 inline-block">
+        ← Torna al catalogo
+      </Link>
       <div className="grid md:grid-cols-2 gap-12">
-        <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[13px] text-mud text-center p-8">
-          [foto: {product.name}]
+        <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[13px] text-mud text-center p-8 relative overflow-hidden">
+          {product.images[0] ? (
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <span>[nessuna foto]</span>
+          )}
         </div>
 
         <div>

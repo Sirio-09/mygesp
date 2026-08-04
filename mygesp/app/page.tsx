@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+import Image from "next/image";
 
 export default async function Home() {
   const featured = await prisma.product.findMany({
@@ -70,10 +71,19 @@ export default async function Home() {
                 href={`/prodotto/${product.slug}`}
                 className="bg-white border border-canvas-deep relative block hover:border-rust transition-colors"
               >
-                <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[11px] text-mud text-center p-4 relative">
-                  [foto prodotto]
+                <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[11px] text-mud text-center p-4 relative overflow-hidden">
+                  {product.images[0] ? (
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span>[nessuna foto]</span>
+                  )}
                   {product.waterColumn && (
-                    <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2">
+                    <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
                       {product.waterColumn}MM
                     </span>
                   )}
@@ -180,6 +190,10 @@ export default async function Home() {
       <footer className="bg-loden-deep text-canvas-deep py-12">
         <div className="max-w-[1200px] mx-auto px-8 text-center text-xs text-mud">
           © 2026 MyGesp di Panero Enrica — P.IVA 04093030049
+          <span className="mx-2">·</span>
+          <Link href="/admin/login" className="hover:text-canvas-deep underline">
+            Area tecnica
+          </Link>
         </div>
       </footer>
     </main>

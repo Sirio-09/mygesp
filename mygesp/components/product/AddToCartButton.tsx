@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/cart-store";
 
 type Variant = {
@@ -18,8 +19,9 @@ export default function AddToCartButton({
   productSlug: string;
   productName: string;
 }) {
+  const router = useRouter();
   const [selectedSize, setSelectedSize] = useState(variants[0]?.size ?? "");
-  const [added, setAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
 
   const selectedVariant = variants.find((v) => v.size === selectedSize);
@@ -32,10 +34,9 @@ export default function AddToCartButton({
       productName,
       size: selectedVariant.size,
       priceCents: selectedVariant.priceCents,
-      quantity: 1,
+      quantity,
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    router.push("/carrello");
   };
 
   return (
@@ -61,9 +62,30 @@ export default function AddToCartButton({
         </div>
       </div>
 
+      <div className="mb-6">
+        <div className="text-sm font-medium text-loden-deep mb-2">Quantità</div>
+        <div className="flex items-center border border-mud w-fit">
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            className="w-9 h-9 flex items-center justify-center text-loden-deep hover:bg-canvas"
+          >
+            −
+          </button>
+          <span className="w-10 text-center font-mono text-sm">{quantity}</span>
+          <button
+            type="button"
+            onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))}
+            className="w-9 h-9 flex items-center justify-center text-loden-deep hover:bg-canvas"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
       {selectedVariant && (
         <div className="font-mono text-2xl font-medium text-rust-deep mb-6">
-          €{(selectedVariant.priceCents / 100).toFixed(2)}
+          €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
         </div>
       )}
 
@@ -72,7 +94,7 @@ export default function AddToCartButton({
         disabled={!selectedVariant || selectedVariant.stock === 0}
         className="bg-rust hover:bg-rust-deep text-white font-display uppercase tracking-wide text-[15px] font-semibold py-4 px-8 w-full md:w-auto disabled:opacity-40"
       >
-        {added ? "Aggiunto ✓" : "Aggiungi al carrello"}
+        Aggiungi al carrello
       </button>
     </div>
   );

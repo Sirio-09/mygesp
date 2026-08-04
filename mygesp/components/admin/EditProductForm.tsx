@@ -1,16 +1,51 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
-export default function NuovoProdotto() {
+type Variant = {
+  id: string;
+  size: string;
+  sku: string;
+  priceCents: number;
+  stock: number;
+};
+
+type Product = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  brand: string;
+  category: string;
+  waterColumn: number | null;
+  minTemp: number | null;
+  images: string[];
+  variants: Variant[];
+};
+
+export default function EditProductForm({ product }: { product: Product }) {
   const router = useRouter();
   const [form, setForm] = useState({
-    name: "", slug: "", description: "", brand: "", category: "",
-    waterColumn: "", minTemp: "",
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    brand: product.brand,
+    category: product.category,
+    waterColumn: product.waterColumn?.toString() ?? "",
+    minTemp: product.minTemp?.toString() ?? "",
   });
-  const [variants, setVariants] = useState([{ size: "", sku: "", priceCents: "", stock: "" }]);
+  const [variants, setVariants] = useState(
+    product.variants.map((v) => ({
+      size: v.size,
+      sku: v.sku,
+      priceCents: v.priceCents.toString(),
+      stock: v.stock.toString(),
+    }))
+  );
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(product.images[0] ?? null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,7 +80,7 @@ export default function NuovoProdotto() {
     setError("");
     setUploading(true);
 
-    let imageUrl = "";
+    let imageUrl = product.images[0] ?? "";
     if (imageFile) {
       const formData = new FormData();
       formData.append("file", imageFile);
@@ -59,8 +94,8 @@ export default function NuovoProdotto() {
       imageUrl = uploadData.url;
     }
 
-    const res = await fetch("/api/admin/prodotti", {
-      method: "POST",
+    const res = await fetch(`/api/admin/prodotti/${product.id}`, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, images: imageUrl ? [imageUrl] : [], variants }),
     });
@@ -74,40 +109,52 @@ export default function NuovoProdotto() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm(`Eliminare definitivamente "${product.name}"? L'azione non è reversibile.`)) {
+      return;
+    }
+    const res = await fetch(`/api/admin/prodotti/${product.id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/admin");
+    } else {
+      setError("Errore durante l'eliminazione");
+    }
+  };
+
   return (
     <main className="max-w-[720px] mx-auto px-8 py-12">
-      <h1 className="font-display text-3xl uppercase text-loden-deep tracking-wide mb-2">
-        Nuovo prodotto
-      </h1>
-      <p className="text-slate text-sm mb-8">Compila i campi per aggiungere un articolo al catalogo.</p>
+      <Link href="/admin" className="text-sm text-mud hover:text-rust mb-6 inline-block">
+        ← Torna al catalogo
+      </Link>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="font-display text-3xl uppercase text-loden-deep tracking-wide">
+          Modifica prodotto
+        </h1>
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="text-rust hover:text-rust-deep text-sm border border-rust hover:bg-rust hover:text-white px-3 py-1.5 transition-colors"
+        >
+          Elimina prodotto
+        </button>
+      </div>
+      <p className="text-slate text-sm mb-8">{product.name}</p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* immagine */}
         <div>
           <label className="block text-sm font-medium text-loden-deep mb-2">Immagine prodotto</label>
           <div className="flex items-center gap-4">
-            <label className="w-32 h-32 bg-canvas border-2 border-dashed border-mud flex items-center justify-center text-xs text-mud text-center cursor-pointer hover:border-rust transition-colors overflow-hidden">
+            <label className="w-32 h-32 bg-canvas border-2 border-dashed border-mud flex items-center justify-center text-xs text-mud text-center cursor-pointer hover:border-rust transition-colors overflow-hidden relative">
               {imagePreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePreview} alt="Anteprima" className="w-full h-full object-cover" />
+                <Image src={imagePreview} alt="Anteprima" fill className="object-cover" />
               ) : (
                 <span>Clicca per caricare</span>
               )}
               <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
             </label>
-            {imagePreview && (
-              <button
-                type="button"
-                onClick={() => { setImageFile(null); setImagePreview(null); }}
-                className="text-sm text-mud hover:text-rust"
-              >
-                Rimuovi
-              </button>
-            )}
           </div>
         </div>
 
-        {/* dati base */}
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-sm font-medium text-loden-deep mb-1">Nome prodotto</label>
@@ -117,7 +164,6 @@ export default function NuovoProdotto() {
           <div className="col-span-2">
             <label className="block text-sm font-medium text-loden-deep mb-1">Slug (URL)</label>
             <input name="slug" value={form.slug} onChange={handleChange} required
-              placeholder="es. giacca-uragan-tex"
               className="w-full border border-mud px-3 py-2 focus:border-rust outline-none" />
           </div>
           <div className="col-span-2">
@@ -147,7 +193,6 @@ export default function NuovoProdotto() {
           </div>
         </div>
 
-        {/* varianti */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <label className="text-sm font-medium text-loden-deep">Taglie e prezzi</label>
@@ -178,7 +223,7 @@ export default function NuovoProdotto() {
 
         <button type="submit" disabled={uploading}
           className="bg-rust hover:bg-rust-deep text-white font-display uppercase tracking-wide text-[15px] font-semibold py-4 px-8 w-full disabled:opacity-50">
-          {uploading ? "Salvataggio in corso..." : "Salva prodotto"}
+          {uploading ? "Salvataggio in corso..." : "Salva modifiche"}
         </button>
         {error && <p className="text-rust text-sm text-center">{error}</p>}
       </form>
