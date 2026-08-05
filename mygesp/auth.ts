@@ -13,9 +13,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
         if (!admin) return null;
-        const valid = await bcrypt.compare(credentials.password as string, admin.password);
-        if (!valid) return null;
-        return { id: admin.id, email: admin.email, role: "admin" };
+
+        const validPassword = await bcrypt.compare(credentials.password as string, admin.password);
+        if (!validPassword) return null;
+
+        // login riuscito, ma la sessione parte SEMPRE come "non verificata"
+        // finché non passa dalla pagina OTP corretta
+        return {
+          id: admin.id,
+          email: admin.email,
+          role: "admin",
+          totpEnabled: admin.totpEnabled,
+          otpVerified: false,
+        };
       },
     }),
     Credentials({
@@ -33,10 +43,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, trigger, session: updateData }) => {
       if (user) {
         token.role = (user as { role: string }).role;
         token.id = user.id;
+        if ((user as { role: string }).role === "admin") {
+          token.totpEnabled = (user as { totpEnabled: boolean }).totpEnabled;
+          token.otpVerified = false;
+        }
+      }
+      // questo blocco gestisce l'aggiornamento "otpVerified: true" dopo
+      // che l'admin ha inserito il codice corretto (vedi Passo 4)
+      if (trigger === "update" && updateData?.otpVerified) {
+        token.otpVerified = true;
       }
       return token;
     },
@@ -44,6 +63,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { id?: string }).id = token.id as string;
+        if (token.role === "admin") {
+          (session.user as { totpEnabled?: boolean }).totpEnabled = token.totpEnabled as boolean;
+          (session.user as { otpVerified?: boolean }).otpVerified = token.otpVerified as boolean;
+        }
       }
       return session;
     },

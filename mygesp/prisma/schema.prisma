@@ -59,9 +59,11 @@ model OrderItem {
 }
 
 model Admin {
-  id       String @id @default(cuid())
-  email    String @unique
-  password String // hash, mai testo in chiaro
+  id          String  @id @default(cuid())
+  email       String  @unique
+  password    String
+  totpSecret  String?
+  totpEnabled Boolean @default(false)
 }
 
 model Customer {
