@@ -112,7 +112,7 @@ export default async function Home() {
             <h2 className="font-display text-3xl uppercase text-loden-deep tracking-wide">Vai dritto al prodotto</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-5">
-            <a href="#" className="relative aspect-[4/3] bg-loden-deep flex items-end p-6 overflow-hidden group">
+            <Link href="/categoria/abbigliamento" className="relative aspect-[4/3] bg-loden-deep flex items-end p-6 overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent"></div>
               <div className="absolute top-4 left-4 right-4 text-[11px] text-canvas-deep opacity-55 font-mono">
                 [foto: giacca appesa in scuderia]
@@ -120,8 +120,8 @@ export default async function Home() {
               <span className="relative z-10 text-white font-display text-lg uppercase tracking-wide">
                 Abbigliamento impermeabile
               </span>
-            </a>
-            <a href="#" className="relative aspect-[4/3] bg-loden-deep flex items-end p-6 overflow-hidden group">
+            </Link>
+            <Link href="/categoria/stivali" className="relative aspect-[4/3] bg-loden-deep flex items-end p-6 overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent"></div>
               <div className="absolute top-4 left-4 right-4 text-[11px] text-canvas-deep opacity-55 font-mono">
                 [foto: stivali sporchi di fango]
@@ -129,8 +129,8 @@ export default async function Home() {
               <span className="relative z-10 text-white font-display text-lg uppercase tracking-wide">
                 Stivali e calzature
               </span>
-            </a>
-            <a href="#" className="relative aspect-[4/3] bg-loden-deep flex items-end p-6 overflow-hidden group">
+            </Link>
+            <Link href="/categoria/attrezzature" className="relative aspect-[4/3] bg-loden-deep flex items-end p-6 overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-t from-black/65 to-transparent"></div>
               <div className="absolute top-4 left-4 right-4 text-[11px] text-canvas-deep opacity-55 font-mono">
                 [foto: pettorina al lavoro]
@@ -138,7 +138,7 @@ export default async function Home() {
               <span className="relative z-10 text-white font-display text-lg uppercase tracking-wide">
                 Attrezzature e accessori
               </span>
-            </a>
+            </Link>
           </div>
         </div>
       </section>

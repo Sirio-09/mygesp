@@ -16,9 +16,9 @@ export default function Navbar() {
             MY<span className="text-rust">GESP</span>
           </Link>
           <ul className="hidden md:flex gap-7 list-none">
-            <li><a href="#" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Abbigliamento</a></li>
-            <li><a href="#" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Stivali</a></li>
-            <li><a href="#" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Attrezzature</a></li>
+            <li><Link href="/categoria/abbigliamento" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Abbigliamento</Link></li>
+            <li><Link href="/categoria/stivali" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Stivali</Link></li>
+            <li><Link href="/categoria/attrezzature" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Attrezzature</Link></li>
             <li><a href="#" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Per attività ▾</a></li>
             <li><a href="#" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Marchi</a></li>
             <li><a href="#" className="text-canvas-deep text-sm font-medium uppercase tracking-wide hover:text-signal">Offerte</a></li>
