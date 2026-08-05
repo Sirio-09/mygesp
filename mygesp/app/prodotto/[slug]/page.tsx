@@ -1,8 +1,35 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import AddToCartButton from "@/components/product/AddToCartButton";
 import Link from "next/link";
+import type { Metadata } from "next";
+import AddToCartButton from "@/components/product/AddToCartButton";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+
+  const product = await prisma.product.findUnique({
+    where: { slug },
+  });
+
+  if (!product) {
+    return { title: "Prodotto non trovato — MyGesp" };
+  }
+
+  return {
+    title: `${product.name} — ${product.brand} | MyGesp`,
+    description: product.description,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: product.images[0] ? [product.images[0]] : [],
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
@@ -25,6 +52,7 @@ export default async function ProductPage({
       <Link href="/" className="text-sm text-mud hover:text-rust mb-6 inline-block">
         ← Torna al catalogo
       </Link>
+
       <div className="grid md:grid-cols-2 gap-12">
         <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[13px] text-mud text-center p-8 relative overflow-hidden">
           {product.images[0] ? (
