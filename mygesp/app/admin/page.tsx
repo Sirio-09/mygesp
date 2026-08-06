@@ -34,6 +34,9 @@ export default async function AdminHome() {
           </h1>
         </div>
         <div className="flex items-center gap-5">
+          <Link href="/admin/utenti" className="text-mud hover:text-rust text-sm">
+            Staff
+          </Link>
           <LogoutButton />
           <Link
             href="/admin/nuovo-prodotto"

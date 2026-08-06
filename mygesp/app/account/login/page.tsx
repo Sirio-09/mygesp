@@ -47,6 +47,11 @@ export default function LoginClientePage() {
         {error && <p className="text-rust text-sm">{error}</p>}
       </form>
       <p className="text-sm text-mud mt-4">
+        <Link href="/account/password-dimenticata" className="text-rust hover:underline">
+          Password dimenticata?
+        </Link>
+      </p>
+      <p className="text-sm text-mud mt-2">
         Non hai un account?{" "}
         <Link href="/account/registrati" className="text-rust hover:underline">
           Registrati

@@ -60,6 +60,7 @@ model OrderItem {
 
 model Admin {
   id          String  @id @default(cuid())
+  username    String  @unique
   email       String  @unique
   password    String
   totpSecret  String?
@@ -67,10 +68,20 @@ model Admin {
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  orders    Order[]
-  createdAt DateTime @default(now())
+  id          String               @id @default(cuid())
+  email       String               @unique
+  password    String
+  name        String?
+  orders      Order[]
+  resetTokens PasswordResetToken[]
+  createdAt   DateTime             @default(now())
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 }

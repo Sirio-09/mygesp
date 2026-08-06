@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -15,7 +15,7 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
     const result = await signIn("admin-login", {
-      email,
+      username,
       password,
       redirect: false,
     })
@@ -56,12 +56,12 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate uppercase tracking-wide mb-1.5">
-                Email
+                Nome utente
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full bg-white border border-mud px-3 py-2.5 text-sm text-loden-deep focus:border-rust focus:outline-none transition-colors"
               />

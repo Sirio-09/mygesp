@@ -7,18 +7,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       id: "admin-login",
-      credentials: { email: {}, password: {} },
+      credentials: { username: {}, password: {} },
       authorize: async (credentials) => {
         const admin = await prisma.admin.findUnique({
-          where: { email: credentials.email as string },
+          where: { username: credentials.username as string },
         });
         if (!admin) return null;
 
         const validPassword = await bcrypt.compare(credentials.password as string, admin.password);
         if (!validPassword) return null;
 
-        // login riuscito, ma la sessione parte SEMPRE come "non verificata"
-        // finché non passa dalla pagina OTP corretta
         return {
           id: admin.id,
           email: admin.email,
@@ -52,8 +50,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.otpVerified = false;
         }
       }
-      // questo blocco gestisce l'aggiornamento "otpVerified: true" dopo
-      // che l'admin ha inserito il codice corretto (vedi Passo 4)
       if (trigger === "update" && updateData?.otpVerified) {
         token.otpVerified = true;
       }
