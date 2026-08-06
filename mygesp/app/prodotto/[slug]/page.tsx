@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/product/AddToCartButton";
+import ProductGallery from "@/components/product/ProductGallery";
 
 export async function generateMetadata({
   params,
@@ -54,18 +54,7 @@ export default async function ProductPage({
       </Link>
 
       <div className="grid md:grid-cols-2 gap-12">
-        <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[13px] text-mud text-center p-8 relative overflow-hidden">
-          {product.images[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <span>[nessuna foto]</span>
-          )}
-        </div>
+        <ProductGallery images={product.images} productName={product.name} />
 
         <div>
           <div className="text-rust text-xs tracking-[0.1em] uppercase mb-2 font-semibold">

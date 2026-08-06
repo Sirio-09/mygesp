@@ -1,78 +1,83 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+"use client"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export default function NuovoProdotto() {
-  const router = useRouter();
+  const router = useRouter()
   const [form, setForm] = useState({
     name: "", slug: "", description: "", brand: "", category: "",
     waterColumn: "", minTemp: "",
-  });
-  const [variants, setVariants] = useState([{ size: "", sku: "", priceCents: "", stock: "" }]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
+  })
+  const [variants, setVariants] = useState([{ size: "", sku: "", priceCents: "", stock: "" }])
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    setImageFiles((prev) => [...prev, ...files])
+    setImagePreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+  }
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index))
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const handleVariantChange = (index: number, field: string, value: string) => {
-    const updated = [...variants];
-    updated[index] = { ...updated[index], [field]: value };
-    setVariants(updated);
-  };
+    const updated = [...variants]
+    updated[index] = { ...updated[index], [field]: value }
+    setVariants(updated)
+  }
 
   const addVariant = () => {
-    setVariants([...variants, { size: "", sku: "", priceCents: "", stock: "" }]);
-  };
+    setVariants([...variants, { size: "", sku: "", priceCents: "", stock: "" }])
+  }
 
   const removeVariant = (index: number) => {
-    setVariants(variants.filter((_, i) => i !== index));
-  };
+    setVariants(variants.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setUploading(true);
+    e.preventDefault()
+    setError("")
+    setUploading(true)
 
-    let imageUrl = "";
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append("file", imageFile);
-      const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData });
-      const uploadData = await uploadRes.json();
+    const uploadedUrls: string[] = []
+    for (const file of imageFiles) {
+      const formData = new FormData()
+      formData.append("file", file)
+      const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData })
+      const uploadData = await uploadRes.json()
       if (!uploadRes.ok) {
-        setError("Errore durante il caricamento dell'immagine");
-        setUploading(false);
-        return;
+        setError("Errore durante il caricamento di un'immagine")
+        setUploading(false)
+        return
       }
-      imageUrl = uploadData.url;
+      uploadedUrls.push(uploadData.url)
     }
 
     const res = await fetch("/api/admin/prodotti", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, images: imageUrl ? [imageUrl] : [], variants }),
-    });
+      body: JSON.stringify({ ...form, images: uploadedUrls, variants }),
+    })
 
-    setUploading(false);
+    setUploading(false)
 
     if (res.ok) {
-      router.push("/admin");
+      router.push("/admin")
     } else {
-      setError("Errore nel salvataggio, controlla i campi");
+      setError("Errore nel salvataggio, controlla i campi")
     }
-  };
+  }
 
   return (
     <main className="max-w-[720px] mx-auto px-8 py-12">
@@ -82,32 +87,29 @@ export default function NuovoProdotto() {
       <p className="text-slate text-sm mb-8">Compila i campi per aggiungere un articolo al catalogo.</p>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* immagine */}
         <div>
-          <label className="block text-sm font-medium text-loden-deep mb-2">Immagine prodotto</label>
-          <div className="flex items-center gap-4">
-            <label className="w-32 h-32 bg-canvas border-2 border-dashed border-mud flex items-center justify-center text-xs text-mud text-center cursor-pointer hover:border-rust transition-colors overflow-hidden">
-              {imagePreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePreview} alt="Anteprima" className="w-full h-full object-cover" />
-              ) : (
-                <span>Clicca per caricare</span>
-              )}
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+          <label className="block text-sm font-medium text-loden-deep mb-2">Immagini prodotto</label>
+          <div className="flex flex-wrap items-center gap-3">
+            {imagePreviews.map((src, i) => (
+              <div key={i} className="w-24 h-24 relative border border-mud">
+                <Image src={src} alt={`Immagine ${i + 1}`} fill className="object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute -top-2 -right-2 bg-rust text-white w-5 h-5 flex items-center justify-center text-xs rounded-full"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <label className="w-24 h-24 bg-canvas border-2 border-dashed border-mud flex items-center justify-center text-xs text-mud text-center cursor-pointer hover:border-rust transition-colors">
+              <span>+ Aggiungi</span>
+              <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
             </label>
-            {imagePreview && (
-              <button
-                type="button"
-                onClick={() => { setImageFile(null); setImagePreview(null); }}
-                className="text-sm text-mud hover:text-rust"
-              >
-                Rimuovi
-              </button>
-            )}
           </div>
+          <p className="text-xs text-mud mt-2">La prima immagine è quella mostrata in homepage e nella griglia prodotti.</p>
         </div>
 
-        {/* dati base */}
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-sm font-medium text-loden-deep mb-1">Nome prodotto</label>
@@ -147,7 +149,6 @@ export default function NuovoProdotto() {
           </div>
         </div>
 
-        {/* varianti */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <label className="text-sm font-medium text-loden-deep">Taglie e prezzi</label>

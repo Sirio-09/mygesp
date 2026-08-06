@@ -44,8 +44,8 @@ export default function EditProductForm({ product }: { product: Product }) {
       stock: v.stock.toString(),
     }))
   );
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(product.images[0] ?? null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(product.images);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,11 +54,15 @@ export default function EditProductForm({ product }: { product: Product }) {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setImageFiles((prev) => [...prev, ...files]);
+    setImagePreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleVariantChange = (index: number, field: string, value: string) => {
@@ -80,24 +84,28 @@ export default function EditProductForm({ product }: { product: Product }) {
     setError("");
     setUploading(true);
 
-    let imageUrl = product.images[0] ?? "";
-    if (imageFile) {
+    const existingUrls = imagePreviews.filter((src) => !src.startsWith("blob:"));
+
+    const uploadedUrls: string[] = [];
+    for (const file of imageFiles) {
       const formData = new FormData();
-      formData.append("file", imageFile);
+      formData.append("file", file);
       const uploadRes = await fetch("/api/admin/upload", { method: "POST", body: formData });
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) {
-        setError("Errore durante il caricamento dell'immagine");
+        setError("Errore durante il caricamento di un'immagine");
         setUploading(false);
         return;
       }
-      imageUrl = uploadData.url;
+      uploadedUrls.push(uploadData.url);
     }
+
+    const allImages = [...existingUrls, ...uploadedUrls];
 
     const res = await fetch(`/api/admin/prodotti/${product.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, images: imageUrl ? [imageUrl] : [], variants }),
+      body: JSON.stringify({ ...form, images: allImages, variants }),
     });
 
     setUploading(false);
@@ -142,17 +150,26 @@ export default function EditProductForm({ product }: { product: Product }) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label className="block text-sm font-medium text-loden-deep mb-2">Immagine prodotto</label>
-          <div className="flex items-center gap-4">
-            <label className="w-32 h-32 bg-canvas border-2 border-dashed border-mud flex items-center justify-center text-xs text-mud text-center cursor-pointer hover:border-rust transition-colors overflow-hidden relative">
-              {imagePreview ? (
-                <Image src={imagePreview} alt="Anteprima" fill className="object-cover" />
-              ) : (
-                <span>Clicca per caricare</span>
-              )}
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+          <label className="block text-sm font-medium text-loden-deep mb-2">Immagini prodotto</label>
+          <div className="flex flex-wrap items-center gap-3">
+            {imagePreviews.map((src, i) => (
+              <div key={i} className="w-24 h-24 relative border border-mud">
+                <Image src={src} alt={`Immagine ${i + 1}`} fill className="object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute -top-2 -right-2 bg-rust text-white w-5 h-5 flex items-center justify-center text-xs rounded-full"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <label className="w-24 h-24 bg-canvas border-2 border-dashed border-mud flex items-center justify-center text-xs text-mud text-center cursor-pointer hover:border-rust transition-colors">
+              <span>+ Aggiungi</span>
+              <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
             </label>
           </div>
+          <p className="text-xs text-mud mt-2">La prima immagine è quella mostrata in homepage e nella griglia prodotti.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

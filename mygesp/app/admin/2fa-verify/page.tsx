@@ -49,15 +49,7 @@ export default function VerifyOtpPage() {
           <p className="text-sm text-slate text-center mb-6">
             Inserisci il codice dalla tua app di autenticazione.
           </p>
-
-          {showQr && qrCode && (
-            <div className="mb-6 text-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrCode} alt="Nuovo QR code" className="mx-auto border border-mud mb-2" />
-              <p className="text-xs text-mud">Scansiona con Google Authenticator, poi inserisci il nuovo codice.</p>
-            </div>
-          )}
-
+          
           <form onSubmit={handleVerify} className="space-y-4">
             <input
               type="text"
@@ -77,15 +69,6 @@ export default function VerifyOtpPage() {
             </button>
             {error && <p className="text-rust text-sm text-center">{error}</p>}
           </form>
-
-          {!showQr && (
-            <button
-              onClick={handleShowLost}
-              className="w-full text-mud hover:text-rust text-xs text-center mt-4 underline"
-            >
-              Ho perso l&apos;accesso all&apos;app di autenticazione
-            </button>
-          )}
         </div>
       </div>
     </main>
