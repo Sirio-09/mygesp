@@ -63,6 +63,7 @@ model Admin {
   username    String  @unique
   email       String  @unique
   password    String
+  isManager   Boolean @default(false)
   totpSecret  String?
   totpEnabled Boolean @default(false)
 }

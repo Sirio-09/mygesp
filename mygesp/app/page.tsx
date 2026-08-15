@@ -18,7 +18,7 @@ export default async function Home() {
             <div className="text-signal text-[13px] tracking-[0.12em] mb-4 font-display uppercase">
               Uragan-tex · bisont
             </div>
-            <h1 className="font-display text-4xl md:text-5xl leading-[1.08] text-white uppercase tracking-wide mb-5">
+            <h1 className="font-display text-3xl md:text-5xl leading-[1.1] text-white uppercase tracking-wide mb-5">
               Testati in stalla,<br />non in <span className="text-rust">laboratorio</span>
             </h1>
             <p className="text-canvas-deep text-base max-w-[440px] mb-8">
@@ -30,7 +30,7 @@ export default async function Home() {
           </div>
           <div className="relative bg-gradient-to-br from-[#3E4A34] to-[#20281C] flex items-center justify-center text-canvas-deep text-[13px] text-center p-8">
             [foto: allevatore con giacca Uragan-Tex sotto la pioggia, in alpeggio]
-            <div className="absolute bottom-9 -left-8 bg-white border border-dashed border-mud py-3.5 px-4.5 -rotate-3 z-10 min-w-[200px]">
+            <div className="absolute bottom-4 left-4 md:bottom-9 md:-left-8 bg-white border border-dashed border-mud py-3.5 px-4.5 -rotate-3 z-10 min-w-[180px] md:min-w-[200px]">
               <div className="text-[10px] tracking-wide text-slate uppercase mb-1.5">Colonna d&apos;acqua</div>
               <div className="font-mono text-xl font-medium text-rust-deep">5.000mm</div>
               <div className="text-[11px] text-mud mt-1">Traspirante · doppio strato</div>

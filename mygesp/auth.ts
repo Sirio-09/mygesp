@@ -22,6 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: admin.email,
           role: "admin",
           totpEnabled: admin.totpEnabled,
+          isManager: admin.isManager,
           otpVerified: false,
         };
       },
@@ -47,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         if ((user as { role: string }).role === "admin") {
           token.totpEnabled = (user as { totpEnabled: boolean }).totpEnabled;
+          token.isManager = (user as { isManager: boolean }).isManager;
           token.otpVerified = false;
         }
       }
@@ -61,6 +63,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         (session.user as { id?: string }).id = token.id as string;
         if (token.role === "admin") {
           (session.user as { totpEnabled?: boolean }).totpEnabled = token.totpEnabled as boolean;
+          (session.user as { isManager?: boolean }).isManager = token.isManager as boolean;
           (session.user as { otpVerified?: boolean }).otpVerified = token.otpVerified as boolean;
         }
       }
