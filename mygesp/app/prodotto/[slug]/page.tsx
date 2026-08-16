@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/product/AddToCartButton";
 import ProductGallery from "@/components/product/ProductGallery";
+import ProductReviews from "@/components/product/ProductReviews";
 
 export async function generateMetadata({
   params,
@@ -101,6 +102,8 @@ export default async function ProductPage({
           </div>
         </div>
       </div>
+
+      <ProductReviews productId={product.id} />
     </main>
   );
 }
