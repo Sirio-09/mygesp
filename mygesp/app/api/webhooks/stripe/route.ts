@@ -34,10 +34,19 @@ export async function POST(req: Request) {
         where: { id: { in: itemsFromMetadata.map((i) => i.variantId) } },
       });
 
+      const shipping = session.customer_details?.address;
+
       const order = await prisma.order.create({
         data: {
           customerEmail: session.customer_details?.email ?? "sconosciuto",
           customerId: session.metadata?.customerId || null,
+          shippingName: session.customer_details?.name || null,
+          shippingLine1: shipping?.line1 || null,
+          shippingLine2: shipping?.line2 || null,
+          shippingCity: shipping?.city || null,
+          shippingZip: shipping?.postal_code || null,
+          shippingState: shipping?.state || null,
+          shippingCountry: shipping?.country || null,
           totalCents: session.amount_total ?? 0,
           status: "paid",
           items: {

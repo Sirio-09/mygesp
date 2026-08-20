@@ -41,14 +41,21 @@ model Variant {
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  customerEmail String
-  customerId    String?
-  customer      Customer?   @relation(fields: [customerId], references: [id])
-  items         OrderItem[]
-  totalCents    Int
-  status        String      @default("pending")
-  createdAt     DateTime    @default(now())
+  id             String      @id @default(cuid())
+  customerEmail  String
+  customerId     String?
+  customer       Customer?   @relation(fields: [customerId], references: [id])
+  shippingName   String?
+  shippingLine1  String?
+  shippingLine2  String?
+  shippingCity   String?
+  shippingZip    String?
+  shippingState  String?
+  shippingCountry String?
+  items          OrderItem[]
+  totalCents     Int
+  status         String      @default("pending")
+  createdAt      DateTime    @default(now())
 }
 
 model OrderItem {

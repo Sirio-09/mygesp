@@ -45,6 +45,9 @@ export async function POST(req: Request) {
       };
     }),
     mode: "payment",
+    shipping_address_collection: {
+      allowed_countries: ["IT", "FR", "DE", "AT", "CH", "ES", "PT", "BE", "NL", "LU"],
+    },
     success_url: `${origin}/ordine/successo?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/carrello`,
     metadata: {

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 export default async function OrdiniPage() {
   const session = await auth();
-  console.log("Session user:", session?.user);
 
   if (!session || (session.user as { role?: string })?.role !== "customer") {
     redirect("/account/login");
@@ -31,9 +30,16 @@ export default async function OrdiniPage() {
                 <span>{order.createdAt.toLocaleDateString("it-IT")}</span>
                 <span className="uppercase font-mono">{order.status}</span>
               </div>
-              <div className="font-mono text-rust-deep">
+              <div className="font-mono text-rust-deep mb-2">
                 €{(order.totalCents / 100).toFixed(2)}
               </div>
+              {order.shippingLine1 && (
+                <div className="text-xs text-slate border-t border-dashed border-mud pt-2">
+                  <p className="font-medium">{order.shippingName}</p>
+                  <p>{order.shippingLine1}{order.shippingLine2 ? `, ${order.shippingLine2}` : ""}</p>
+                  <p>{order.shippingZip} {order.shippingCity} ({order.shippingState}), {order.shippingCountry}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>
