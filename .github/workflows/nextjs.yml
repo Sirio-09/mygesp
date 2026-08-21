@@ -61,7 +61,7 @@ jobs:
       - name: Build with Next.js
         run: |
           cd mygesp
-          npm install next@16.3.2
+          npm install next@16.3.2 prisma @prisma/client
           npx next build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
