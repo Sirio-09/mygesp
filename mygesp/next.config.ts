@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
   images: {
     // 3. Disattiva l'ottimizzazione server delle immagini (richiesto per siti statici)
     unoptimized: true,
-    qualities: [], // <--- CORRETTO: Ora l'array è scritto bene!
 
     // 4. I tuoi parametri originali per Vercel Blob
     remotePatterns: [
