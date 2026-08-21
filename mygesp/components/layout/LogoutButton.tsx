@@ -5,7 +5,7 @@ export default function LogoutButton() {
   return (
     <button
       onClick={() => signOut({ callbackUrl: "/" })}
-      className="text-mud hover:text-rust text-sm"
+      className="text-ink-soft hover:text-soil-deep text-sm"
     >
       Esci
     </button>

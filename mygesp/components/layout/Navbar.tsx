@@ -6,28 +6,31 @@ import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   return (
-    <nav className="bg-paper border-b border-line sticky top-0 z-40">
-      <div className="w-full px-4 md:px-8 h-18 flex items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-40 bg-paper border-b border-line">
+      <div className="bg-grass-deep text-white text-[11px] sm:text-xs text-center py-1.5 px-4">
+        Spedizione gratuita sopra i 99€ · <span className="hidden sm:inline">consegna in tutta Italia e in Europa</span>
+      </div>
+
+      <nav className="w-full px-4 sm:px-6 lg:px-10 h-16 sm:h-20 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <MobileMenu />
-          <Link href="/" className="text-ink text-2xl font-bold tracking-tight">
-            MyGesp
+          <Link href="/" className="text-ink text-xl sm:text-2xl font-extrabold tracking-tight">
+            MY<span className="text-grass-deep">GESP</span>
           </Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 px-8 border-x border-line h-10">
-          <Link href="/categoria/abbigliamento" className="text-ink-soft text-sm font-medium hover:text-forest transition-colors">Abbigliamento</Link>
-          <Link href="/categoria/stivali" className="text-ink-soft text-sm font-medium hover:text-forest transition-colors">Stivali</Link>
-          <Link href="/categoria/attrezzature" className="text-ink-soft text-sm font-medium hover:text-forest transition-colors">Attrezzature</Link>
-        </div>
+        <ul className="hidden lg:flex items-center gap-8">
+          <li><Link href="/categoria/abbigliamento" className="text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors">Abbigliamento</Link></li>
+          <li><Link href="/categoria/stivali" className="text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors">Stivali</Link></li>
+          <li><Link href="/categoria/attrezzature" className="text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors">Attrezzature</Link></li>
+        </ul>
 
-        <div className="flex items-center gap-4 bg-paper-deep/50 px-3 py-2 rounded-full">
+        <div className="flex items-center gap-2 sm:gap-3">
           <SearchBar />
-          <div className="w-px h-5 bg-line" />
           <AccountMenu />
           <CartIcon />
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

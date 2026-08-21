@@ -38,23 +38,23 @@ export default function SetupOtpPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-loden-deep flex items-center justify-center px-6 py-16">
+    <main className="min-h-[calc(100vh-64px)] bg-ink flex items-center justify-center px-4 sm:px-6 py-16">
       <div className="w-full max-w-md">
-        <div className="bg-canvas border-t-4 border-rust p-8">
-          <h1 className="font-display text-2xl uppercase text-loden-deep tracking-wide text-center mb-2">
+        <div className="bg-white border-t-4 border-grass p-8">
+          <h1 className="text-ink font-extrabold text-2xl text-center mb-2">
             Configura la sicurezza
           </h1>
-          <p className="text-sm text-slate text-center mb-6">
+          <p className="text-sm text-ink-soft text-center mb-6">
             Primo accesso: scansiona questo codice con Google Authenticator per proteggere il tuo account.
           </p>
 
           {qrCode ? (
             <div className="text-center mb-6">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrCode} alt="QR code 2FA" className="mx-auto border border-mud" />
+              <img src={qrCode} alt="QR code 2FA" className="mx-auto border border-line" />
             </div>
           ) : (
-            <p className="text-center text-mud text-sm mb-6">Generazione codice in corso...</p>
+            <p className="text-center text-ink-soft text-sm mb-6">Generazione codice in corso...</p>
           )}
 
           <form onSubmit={handleConfirm} className="space-y-4">
@@ -64,16 +64,16 @@ export default function SetupOtpPage() {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Inserisci il codice a 6 cifre"
-              className="w-full bg-white border border-mud px-3 py-2.5 text-sm text-loden-deep font-mono text-center tracking-widest focus:border-rust focus:outline-none"
+              className="w-full border border-line px-3 py-2.5 text-sm text-ink text-center tracking-widest focus:border-grass-deep outline-none"
             />
             <button
               type="submit"
               disabled={loading || !qrCode}
-              className="w-full bg-rust hover:bg-rust-deep text-white font-display uppercase tracking-wide text-sm font-semibold py-3.5 disabled:opacity-50"
+              className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 disabled:opacity-50 transition-colors"
             >
               {loading ? "Verifica in corso..." : "Conferma e continua"}
             </button>
-            {error && <p className="text-rust text-sm text-center">{error}</p>}
+            {error && <p className="text-soil-deep text-sm text-center">{error}</p>}
           </form>
         </div>
       </div>

@@ -12,10 +12,10 @@ export default function CartIcon() {
   }, []);
 
   return (
-    <Link href="/carrello" className="relative text-canvas text-lg">
-      ⛃
+    <Link href="/carrello" className="relative text-ink text-lg">
+      🛒
       {mounted && totalItems > 0 && (
-        <span className="absolute -top-2 -right-2 bg-rust text-white text-[10px] font-mono w-4 h-4 flex items-center justify-center rounded-full">
+        <span className="absolute -top-2 -right-2 bg-grass-deep text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
           {totalItems}
         </span>
       )}

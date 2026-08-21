@@ -54,21 +54,19 @@ export default function SearchBar() {
 
   return (
     <div ref={containerRef} className="relative">
-      {/* icona sola, solo su mobile, quando non espanso */}
       {!mobileExpanded && (
         <button
           onClick={() => setMobileExpanded(true)}
-          className="md:hidden text-canvas text-lg"
+          className="lg:hidden text-ink text-lg"
           aria-label="Cerca"
         >
-          ⌕
+          🔍
         </button>
       )}
 
-      {/* campo di ricerca: sempre visibile da md in su, su mobile solo se espanso */}
       <form
         onSubmit={handleSubmit}
-        className={mobileExpanded ? "fixed inset-x-4 top-20 z-50 md:static md:inset-auto" : "hidden md:block"}
+        className={mobileExpanded ? "fixed inset-x-4 top-20 z-50 lg:static lg:inset-auto" : "hidden lg:block"}
       >
         <input
           type="text"
@@ -77,12 +75,12 @@ export default function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Cerca prodotti..."
-          className="bg-loden-deep text-canvas placeholder:text-mud text-sm px-3 py-1.5 border border-canvas-deep focus:border-rust outline-none w-full md:w-56 transition-all md:focus:w-64"
+          className="bg-white text-ink placeholder:text-ink-soft/60 text-sm px-3 py-1.5 border border-line focus:border-grass-deep outline-none w-full lg:w-56 transition-all lg:focus:w-64"
         />
       </form>
 
       {open && results.length > 0 && (
-        <div className={`bg-white border border-mud w-72 z-50 shadow-lg ${
+        <div className={`bg-white border border-line w-72 z-50 shadow-lg ${
           mobileExpanded
             ? "fixed inset-x-4 top-32 max-w-none"
             : "absolute top-full right-0 mt-1"
@@ -92,19 +90,19 @@ export default function SearchBar() {
               key={product.id}
               href={`/prodotto/${product.slug}`}
               onClick={() => { setOpen(false); setMobileExpanded(false); }}
-              className="flex items-center gap-3 p-2 hover:bg-canvas transition-colors border-b border-canvas-deep last:border-b-0"
+              className="flex items-center gap-3 p-2 hover:bg-paper-warm transition-colors border-b border-line last:border-b-0"
             >
-              <div className="w-10 h-10 bg-[#DCD4BF] relative flex-shrink-0 overflow-hidden">
+              <div className="w-10 h-10 bg-line/40 relative flex-shrink-0 overflow-hidden">
                 {product.images[0] && (
                   <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
                 )}
               </div>
-              <span className="text-sm text-loden-deep truncate">{product.name}</span>
+              <span className="text-sm text-ink truncate">{product.name}</span>
             </Link>
           ))}
           <button
             onClick={handleSubmit}
-            className="w-full text-center text-xs text-rust hover:underline p-2 border-t border-canvas-deep"
+            className="w-full text-center text-xs text-grass-deep hover:underline p-2 border-t border-line"
           >
             Vedi tutti i risultati →
           </button>

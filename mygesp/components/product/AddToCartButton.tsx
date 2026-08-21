@@ -42,7 +42,7 @@ export default function AddToCartButton({
   return (
     <div>
       <div className="mb-6">
-        <div className="text-sm font-medium text-loden-deep mb-2">Taglia</div>
+        <div className="text-sm font-semibold text-ink mb-2">Taglia</div>
         <div className="flex gap-2">
           {variants.map((v) => (
             <button
@@ -51,8 +51,8 @@ export default function AddToCartButton({
               disabled={v.stock === 0}
               className={`border px-4 py-2 text-sm transition-colors ${
                 selectedSize === v.size
-                  ? "border-rust text-rust"
-                  : "border-mud hover:border-rust hover:text-rust"
+                  ? "border-grass-deep text-grass-deep"
+                  : "border-line hover:border-grass-deep hover:text-grass-deep"
               } ${v.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               {v.size}
@@ -63,20 +63,20 @@ export default function AddToCartButton({
       </div>
 
       <div className="mb-6">
-        <div className="text-sm font-medium text-loden-deep mb-2">Quantità</div>
-        <div className="flex items-center border border-mud w-fit">
+        <div className="text-sm font-semibold text-ink mb-2">Quantità</div>
+        <div className="flex items-center border border-line w-fit">
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="w-9 h-9 flex items-center justify-center text-loden-deep hover:bg-canvas"
+            className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
           >
             −
           </button>
-          <span className="w-10 text-center font-mono text-sm">{quantity}</span>
+          <span className="w-10 text-center text-sm font-medium">{quantity}</span>
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))}
-            className="w-9 h-9 flex items-center justify-center text-loden-deep hover:bg-canvas"
+            className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
           >
             +
           </button>
@@ -84,7 +84,7 @@ export default function AddToCartButton({
       </div>
 
       {selectedVariant && (
-        <div className="font-mono text-2xl font-medium text-rust-deep mb-6">
+        <div className="text-soil-deep text-2xl font-bold mb-6">
           €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
         </div>
       )}
@@ -92,7 +92,7 @@ export default function AddToCartButton({
       <button
         onClick={handleAdd}
         disabled={!selectedVariant || selectedVariant.stock === 0}
-        className="bg-rust hover:bg-rust-deep text-white font-display uppercase tracking-wide text-[15px] font-semibold py-4 px-8 w-full md:w-auto disabled:opacity-40"
+        className="bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base uppercase tracking-wide py-4 px-8 w-full md:w-auto disabled:opacity-40 transition-colors"
       >
         Aggiungi al carrello
       </button>

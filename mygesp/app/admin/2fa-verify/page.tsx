@@ -8,8 +8,6 @@ export default function VerifyOtpPage() {
   const { update } = useSession();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const [showQr, setShowQr] = useState(false);
-  const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -32,24 +30,17 @@ export default function VerifyOtpPage() {
     }
   };
 
-  const handleShowLost = async () => {
-    const res = await fetch("/api/admin/2fa/regenerate", { method: "POST" });
-    const data = await res.json();
-    setQrCode(data.qrCodeDataUrl);
-    setShowQr(true);
-  };
-
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-loden-deep flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-95">
-        <div className="bg-canvas border-t-4 border-rust p-8">
-          <h1 className="font-display text-2xl uppercase text-loden-deep tracking-wide text-center mb-2">
+    <main className="min-h-[calc(100vh-64px)] bg-ink flex items-center justify-center px-4 sm:px-6 py-16">
+      <div className="w-full max-w-[380px]">
+        <div className="bg-white border-t-4 border-grass p-8">
+          <h1 className="text-ink font-extrabold text-2xl text-center mb-2">
             Verifica in due passaggi
           </h1>
-          <p className="text-sm text-slate text-center mb-6">
+          <p className="text-sm text-ink-soft text-center mb-6">
             Inserisci il codice dalla tua app di autenticazione.
           </p>
-          
+
           <form onSubmit={handleVerify} className="space-y-4">
             <input
               type="text"
@@ -58,16 +49,16 @@ export default function VerifyOtpPage() {
               onChange={(e) => setCode(e.target.value)}
               placeholder="123456"
               autoFocus
-              className="w-full bg-white border border-mud px-3 py-2.5 text-sm text-loden-deep font-mono text-center tracking-widest focus:border-rust focus:outline-none"
+              className="w-full border border-line px-3 py-2.5 text-sm text-ink text-center tracking-widest focus:border-grass-deep outline-none"
             />
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-rust hover:bg-rust-deep text-white font-display uppercase tracking-wide text-sm font-semibold py-3.5 disabled:opacity-50"
+              className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 disabled:opacity-50 transition-colors"
             >
               {loading ? "Verifica in corso..." : "Conferma"}
             </button>
-            {error && <p className="text-rust text-sm text-center">{error}</p>}
+            {error && <p className="text-soil-deep text-sm text-center">{error}</p>}
           </form>
         </div>
       </div>
