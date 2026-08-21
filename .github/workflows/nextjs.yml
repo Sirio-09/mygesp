@@ -60,6 +60,7 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build with Next.js
         run: |
+          cd mygesp
           npm install next@16.3.2
           npx next build
       - name: Upload artifact
