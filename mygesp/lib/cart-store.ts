@@ -8,7 +8,6 @@ export interface CartItem {
   size: string
   priceCents: number
   quantity: number
-  image?: string
 }
 
 interface CartStore {
@@ -16,12 +15,11 @@ interface CartStore {
   addItem: (item: CartItem) => void
   removeItem: (variantId: string) => void
   updateQuantity: (variantId: string, quantity: number) => void
-  totalItems: () => number
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
       addItem: (newItem) =>
         set((state) => {
@@ -48,10 +46,6 @@ export const useCartStore = create<CartStore>()(
                   item.variantId === variantId ? { ...item, quantity } : item
                 ),
         })),
-      totalItems: () => {
-        const items = get().items || []
-        return items.reduce((acc, item) => acc + (item.quantity || 0), 0)
-      },
     }),
     {
       name: 'cart-storage',

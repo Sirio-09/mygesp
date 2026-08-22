@@ -64,7 +64,6 @@ export default function AddToCartButton({
 
   return (
     <div className="space-y-6">
-      {/* Box Prezzo Dinamico in Alto con IVA Inclusa */}
       <div className="p-4 bg-paper-warm/50 border border-line rounded-lg space-y-1">
         <div className="flex items-baseline gap-3">
           {hasDiscount ? (
@@ -84,7 +83,6 @@ export default function AddToCartButton({
         </p>
       </div>
 
-      {/* Selezione Taglia */}
       {variants.length > 0 && (
         <div className="space-y-2">
           <label className="block text-xs font-bold uppercase text-ink">
@@ -115,7 +113,6 @@ export default function AddToCartButton({
         </div>
       )}
 
-      {/* Quantità e Bottone d'Acquisto senza Prezzo */}
       <div className="flex items-center gap-4 pt-2">
         <div className="flex items-center border border-line rounded-md bg-paper h-12">
           <button
