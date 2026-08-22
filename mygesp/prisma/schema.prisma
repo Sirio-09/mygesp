@@ -13,19 +13,19 @@ datasource db {
 }
 
 model Product {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  description String
-  brand       String
-  category    String
-  activities  String[]
-  variants    Variant[]
-  images      String[]
-  waterColumn Int?
-  minTemp     Int?
-  reviews     Review[]
-  createdAt   DateTime  @default(now())
+  id                String    @id @default(cuid())
+  name              String
+  slug              String    @unique
+  descriptionBlocks Json
+  brand             String
+  category          String
+  activities        String[]
+  variants          Variant[]
+  images            String[]
+  waterColumn       Int?
+  minTemp           Int?
+  reviews           Review[]
+  createdAt         DateTime  @default(now())
 }
 
 model Variant {

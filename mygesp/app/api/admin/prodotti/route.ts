@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       data: {
         name: body.name,
         slug: body.slug,
-        description: body.description,
+        descriptionBlocks: body.descriptionBlocks,
         brand: body.brand,
         category: body.category,
         activities: [],

@@ -6,9 +6,10 @@ import Image from "next/image"
 export default function NuovoProdotto() {
   const router = useRouter()
   const [form, setForm] = useState({
-    name: "", slug: "", description: "", brand: "", category: "",
+    name: "", slug: "", brand: "", category: "",
     waterColumn: "", minTemp: "",
   })
+  const [descriptionBlocks, setDescriptionBlocks] = useState([{ title: "", text: "" }])
   const [variants, setVariants] = useState([{ size: "", sku: "", priceCents: "", stock: "" }])
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
@@ -17,6 +18,20 @@ export default function NuovoProdotto() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleBlockChange = (index: number, field: "title" | "text", value: string) => {
+    const updated = [...descriptionBlocks]
+    updated[index] = { ...updated[index], [field]: value }
+    setDescriptionBlocks(updated)
+  }
+
+  const addBlock = () => {
+    setDescriptionBlocks([...descriptionBlocks, { title: "", text: "" }])
+  }
+
+  const removeBlock = (index: number) => {
+    setDescriptionBlocks(descriptionBlocks.filter((_, i) => i !== index))
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +82,7 @@ export default function NuovoProdotto() {
     const res = await fetch("/api/admin/prodotti", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, images: uploadedUrls, variants }),
+      body: JSON.stringify({ ...form, images: uploadedUrls, variants, descriptionBlocks }),
     })
 
     setUploading(false)
@@ -122,11 +137,6 @@ export default function NuovoProdotto() {
               placeholder="es. giacca-uragan-tex"
               className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
           </div>
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-semibold text-ink mb-1">Descrizione</label>
-            <textarea name="description" value={form.description} onChange={handleChange} required rows={3}
-              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
-          </div>
           <div>
             <label className="block text-sm font-semibold text-ink mb-1">Marchio</label>
             <input name="brand" value={form.brand} onChange={handleChange} required
@@ -146,6 +156,43 @@ export default function NuovoProdotto() {
             <label className="block text-sm font-semibold text-ink mb-1">Temperatura minima (°C)</label>
             <input name="minTemp" value={form.minTemp} onChange={handleChange}
               className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-sm font-semibold text-ink">Descrizione (a blocchi)</label>
+            <button type="button" onClick={addBlock} className="text-sm text-grass-deep hover:underline">
+              + Aggiungi blocco
+            </button>
+          </div>
+          <div className="space-y-3">
+            {descriptionBlocks.map((block, i) => (
+              <div key={i} className="border border-line p-3 relative">
+                <input
+                  placeholder="Titolo del blocco (es. Impermeabilità totale)"
+                  value={block.title}
+                  onChange={(e) => handleBlockChange(i, "title", e.target.value)}
+                  className="w-full border-b border-line px-1 py-1.5 text-sm font-semibold mb-2 focus:border-grass-deep outline-none"
+                />
+                <textarea
+                  placeholder="Testo del blocco"
+                  value={block.text}
+                  onChange={(e) => handleBlockChange(i, "text", e.target.value)}
+                  rows={2}
+                  className="w-full px-1 py-1 text-sm focus:outline-none resize-y"
+                />
+                {descriptionBlocks.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeBlock(i)}
+                    className="absolute top-2 right-2 text-ink-soft hover:text-soil-deep text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 

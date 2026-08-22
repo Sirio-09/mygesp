@@ -24,42 +24,42 @@ export default async function CercaPage({
     : [];
 
   return (
-    <main className="max-w-[1200px] mx-auto px-8 py-12">
-      <Link href="/" className="text-sm text-mud hover:text-rust mb-6 inline-block">
+    <main className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
+      <Link href="/" className="text-sm text-ink-soft hover:text-grass-deep mb-6 inline-block">
         ← Torna alla home
       </Link>
-      <div className="mb-10">
-        <div className="text-rust text-xs tracking-[0.1em] uppercase mb-2 font-semibold">
+      <div className="mb-8 sm:mb-10">
+        <div className="text-grass-deep text-xs font-bold uppercase tracking-wide mb-2">
           Risultati ricerca
         </div>
-        <h1 className="font-display text-3xl uppercase text-loden-deep tracking-wide">
+        <h1 className="text-ink font-extrabold text-2xl sm:text-3xl">
           &ldquo;{query}&rdquo;
         </h1>
       </div>
 
       {products.length === 0 ? (
-        <div className="border border-dashed border-mud py-16 text-center">
-          <p className="text-slate">Nessun prodotto trovato per questa ricerca.</p>
+        <div className="border border-dashed border-line py-16 text-center">
+          <p className="text-ink-soft">Nessun prodotto trovato per questa ricerca.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-[18px]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {products.map((product) => (
             <Link
               key={product.id}
               href={`/prodotto/${product.slug}`}
-              className="bg-white border border-canvas-deep relative block hover:border-rust transition-colors"
+              className="bg-white border border-line hover:border-grass-deep hover:shadow-md transition-all"
             >
-              <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[11px] text-mud text-center p-4 relative overflow-hidden">
+              <div className="aspect-square bg-line/30 relative overflow-hidden">
                 {product.images[0] ? (
                   <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
                 ) : (
-                  <span>[nessuna foto]</span>
+                  <span className="text-ink-soft text-xs">[nessuna foto]</span>
                 )}
               </div>
-              <div className="p-4">
-                <h3 className="text-sm font-medium text-loden-deep mb-2 leading-tight">{product.name}</h3>
+              <div className="p-3 sm:p-4">
+                <h3 className="text-ink text-sm font-semibold mb-1.5 leading-tight">{product.name}</h3>
                 {product.variants[0] && (
-                  <span className="font-mono font-medium text-base text-rust-deep">
+                  <span className="text-soil-deep font-bold text-sm">
                     €{(product.variants[0].priceCents / 100).toFixed(2)}
                   </span>
                 )}

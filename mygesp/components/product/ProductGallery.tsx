@@ -34,7 +34,7 @@ export default function ProductGallery({
         onMouseEnter={() => setZooming(true)}
         onMouseLeave={() => setZooming(false)}
         onMouseMove={handleMouseMove}
-        className="aspect-square bg-[#DCD4BF] relative overflow-hidden cursor-zoom-in"
+        className="aspect-square bg-line/30 relative overflow-hidden cursor-zoom-in"
       >
         {hasImages ? (
           <Image
@@ -52,7 +52,7 @@ export default function ProductGallery({
             }
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-[13px] text-mud text-center p-8">
+          <div className="w-full h-full flex items-center justify-center text-sm text-ink-soft text-center p-8">
             [nessuna foto]
           </div>
         )}
@@ -61,13 +61,13 @@ export default function ProductGallery({
           <>
             <button
               onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white w-9 h-9 flex items-center justify-center text-loden-deep text-lg z-10"
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white w-9 h-9 flex items-center justify-center text-ink text-lg z-10 shadow-sm"
             >
               ‹
             </button>
             <button
               onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white w-9 h-9 flex items-center justify-center text-loden-deep text-lg z-10"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white w-9 h-9 flex items-center justify-center text-ink text-lg z-10 shadow-sm"
             >
               ›
             </button>
@@ -76,13 +76,13 @@ export default function ProductGallery({
       </div>
 
       {images.length > 1 && (
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 mt-3 overflow-x-auto">
           {images.map((img, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               className={`w-16 h-16 relative border-2 flex-shrink-0 ${
-                current === i ? "border-rust" : "border-canvas-deep"
+                current === i ? "border-grass-deep" : "border-line"
               }`}
             >
               <Image src={img} alt={`${productName} ${i + 1}`} fill className="object-cover" />

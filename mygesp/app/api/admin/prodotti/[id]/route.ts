@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function PUT(
   req: Request,
@@ -15,13 +18,21 @@ export async function PUT(
   const body = await req.json();
 
   try {
-    // aggiorna i dati base del prodotto
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },
+    });
+
+    const oldMinPrice = existingProduct
+      ? Math.min(...existingProduct.variants.map((v) => v.priceCents))
+      : null;
+
     await prisma.product.update({
       where: { id },
       data: {
         name: body.name,
         slug: body.slug,
-        description: body.description,
+        descriptionBlocks: body.descriptionBlocks,
         brand: body.brand,
         category: body.category,
         images: body.images ?? [],
@@ -30,8 +41,6 @@ export async function PUT(
       },
     });
 
-    // elimina le varianti esistenti e ricrea quelle inviate — più semplice
-    // che calcolare quali aggiungere/modificare/rimuovere una per una
     await prisma.variant.deleteMany({ where: { productId: id } });
     await prisma.variant.createMany({
       data: body.variants.map((v: { size: string; sku: string; priceCents: string; stock: string }) => ({
@@ -42,6 +51,30 @@ export async function PUT(
         stock: parseInt(v.stock),
       })),
     });
+
+    const newMinPrice = Math.min(
+      ...body.variants.map((v: { priceCents: string }) => parseInt(v.priceCents))
+    );
+
+    if (oldMinPrice !== null && newMinPrice < oldMinPrice && process.env.RESEND_API_KEY) {
+      const subscribers = await prisma.newsletterSubscriber.findMany();
+
+      if (subscribers.length > 0) {
+        for (const subscriber of subscribers) {
+          await resend.emails.send({
+            from: "MyGesp <onboarding@resend.dev>",
+            to: subscriber.email,
+            subject: `Sconto su ${body.name}`,
+            html: `
+              <h2>${body.name} ora costa meno</h2>
+              <p>Prezzo precedente: €${(oldMinPrice / 100).toFixed(2)}</p>
+              <p>Nuovo prezzo: €${(newMinPrice / 100).toFixed(2)}</p>
+              <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/prodotto/${body.slug}">Vai al prodotto</a></p>
+            `,
+          });
+        }
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
@@ -63,6 +96,7 @@ export async function DELETE(
 
   try {
     await prisma.variant.deleteMany({ where: { productId: id } });
+    await prisma.review.deleteMany({ where: { productId: id } });
     await prisma.product.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (err) {
