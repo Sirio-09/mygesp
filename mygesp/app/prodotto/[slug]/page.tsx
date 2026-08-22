@@ -40,21 +40,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound()
   }
 
-  // Calcolo stock totale
   const totalStock = product.variants.reduce((acc: number, v: any) => acc + (v.stock || 0), 0)
   const isAvailable = totalStock > 0
 
-  // Calcolo prezzo e sconti
-  const minPriceCents = product.variants.length > 0
-    ? Math.min(...product.variants.map((v: any) => v.priceCents))
-    : 0
-  const isDiscounted = !!(product.discountPercent && product.discountPercent > 0)
-  const fullPriceEuro = (minPriceCents / 100).toFixed(2)
-  const discountedPriceEuro = isDiscounted
-    ? ((minPriceCents * (100 - product.discountPercent!)) / 10000).toFixed(2)
-    : fullPriceEuro
-
-  // Parsing descrizione a blocchi
   let descriptionBlocks: Array<{ title?: string; text: string }> = []
   if (Array.isArray(product.descriptionBlocks)) {
     descriptionBlocks = product.descriptionBlocks as any
@@ -81,12 +69,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {/* MAIN PRODUCT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-        {/* GALLERIA IMMAGINI (7 colonne) */}
+        {/* GALLERIA IMMAGINI */}
         <div className="lg:col-span-7">
           <ProductGallery images={product.images || []} productName={product.name} />
         </div>
 
-        {/* DETTAGLI D'ACQUISTO (5 colonne) */}
+        {/* DETTAGLI D'ACQUISTO */}
         <div className="lg:col-span-5 space-y-6">
           <div>
             <span className="inline-block px-2.5 py-1 bg-paper-warm border border-line text-soil font-bold text-xs uppercase rounded mb-2">
@@ -97,7 +85,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </h1>
           </div>
 
-          {/* BOX DISPONIBILITÀ & TEST */}
+          {/* DISPONIBILITÀ */}
           <div className="flex flex-wrap items-center gap-3 text-xs font-semibold">
             {isAvailable ? (
               <span className="px-2.5 py-1 bg-grass/10 border border-grass/30 text-grass-deep rounded-md flex items-center gap-1">
@@ -114,27 +102,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </span>
           </div>
 
-          {/* PREZZO E SCONTO */}
-          <div className="p-4 bg-paper-warm/50 border border-line rounded-lg space-y-1">
-            <div className="flex items-baseline gap-3">
-              {isDiscounted ? (
-                <>
-                  <span className="text-3xl font-black text-soil">€{discountedPriceEuro}</span>
-                  <span className="text-lg text-ink-soft line-through">€{fullPriceEuro}</span>
-                  <span className="px-2 py-0.5 bg-soil text-paper font-bold text-xs rounded uppercase">
-                    Risparmi il {product.discountPercent}%
-                  </span>
-                </>
-              ) : (
-                <span className="text-3xl font-black text-ink">€{fullPriceEuro}</span>
-              )}
-            </div>
-            <p className="text-[11px] text-ink-soft uppercase font-medium">Prezzo IVA inclusa</p>
-          </div>
-
           {/* CARTELLINI TECNICI SPECIFICI */}
           {(product.waterColumn !== null || product.minTemp !== null) && (
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
               {product.waterColumn !== null && (
                 <div className="p-3 bg-paper border border-line rounded-md text-center">
                   <span className="block text-[10px] font-bold uppercase text-ink-soft">Colonna d'Acqua</span>
@@ -150,15 +120,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           )}
 
-          {/* SELETTORE TAGLIE & PULSANTE ACQUISTO */}
-          <div className="pt-2 border-t border-line">
-            <AddToCartButton
-              variants={product.variants as any}
-              productSlug={product.slug}
-              productName={product.name}
-              discountPercent={product.discountPercent ?? 0}
-            />
-          </div>
+          {/* PREZZO DINAMICO, SELEZIONE TAGLIA E BOTTONE D'ACQUISTO */}
+          <AddToCartButton
+            variants={product.variants as any}
+            productSlug={product.slug}
+            productName={product.name}
+            discountPercent={product.discountPercent ?? 0}
+            image={product.images && product.images[0] ? product.images[0] : undefined}
+          />
 
           {/* GARANZIE CRO SOTTO CTA */}
           <div className="space-y-2 pt-4 border-t border-line text-xs text-ink-soft">
@@ -178,7 +147,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      {/* DESCRIZIONE DETTAGLIATA A BLOCCHI */}
+      {/* DESCRIZIONE DETTAGLIATA */}
       {descriptionBlocks.length > 0 && (
         <section className="bg-paper border border-line rounded-xl p-6 sm:p-8 space-y-6">
           <h2 className="text-xl font-black text-ink uppercase tracking-tight border-b border-line pb-3">

@@ -1,119 +1,160 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useCartStore } from "@/lib/cart-store";
+'use client'
 
-type Variant = {
-  id: string;
-  size: string;
-  priceCents: number;
-  stock: number;
-};
+import { useState } from 'react'
+import { useCartStore } from '@/lib/cart-store'
+
+interface Variant {
+  id: string
+  size: string
+  color?: string | null
+  priceCents: number
+  stock: number
+}
+
+interface AddToCartButtonProps {
+  variants: Variant[]
+  productSlug: string
+  productName: string
+  discountPercent?: number
+  image?: string
+}
 
 export default function AddToCartButton({
   variants,
   productSlug,
   productName,
-  discountPercent,
-}: {
-  variants: Variant[];
-  productSlug: string;
-  productName: string;
-  discountPercent?: number | null;
-}) {
-  const router = useRouter();
-  const [selectedSize, setSelectedSize] = useState(variants[0]?.size ?? "");
-  const [quantity, setQuantity] = useState(1);
-  const addItem = useCartStore((state) => state.addItem);
+  discountPercent = 0,
+  image,
+}: AddToCartButtonProps) {
+  const { addItem } = useCartStore()
 
-  const selectedVariant = variants.find((v) => v.size === selectedSize);
-  const finalPriceCents = selectedVariant && discountPercent
-    ? Math.round(selectedVariant.priceCents * (1 - discountPercent / 100))
-    : selectedVariant?.priceCents;
+  const [selectedVariantId, setSelectedVariantId] = useState<string>(
+    variants[0]?.id || ''
+  )
+  const [quantity, setQuantity] = useState<number>(1)
+  const [added, setAdded] = useState(false)
 
-  const handleAdd = () => {
-    if (!selectedVariant) return;
+  const selectedVariant = variants.find((v) => v.id === selectedVariantId) || variants[0]
+
+  const unitPriceCents = selectedVariant ? selectedVariant.priceCents : 0
+  const hasDiscount = discountPercent > 0
+  
+  const discountedUnitPriceCents = hasDiscount
+    ? Math.round((unitPriceCents * (100 - discountPercent)) / 100)
+    : unitPriceCents
+
+  const totalPriceCents = discountedUnitPriceCents * quantity
+  const fullTotalPriceCents = unitPriceCents * quantity
+
+  const formattedTotalPrice = (totalPriceCents / 100).toFixed(2)
+  const formattedFullTotalPrice = (fullTotalPriceCents / 100).toFixed(2)
+
+  const handleAddToCart = () => {
+    if (!selectedVariant) return
+
     addItem({
       variantId: selectedVariant.id,
       productSlug,
       productName,
       size: selectedVariant.size,
-      priceCents: finalPriceCents ?? selectedVariant.priceCents,
+      color: selectedVariant.color ?? undefined,
+      priceCents: discountedUnitPriceCents,
       quantity,
-    });
-    router.push("/carrello");
-  };
+      image,
+    })
+
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
+  }
 
   return (
-    <div>
-      <div className="mb-6">
-        <div className="text-sm font-semibold text-ink mb-2">Taglia</div>
-        <div className="flex gap-2">
-          {variants.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setSelectedSize(v.size)}
-              disabled={v.stock === 0}
-              className={`border px-4 py-2 text-sm transition-colors ${
-                selectedSize === v.size
-                  ? "border-grass-deep text-grass-deep"
-                  : "border-line hover:border-grass-deep hover:text-grass-deep"
-              } ${v.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
-            >
-              {v.size}
-              {v.stock === 0 && " (esaurito)"}
-            </button>
-          ))}
+    <div className="space-y-6">
+      {/* Prezzo in alto dinamico con dicitura IVA inclusa */}
+      <div className="p-4 bg-paper-warm/50 border border-line rounded-lg space-y-1">
+        <div className="flex items-baseline gap-3">
+          {hasDiscount ? (
+            <>
+              <span className="text-3xl font-black text-soil">€{formattedTotalPrice}</span>
+              <span className="text-lg text-ink-soft line-through">€{formattedFullTotalPrice}</span>
+              <span className="px-2 py-0.5 bg-soil text-paper font-bold text-xs rounded uppercase">
+                Risparmi il {discountPercent}%
+              </span>
+            </>
+          ) : (
+            <span className="text-3xl font-black text-ink">€{formattedTotalPrice}</span>
+          )}
         </div>
+        <p className="text-[11px] text-ink-soft uppercase font-medium">
+          Prezzo IVA inclusa {quantity > 1 ? `(${quantity} pz)` : ''}
+        </p>
       </div>
 
-      <div className="mb-6">
-        <div className="text-sm font-semibold text-ink mb-2">Quantità</div>
-        <div className="flex items-center border border-line w-fit">
+      {/* Selezione Taglia */}
+      {variants.length > 0 && (
+        <div className="space-y-2">
+          <label className="block text-xs font-bold uppercase text-ink">
+            Seleziona Taglia:
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((v) => {
+              const isSelected = v.id === selectedVariantId
+              const isOutOfStock = v.stock <= 0
+
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  disabled={isOutOfStock}
+                  onClick={() => setSelectedVariantId(v.id)}
+                  className={`px-4 py-2 text-xs font-bold rounded-md border transition-all ${
+                    isSelected
+                      ? 'border-grass bg-grass/10 text-grass-deep shadow-xs'
+                      : 'border-line bg-paper text-ink hover:border-ink'
+                  } ${isOutOfStock ? 'opacity-40 cursor-not-allowed line-through' : ''}`}
+                >
+                  {v.size} {v.color ? `- ${v.color}` : ''}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Selettore quantità e pulsante d'acquisto senza prezzo */}
+      <div className="flex items-center gap-4 pt-2">
+        <div className="flex items-center border border-line rounded-md bg-paper h-12">
           <button
             type="button"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
+            className="px-3 h-full text-ink hover:bg-paper-warm font-bold text-base"
           >
-            −
+            -
           </button>
-          <span className="w-10 text-center text-sm font-medium">{quantity}</span>
+          <span className="px-4 h-full flex items-center font-bold text-sm border-x border-line">
+            {quantity}
+          </span>
           <button
             type="button"
-            onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))}
-            className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
+            onClick={() =>
+              setQuantity((q) =>
+                selectedVariant ? Math.min(selectedVariant.stock, q + 1) : q + 1
+              )
+            }
+            className="px-3 h-full text-ink hover:bg-paper-warm font-bold text-base"
           >
             +
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={!selectedVariant || selectedVariant.stock <= 0}
+          className="flex-1 h-12 bg-grass hover:bg-grass-deep text-paper font-bold text-xs uppercase tracking-wider rounded-md transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span>{added ? '✓ Aggiunto al Carrello!' : 'Aggiungi al Carrello'}</span>
+        </button>
       </div>
-
-      {selectedVariant && (
-        <div className="flex items-baseline gap-3 mb-6">
-          {discountPercent ? (
-            <>
-              <span className="text-line line-through text-base">
-                €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
-              </span>
-              <span className="text-soil-deep text-2xl font-bold">
-                €{(((finalPriceCents ?? 0) * quantity) / 100).toFixed(2)}
-              </span>
-            </>
-          ) : (
-            <span className="text-soil-deep text-2xl font-bold">
-              €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
-            </span>
-          )}
-        </div>
-      )}
-
-      <button
-        onClick={handleAdd}
-        disabled={!selectedVariant || selectedVariant.stock === 0}
-        className="bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base uppercase tracking-wide py-4 px-8 w-full md:w-auto disabled:opacity-40 transition-colors"
-      >
-        Aggiungi al carrello
-      </button>
     </div>
-  );
+  )
 }
