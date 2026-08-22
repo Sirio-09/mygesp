@@ -15,7 +15,6 @@ interface AddToCartButtonProps {
   productSlug: string
   productName: string
   discountPercent?: number
-  image?: string
 }
 
 export default function AddToCartButton({
@@ -23,7 +22,6 @@ export default function AddToCartButton({
   productSlug,
   productName,
   discountPercent = 0,
-  image,
 }: AddToCartButtonProps) {
   const { addItem } = useCartStore()
 
@@ -37,7 +35,7 @@ export default function AddToCartButton({
 
   const unitPriceCents = selectedVariant ? selectedVariant.priceCents : 0
   const hasDiscount = discountPercent > 0
-  
+
   const discountedUnitPriceCents = hasDiscount
     ? Math.round((unitPriceCents * (100 - discountPercent)) / 100)
     : unitPriceCents
@@ -58,7 +56,6 @@ export default function AddToCartButton({
       size: selectedVariant.size,
       priceCents: discountedUnitPriceCents,
       quantity,
-      image,
     })
 
     setAdded(true)
@@ -67,7 +64,7 @@ export default function AddToCartButton({
 
   return (
     <div className="space-y-6">
-      {/* Prezzo in alto dinamico con dicitura IVA inclusa */}
+      {/* Box Prezzo Dinamico in Alto con IVA Inclusa */}
       <div className="p-4 bg-paper-warm/50 border border-line rounded-lg space-y-1">
         <div className="flex items-baseline gap-3">
           {hasDiscount ? (
@@ -118,7 +115,7 @@ export default function AddToCartButton({
         </div>
       )}
 
-      {/* Selettore quantità e pulsante d'acquisto senza prezzo */}
+      {/* Quantità e Bottone d'Acquisto senza Prezzo */}
       <div className="flex items-center gap-4 pt-2">
         <div className="flex items-center border border-line rounded-md bg-paper h-12">
           <button

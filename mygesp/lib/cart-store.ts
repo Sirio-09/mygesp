@@ -8,7 +8,6 @@ export interface CartItem {
   size: string
   priceCents: number
   quantity: number
-  image?: string
 }
 
 interface CartStore {
@@ -16,7 +15,6 @@ interface CartStore {
   addItem: (item: CartItem) => void
   removeItem: (variantId: string) => void
   updateQuantity: (variantId: string, quantity: number) => void
-  clearCart: () => void
 }
 
 export const useCartStore = create<CartStore>()(
@@ -48,7 +46,6 @@ export const useCartStore = create<CartStore>()(
                   item.variantId === variantId ? { ...item, quantity } : item
                 ),
         })),
-      clearCart: () => set({ items: [] }),
     }),
     {
       name: 'cart-storage',
