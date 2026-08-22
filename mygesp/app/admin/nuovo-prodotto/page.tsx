@@ -8,7 +8,9 @@ export default function NuovoProdotto() {
   const [form, setForm] = useState({
     name: "", slug: "", brand: "", category: "",
     waterColumn: "", minTemp: "",
+    discountPercent: "", discountUntil: "",
   })
+  const [featured, setFeatured] = useState(false)
   const [descriptionBlocks, setDescriptionBlocks] = useState([{ title: "", text: "" }])
   const [variants, setVariants] = useState([{ size: "", sku: "", priceCents: "", stock: "" }])
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -82,7 +84,7 @@ export default function NuovoProdotto() {
     const res = await fetch("/api/admin/prodotti", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, images: uploadedUrls, variants, descriptionBlocks }),
+      body: JSON.stringify({ ...form, images: uploadedUrls, variants, descriptionBlocks, featured }),
     })
 
     setUploading(false)
@@ -157,7 +159,28 @@ export default function NuovoProdotto() {
             <input name="minTemp" value={form.minTemp} onChange={handleChange}
               className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-ink mb-1">Sconto (%)</label>
+            <input name="discountPercent" value={form.discountPercent} onChange={handleChange}
+              placeholder="es. 20"
+              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-ink mb-1">Sconto valido fino al</label>
+            <input type="date" name="discountUntil" value={form.discountUntil} onChange={handleChange}
+              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
+          </div>
         </div>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+            className="w-4 h-4 accent-grass-deep"
+          />
+          <span className="text-sm font-semibold text-ink">Metti in evidenza in homepage</span>
+        </label>
 
         <div>
           <div className="flex items-center justify-between mb-3">

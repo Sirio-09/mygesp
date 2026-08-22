@@ -14,10 +14,12 @@ export default function AddToCartButton({
   variants,
   productSlug,
   productName,
+  discountPercent,
 }: {
   variants: Variant[];
   productSlug: string;
   productName: string;
+  discountPercent?: number | null;
 }) {
   const router = useRouter();
   const [selectedSize, setSelectedSize] = useState(variants[0]?.size ?? "");
@@ -25,6 +27,9 @@ export default function AddToCartButton({
   const addItem = useCartStore((state) => state.addItem);
 
   const selectedVariant = variants.find((v) => v.size === selectedSize);
+  const finalPriceCents = selectedVariant && discountPercent
+    ? Math.round(selectedVariant.priceCents * (1 - discountPercent / 100))
+    : selectedVariant?.priceCents;
 
   const handleAdd = () => {
     if (!selectedVariant) return;
@@ -33,7 +38,7 @@ export default function AddToCartButton({
       productSlug,
       productName,
       size: selectedVariant.size,
-      priceCents: selectedVariant.priceCents,
+      priceCents: finalPriceCents ?? selectedVariant.priceCents,
       quantity,
     });
     router.push("/carrello");
@@ -84,8 +89,21 @@ export default function AddToCartButton({
       </div>
 
       {selectedVariant && (
-        <div className="text-soil-deep text-2xl font-bold mb-6">
-          €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
+        <div className="flex items-baseline gap-3 mb-6">
+          {discountPercent ? (
+            <>
+              <span className="text-line line-through text-base">
+                €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
+              </span>
+              <span className="text-soil-deep text-2xl font-bold">
+                €{(((finalPriceCents ?? 0) * quantity) / 100).toFixed(2)}
+              </span>
+            </>
+          ) : (
+            <span className="text-soil-deep text-2xl font-bold">
+              €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
+            </span>
+          )}
         </div>
       )}
 

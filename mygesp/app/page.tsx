@@ -3,7 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default async function Home() {
-  const featured = await prisma.product.findMany({
+  const featuredProducts = await prisma.product.findMany({
+    where: { featured: true },
     take: 8,
     include: { variants: true },
     orderBy: { createdAt: "desc" },
@@ -83,55 +84,57 @@ export default async function Home() {
       </section>
 
       {/* prodotti in evidenza */}
-      <section className="bg-paper-warm py-14 sm:py-20">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex items-end justify-between mb-8 sm:mb-10">
-            <div>
-              <p className="text-grass-deep text-xs sm:text-sm font-bold uppercase tracking-wide mb-2">
-                I più scelti
-              </p>
-              <h2 className="text-ink font-extrabold text-2xl sm:text-3xl">
-                Uragan-Tex &amp; Bisont
-              </h2>
+      {featuredProducts.length > 0 && (
+        <section className="bg-paper-warm py-14 sm:py-20">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
+            <div className="flex items-end justify-between mb-8 sm:mb-10">
+              <div>
+                <p className="text-grass-deep text-xs sm:text-sm font-bold uppercase tracking-wide mb-2">
+                  I più scelti
+                </p>
+                <h2 className="text-ink font-extrabold text-2xl sm:text-3xl">
+                  Uragan-Tex &amp; Bisont
+                </h2>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {featuredProducts.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/prodotto/${product.slug}`}
+                  className="bg-white border border-line hover:border-grass-deep hover:shadow-md transition-all"
+                >
+                  <div className="aspect-square bg-line/40 relative overflow-hidden">
+                    {product.images[0] ? (
+                      <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3">
+                        [nessuna foto]
+                      </div>
+                    )}
+                    {product.waterColumn && (
+                      <span className="absolute top-2 right-2 bg-grass-deep text-white text-[10px] font-bold px-2 py-1">
+                        {product.waterColumn}MM
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3 sm:p-4">
+                    <h3 className="text-ink text-sm font-semibold mb-1.5 leading-tight line-clamp-2">
+                      {product.name}
+                    </h3>
+                    {product.variants[0] && (
+                      <span className="text-soil-deep font-bold text-sm sm:text-base">
+                        €{(product.variants[0].priceCents / 100).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-            {featured.map((product) => (
-              <Link
-                key={product.id}
-                href={`/prodotto/${product.slug}`}
-                className="bg-white border border-line hover:border-grass-deep hover:shadow-md transition-all"
-              >
-                <div className="aspect-square bg-line/40 relative overflow-hidden">
-                  {product.images[0] ? (
-                    <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3">
-                      [nessuna foto]
-                    </div>
-                  )}
-                  {product.waterColumn && (
-                    <span className="absolute top-2 right-2 bg-grass-deep text-white text-[10px] font-bold px-2 py-1">
-                      {product.waterColumn}MM
-                    </span>
-                  )}
-                </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="text-ink text-sm font-semibold mb-1.5 leading-tight line-clamp-2">
-                    {product.name}
-                  </h3>
-                  {product.variants[0] && (
-                    <span className="text-soil-deep font-bold text-sm sm:text-base">
-                      €{(product.variants[0].priceCents / 100).toFixed(2)}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* perché sceglierci */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-14 sm:py-20">

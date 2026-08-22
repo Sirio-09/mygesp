@@ -25,6 +25,9 @@ model Product {
   waterColumn       Int?
   minTemp           Int?
   reviews           Review[]
+  featured          Boolean   @default(false)
+  discountPercent   Int?
+  discountUntil     DateTime?
   createdAt         DateTime  @default(now())
 }
 

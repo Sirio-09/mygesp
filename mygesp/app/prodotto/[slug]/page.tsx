@@ -57,6 +57,8 @@ export default async function ProductPage({
   }
 
   const descriptionBlocks = product.descriptionBlocks as unknown as DescriptionBlock[];
+  const isDiscountActive =
+    product.discountPercent && product.discountUntil && new Date(product.discountUntil) > new Date();
 
   return (
     <main className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-12">
@@ -68,8 +70,15 @@ export default async function ProductPage({
         <ProductGallery images={product.images} productName={product.name} />
 
         <div>
-          <div className="text-grass-deep text-xs font-bold uppercase tracking-wide mb-2">
-            {product.brand}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-grass-deep text-xs font-bold uppercase tracking-wide">
+              {product.brand}
+            </span>
+            {isDiscountActive && (
+              <span className="bg-soil-deep text-white text-[10px] font-bold px-2 py-0.5">
+                -{product.discountPercent}%
+              </span>
+            )}
           </div>
           <h1 className="text-ink font-extrabold text-2xl sm:text-3xl mb-4">
             {product.name}
@@ -111,6 +120,7 @@ export default async function ProductPage({
             variants={product.variants}
             productSlug={product.slug}
             productName={product.name}
+            discountPercent={isDiscountActive ? product.discountPercent : null}
           />
 
           <div className="mt-8 pt-6 border-t border-dashed border-line text-sm text-ink-soft space-y-2">

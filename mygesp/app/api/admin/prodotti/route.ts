@@ -22,6 +22,9 @@ export async function POST(req: Request) {
         images: body.images ?? [],
         waterColumn: body.waterColumn ? parseInt(body.waterColumn) : null,
         minTemp: body.minTemp ? parseInt(body.minTemp) : null,
+        featured: body.featured ?? false,
+        discountPercent: body.discountPercent ? parseInt(body.discountPercent) : null,
+        discountUntil: body.discountUntil ? new Date(body.discountUntil) : null,
         variants: {
           create: body.variants.map((v: { size: string; sku: string; priceCents: string; stock: string }) => ({
             size: v.size,
