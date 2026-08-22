@@ -6,7 +6,6 @@ import { useCartStore } from '@/lib/cart-store'
 interface Variant {
   id: string
   size: string
-  color?: string | null
   priceCents: number
   stock: number
 }
@@ -57,7 +56,6 @@ export default function AddToCartButton({
       productSlug,
       productName,
       size: selectedVariant.size,
-      color: selectedVariant.color ?? undefined,
       priceCents: discountedUnitPriceCents,
       quantity,
       image,
@@ -112,7 +110,7 @@ export default function AddToCartButton({
                       : 'border-line bg-paper text-ink hover:border-ink'
                   } ${isOutOfStock ? 'opacity-40 cursor-not-allowed line-through' : ''}`}
                 >
-                  {v.size} {v.color ? `- ${v.color}` : ''}
+                  {v.size}
                 </button>
               )
             })}

@@ -6,7 +6,6 @@ export interface CartItem {
   productSlug: string
   productName: string
   size: string
-  color?: string
   priceCents: number
   quantity: number
   image?: string
