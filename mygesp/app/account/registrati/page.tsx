@@ -1,111 +1,89 @@
-'use client'
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
 
-import { useState } from 'react'
-import Link from 'next/link'
+export default function RegistratiPage() {
+  const router = useRouter();
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  })
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Logica di registrazione
-  }
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Errore durante la registrazione");
+      setLoading(false);
+      return;
+    }
+
+    const result = await signIn("customer-login", {
+      email: form.email,
+      password: form.password,
+      redirect: false,
+    });
+
+    if (result?.error) {
+      setError("Registrazione riuscita, ma login automatico fallito. Prova ad accedere manualmente.");
+      setLoading(false);
+      return;
+    }
+
+    router.push("/account/ordini");
+  };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-paper border border-line rounded-xl p-6 sm:p-8 space-y-6 shadow-sm">
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-black uppercase text-ink tracking-tight">
-            Crea un Account
-          </h1>
-          <p className="text-xs text-ink-soft uppercase tracking-wider">
-            Compila i campi per registrarti alla piattaforma
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase text-ink">
-              Nome Completo
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Mario Rossi"
-              className="w-full h-11 px-3 bg-paper border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase text-ink">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="nome@esempio.it"
-              className="w-full h-11 px-3 bg-paper border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase text-ink">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="••••••••"
-              className="w-full h-11 px-3 bg-paper border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase text-ink">
-              Conferma Password
-            </label>
-            <input
-              type="password"
-              required
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              placeholder="••••••••"
-              className="w-full h-11 px-3 bg-paper border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full h-12 bg-grass hover:bg-grass-deep text-paper font-bold text-xs uppercase tracking-wider rounded-md transition-all shadow-md mt-2"
-          >
-            Crea Account
-          </button>
-        </form>
-
-        <div className="relative border-t border-line pt-6 text-center space-y-3">
-          <p className="text-xs text-ink-soft uppercase tracking-wider">
-            Hai già un account?
-          </p>
-
-          <Link
-            href="/login"
-            className="w-full h-12 border-2 border-ink hover:bg-paper-warm text-ink font-bold text-xs uppercase tracking-wider rounded-md transition-all flex items-center justify-center"
-          >
-            Accedi
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
+    <main className="max-w-[400px] mx-auto px-4 sm:px-8 py-16">
+      <h1 className="text-ink font-extrabold text-2xl mb-6">Crea un account</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <input
+          placeholder="Nome"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none"
+          required
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3 disabled:opacity-50 transition-colors"
+        >
+          {loading ? "Registrazione in corso..." : "Registrati"}
+        </button>
+        {error && <p className="text-soil-deep text-sm">{error}</p>}
+      </form>
+      <p className="text-sm text-ink-soft mt-4">
+        Hai già un account?{" "}
+        <Link href="/account/login" className="text-grass-deep hover:underline">
+          Accedi
+        </Link>
+      </p>
+    </main>
+  );
 }

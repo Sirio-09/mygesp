@@ -1,90 +1,67 @@
-'use client'
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
 
-import { useState } from 'react'
-import Link from 'next/link'
+export default function LoginClientePage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Logica di autenticazione
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const result = await signIn("customer-login", { email, password, redirect: false });
+    if (result?.error) {
+      setError("Credenziali non valide");
+      setLoading(false);
+    } else {
+      router.push("/account/ordini");
+    }
+  };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-paper border border-line rounded-xl p-6 sm:p-8 space-y-6 shadow-sm">
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-black uppercase text-ink tracking-tight">
-            Accedi al tuo Account
-          </h1>
-          <p className="text-xs text-ink-soft uppercase tracking-wider">
-            Inserisci le tue credenziali per proseguire
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase text-ink">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="nome@esempio.it"
-              className="w-full h-11 px-3 bg-paper border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-xs font-bold uppercase text-ink">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full h-11 px-3 bg-paper border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass"
-            />
-          </div>
-
-          {/* Bottone Password Dimenticata */}
-          <div className="text-right">
-            <Link
-              href="/recupero-password"
-              className="text-xs font-bold text-ink-soft hover:text-grass transition-colors uppercase tracking-wider"
-            >
-              Ho dimenticato la password
-            </Link>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full h-12 bg-grass hover:bg-grass-deep text-paper font-bold text-xs uppercase tracking-wider rounded-md transition-all shadow-md"
-          >
-            Accedi
-          </button>
-        </form>
-
-        <div className="relative border-t border-line pt-6 text-center space-y-3">
-          <p className="text-xs text-ink-soft uppercase tracking-wider">
-            Non hai ancora un account?
-          </p>
-          
-          {/* Bottone Registrati */}
-          <Link
-            href="/registrati"
-            className="w-full h-12 border-2 border-ink hover:bg-paper-warm text-ink font-bold text-xs uppercase tracking-wider rounded-md transition-all flex items-center justify-center"
-          >
-            Registrati
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
+    <main className="max-w-[400px] mx-auto px-4 sm:px-8 py-16">
+      <h1 className="text-ink font-extrabold text-2xl mb-6">Accedi</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none"
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3 disabled:opacity-50 transition-colors"
+        >
+          {loading ? "Verifica in corso..." : "Accedi"}
+        </button>
+        {error && <p className="text-soil-deep text-sm">{error}</p>}
+      </form>
+      <p className="text-sm text-ink-soft mt-4">
+        <Link href="/account/password-dimenticata" className="text-grass-deep hover:underline">
+          Password dimenticata?
+        </Link>
+      </p>
+      <p className="text-sm text-ink-soft mt-2">
+        Non hai un account?{" "}
+        <Link href="/account/registrati" className="text-grass-deep hover:underline">
+          Registrati
+        </Link>
+      </p>
+    </main>
+  );
 }

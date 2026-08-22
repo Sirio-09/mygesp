@@ -1,62 +1,36 @@
-'use client'
-
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useCartStore } from '@/lib/cart-store'
+import Link from "next/link";
+import CartIcon from "./CartIcon";
+import AccountMenu from "./AccountMenu";
+import SearchBar from "./SearchBar";
+import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
-  const [mounted, setMounted] = useState(false)
-  const items = useCartStore((state) => state.items)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const cartCount = mounted
-    ? items.reduce((acc, item) => acc + (item.quantity || 0), 0)
-    : 0
-
   return (
-    <header className="sticky top-0 z-50 bg-paper border-b border-line shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" className="font-black text-xl tracking-tight text-ink uppercase">
-          MyGesp <span className="text-grass">Pro</span>
-        </Link>
+    <header className="sticky top-0 z-40 bg-paper border-b border-line">
+      <div className="bg-grass-deep text-white text-[11px] sm:text-xs text-center py-1.5 px-4">
+        Spedizione gratuita sopra i 99€ · <span className="hidden sm:inline">consegna in tutta Italia e in Europa</span>
+      </div>
 
-        {/* Navigazione Principale */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-ink">
-          <Link href="/prodotti" className="hover:text-grass transition-colors">
-            Tutti i Prodotti
-          </Link>
-          <Link href="/categoria/abbigliamento" className="hover:text-grass transition-colors">
-            Abbigliamento
-          </Link>
-          <Link href="/categoria/stivali" className="hover:text-grass transition-colors">
-            Stivali Termici
-          </Link>
-        </nav>
-
-        {/* Azioni Utente e Carrello */}
-        <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="text-xs font-bold uppercase tracking-wider text-ink hover:text-grass transition-colors"
-          >
-            Accedi
-          </Link>
-
-          <Link
-            href="/carrello"
-            className="relative px-3 py-2 bg-grass/10 border border-grass/30 rounded-md text-grass-deep font-bold text-xs uppercase tracking-wider flex items-center gap-2 hover:bg-grass hover:text-paper transition-all"
-          >
-            <span>Carrello</span>
-            <span className="bg-grass text-paper font-black text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-              {cartCount}
-            </span>
+      <nav className="w-full px-4 sm:px-6 lg:px-10 h-16 sm:h-20 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <MobileMenu />
+          <Link href="/" className="text-ink text-xl sm:text-2xl font-extrabold tracking-tight">
+            MY<span className="text-grass-deep">GESP</span>
           </Link>
         </div>
-      </div>
+
+        <ul className="hidden lg:flex items-center gap-8">
+          <li><Link href="/categoria/abbigliamento" className="text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors">Abbigliamento</Link></li>
+          <li><Link href="/categoria/stivali" className="text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors">Stivali</Link></li>
+          <li><Link href="/categoria/attrezzature" className="text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors">Attrezzature</Link></li>
+        </ul>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <SearchBar />
+          <AccountMenu />
+          <CartIcon />
+        </div>
+      </nav>
     </header>
-  )
+  );
 }
