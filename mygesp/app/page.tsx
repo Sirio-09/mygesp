@@ -57,124 +57,88 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* gamma prodotti (NUOVA SEZIONE NUOVA E MODERNA) */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6 border-b border-line/60 pb-8">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-grass-deep/10 text-grass-deep text-xs font-bold uppercase tracking-widest mb-3">
-              <span>Collezioni Tecniche</span>
-            </div>
-            <h2 className="text-ink font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight">
-              Equipaggiamento per il lavoro vero
-            </h2>
-          </div>
-          <p className="text-ink-soft text-sm sm:text-base max-w-md font-normal leading-relaxed">
-            Seleziona la tua categoria per scoprire i prodotti testati in condizioni estreme sul campo e in stalla.
+      {/* gamma prodotti (VERSIONE MINIMALISTA E PULITA) */}
+      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-20">
+        <div className="mb-10 sm:mb-12">
+          <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-2">
+            Gamma prodotti
           </p>
+          <h2 className="text-ink font-extrabold text-2xl sm:text-3xl tracking-tight">
+            Esplora per categoria
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {/* Card 1 - Abbigliamento */}
           <Link
             href="/categoria/abbigliamento"
-            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 hover:border-grass-deep hover:shadow-2xl hover:-translate-y-1.5 overflow-hidden"
+            className="group bg-white border border-line p-7 sm:p-8 flex flex-col justify-between transition-colors duration-200 hover:border-grass-deep"
           >
-            {/* Barra superiore colorata in hover */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-grass-deep transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-
             <div>
-              <div className="flex items-center justify-between mb-8">
-                <span className="font-mono text-xs font-bold tracking-widest text-grass-deep bg-grass-deep/10 px-3 py-1.5 rounded-md">
-                  01 / IMPERMEABILE
-                </span>
-                <div className="w-12 h-12 rounded-xl bg-paper-warm flex items-center justify-center text-grass-deep group-hover:bg-grass-deep group-hover:text-white transition-colors duration-300 shadow-sm">
-                  {/* Icona Giacca / Mantella */}
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                  </svg>
-                </div>
+              <div className="w-11 h-11 rounded-lg bg-paper-warm flex items-center justify-center text-grass-deep mb-6">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 009-9c0-4.97-4.03-9-9-9s-9 4.03-9 9a9 9 0 009 9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18" />
+                </svg>
               </div>
-
-              <h3 className="text-ink font-bold text-xl sm:text-2xl mb-3 group-hover:text-grass-deep transition-colors">
-                Abbigliamento Tecnico
+              <h3 className="text-ink font-bold text-lg mb-2 group-hover:text-grass-deep transition-colors">
+                Abbigliamento impermeabile
               </h3>
               <p className="text-ink-soft text-sm leading-relaxed mb-8">
-                Giacche ad alta tenacità, salopette e mantelle anti-strappo traspiranti e 100% impermeabili.
+                Giacche, salopette e mantelle ad alta tenacità, 100% impermeabili.
               </p>
             </div>
-
-            <div className="flex items-center justify-between text-sm font-bold text-ink group-hover:text-grass-deep transition-colors pt-4 border-t border-line/60">
-              <span>Esplora la gamma</span>
-              <span className="transform group-hover:translate-x-2 transition-transform duration-200">→</span>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-grass-deep tracking-wider uppercase">
+              <span>Scopri i capi</span>
+              <span>→</span>
             </div>
           </Link>
 
           {/* Card 2 - Stivali */}
           <Link
             href="/categoria/stivali"
-            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 hover:border-grass-deep hover:shadow-2xl hover:-translate-y-1.5 overflow-hidden"
+            className="group bg-white border border-line p-7 sm:p-8 flex flex-col justify-between transition-colors duration-200 hover:border-grass-deep"
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-grass-deep transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-
             <div>
-              <div className="flex items-center justify-between mb-8">
-                <span className="font-mono text-xs font-bold tracking-widest text-grass-deep bg-grass-deep/10 px-3 py-1.5 rounded-md">
-                  02 / CALZATURE
-                </span>
-                <div className="w-12 h-12 rounded-xl bg-paper-warm flex items-center justify-center text-grass-deep group-hover:bg-grass-deep group-hover:text-white transition-colors duration-300 shadow-sm">
-                  {/* Icona Stivale / Protezione */}
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
+              <div className="w-11 h-11 rounded-lg bg-paper-warm flex items-center justify-center text-grass-deep mb-6">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-
-              <h3 className="text-ink font-bold text-xl sm:text-2xl mb-3 group-hover:text-grass-deep transition-colors">
-                Stivali e Calzature Termiche
+              <h3 className="text-ink font-bold text-lg mb-2 group-hover:text-grass-deep transition-colors">
+                Stivali e calzature
               </h3>
               <p className="text-ink-soft text-sm leading-relaxed mb-8">
-                Stivali termici e scarponi da lavoro con isolamento dal freddo e suola ad altissimo grip antiscivolo.
+                Stivali termici e scarponi con isolamento dal freddo e suola antiscivolo.
               </p>
             </div>
-
-            <div className="flex items-center justify-between text-sm font-bold text-ink group-hover:text-grass-deep transition-colors pt-4 border-t border-line/60">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-grass-deep tracking-wider uppercase">
               <span>Scopri i modelli</span>
-              <span className="transform group-hover:translate-x-2 transition-transform duration-200">→</span>
+              <span>→</span>
             </div>
           </Link>
 
           {/* Card 3 - Attrezzature */}
           <Link
             href="/categoria/attrezzature"
-            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 hover:border-grass-deep hover:shadow-2xl hover:-translate-y-1.5 overflow-hidden"
+            className="group bg-white border border-line p-7 sm:p-8 flex flex-col justify-between transition-colors duration-200 hover:border-grass-deep"
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-grass-deep transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-
             <div>
-              <div className="flex items-center justify-between mb-8">
-                <span className="font-mono text-xs font-bold tracking-widest text-grass-deep bg-grass-deep/10 px-3 py-1.5 rounded-md">
-                  03 / STRUMENTI
-                </span>
-                <div className="w-12 h-12 rounded-xl bg-paper-warm flex items-center justify-center text-grass-deep group-hover:bg-grass-deep group-hover:text-white transition-colors duration-300 shadow-sm">
-                  {/* Icona Attrezzatura / Utensili */}
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
+              <div className="w-11 h-11 rounded-lg bg-paper-warm flex items-center justify-center text-grass-deep mb-6">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l5.654-4.654" />
+                </svg>
               </div>
-
-              <h3 className="text-ink font-bold text-xl sm:text-2xl mb-3 group-hover:text-grass-deep transition-colors">
-                Attrezzature e Accessori
+              <h3 className="text-ink font-bold text-lg mb-2 group-hover:text-grass-deep transition-colors">
+                Attrezzature e accessori
               </h3>
               <p className="text-ink-soft text-sm leading-relaxed mb-8">
-                Soluzioni professionali robuste pensate per semplificare il lavoro quotidiano in stalla e sul campo.
+                Accessori e strumenti robusti pensati per il lavoro quotidiano in stalla.
               </p>
             </div>
-
-            <div className="flex items-center justify-between text-sm font-bold text-ink group-hover:text-grass-deep transition-colors pt-4 border-t border-line/60">
-              <span>Vedi le attrezzature</span>
-              <span className="transform group-hover:translate-x-2 transition-transform duration-200">→</span>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-grass-deep tracking-wider uppercase">
+              <span>Vedi attrezzature</span>
+              <span>→</span>
             </div>
           </Link>
         </div>
