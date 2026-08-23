@@ -11,7 +11,10 @@ export default function AccountMenu() {
     return <span className="text-ink text-sm">···</span>;
   }
 
-  if (!session?.user) {
+  // L'account menu privato si attiva SOLO per gli utenti con ruolo "customer"
+  const isCustomer = session?.user?.role === "customer";
+
+  if (!isCustomer) {
     return (
       <Link href="/account/login" className="text-ink text-sm font-medium hover:text-grass-deep">
         Accedi

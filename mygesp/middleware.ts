@@ -8,22 +8,19 @@ export default auth((req) => {
   const mustChangePassword = (req.auth?.user as { mustChangePassword?: boolean })?.mustChangePassword;
   const pathname = req.nextUrl.pathname;
 
-  // Applica il middleware solo alle rotte /admin
   if (!pathname.startsWith("/admin")) return;
 
   const isLoginPage = pathname === "/admin/login";
   const is2faPage = pathname.startsWith("/admin/2fa");
   const isCambiaPasswordPage = pathname === "/admin/cambia-password";
 
-  // 1. UTENTE NON AUTENTICATO
-  if (!isLoggedIn || role !== "admin") {
-    if (isLoginPage) return; // Permetti la visione della pagina di login
-    return NextResponse.redirect(new URL("/admin/login", req.url));
-  }
+  // 1. Se la rotta è /admin/login, PERMETTI SEMPRE la visione della pagina
+  // (permette di richiedere le credenziali ogni volta che si clicca su Area Tecnica)
+  if (isLoginPage) return;
 
-  // 2. UTENTE GIÀ AUTENTICATO SULLA PAGINA DI LOGIN
-  if (isLoginPage) {
-    return NextResponse.redirect(new URL("/admin", req.url));
+  // 2. UTENTE NON AUTENTICATO -> Reindirizza a login
+  if (!isLoggedIn || role !== "admin") {
+    return NextResponse.redirect(new URL("/admin/login", req.url));
   }
 
   // 3. PRIORITÀ 1: OBBLIGO CAMBIO PASSWORD
@@ -31,10 +28,9 @@ export default auth((req) => {
     if (!isCambiaPasswordPage) {
       return NextResponse.redirect(new URL("/admin/cambia-password", req.url));
     }
-    return; // Consenti la permanenza su /admin/cambia-password
+    return;
   }
 
-  // Blocco di sicurezza: se la password non va cambiata, vieta l'accesso a cambia-password
   if (!mustChangePassword && isCambiaPasswordPage) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
@@ -44,10 +40,9 @@ export default auth((req) => {
     if (!is2faPage) {
       return NextResponse.redirect(new URL("/admin/2fa-verify", req.url));
     }
-    return; // Consenti la permanenza sulle pagine 2FA
+    return;
   }
 
-  // Blocco di sicurezza: se 2FA è già verificato, vieta l'accesso alle pagine 2FA
   if (otpVerified && is2faPage) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
