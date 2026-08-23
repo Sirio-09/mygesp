@@ -26,7 +26,10 @@ export async function PUT(
 
   await prisma.admin.update({
     where: { id },
-    data: { password: hashedPassword },
+    data: { 
+      password: hashedPassword,
+      mustChangePassword: true, // L'utente dovrà comunque cambiarla al prossimo accesso
+    },
   });
 
   return NextResponse.json({ success: true });

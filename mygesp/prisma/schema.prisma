@@ -72,13 +72,14 @@ model OrderItem {
 }
 
 model Admin {
-  id          String  @id @default(cuid())
-  username    String  @unique
-  email       String  @unique
-  password    String
-  isManager   Boolean @default(false)
-  totpSecret  String?
-  totpEnabled Boolean @default(false)
+  id                 String  @id @default(cuid())
+  username           String  @unique
+  email              String  @unique
+  password           String
+  isManager          Boolean @default(false)
+  totpSecret         String?
+  totpEnabled        Boolean @default(false)
+  mustChangePassword Boolean @default(false)
 }
 
 model Customer {

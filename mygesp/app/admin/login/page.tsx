@@ -1,11 +1,9 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,15 +26,8 @@ export default function LoginPage() {
       return;
     }
 
-    const sessionRes = await fetch("/api/auth/session");
-    const sessionData = await sessionRes.json();
-    const totpEnabled = sessionData?.user?.totpEnabled;
-
-    if (totpEnabled) {
-      router.push("/admin/2fa-verify");
-    } else {
-      router.push("/admin/2fa-setup");
-    }
+    // Il middleware deciderà se mandare l'utente a cambia-password, 2fa o dashboard
+    window.location.href = "/admin";
   };
 
   return (

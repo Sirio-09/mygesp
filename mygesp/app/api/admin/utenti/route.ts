@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -12,11 +13,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Solo il manager può creare nuovi utenti" }, { status: 403 });
   }
 
-  const { username, email, password } = await req.json();
+  const { username, email } = await req.json();
 
-  if (!username || !email || !password || password.length < 8) {
+  if (!username || !email) {
     return NextResponse.json(
-      { error: "Nome utente, email e password (min. 8 caratteri) sono obbligatori" },
+      { error: "Nome utente ed email sono obbligatori" },
       { status: 400 }
     );
   }
@@ -31,13 +32,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email già registrata come admin" }, { status: 400 });
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  // Genera password casuale di 10 caratteri
+  const tempPassword = crypto.randomBytes(5).toString("hex");
+  const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
   const admin = await prisma.admin.create({
-    data: { username, email, password: hashedPassword },
+    data: {
+      username,
+      email,
+      password: hashedPassword,
+      mustChangePassword: true,
+    },
   });
 
-  return NextResponse.json({ id: admin.id, email: admin.email });
+  return NextResponse.json({
+    id: admin.id,
+    username: admin.username,
+    email: admin.email,
+    tempPassword, // Restituiamo la password in chiaro per mostrarla a schermo al Manager
+  });
 }
 
 export async function GET() {
@@ -47,7 +60,14 @@ export async function GET() {
   }
 
   const admins = await prisma.admin.findMany({
-    select: { id: true, username: true, email: true, totpEnabled: true, isManager: true },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      totpEnabled: true,
+      isManager: true,
+      mustChangePassword: true,
+    },
   });
 
   return NextResponse.json(admins);

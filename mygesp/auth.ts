@@ -3,6 +3,33 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 
+declare module "next-auth" {
+  interface User {
+    role?: string;
+    totpEnabled?: boolean;
+    isManager?: boolean;
+    mustChangePassword?: boolean;
+    otpVerified?: boolean;
+  }
+  interface Session {
+    user: User & {
+      id: string;
+      email: string;
+    };
+  }
+}
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id?: string;
+    role?: string;
+    totpEnabled?: boolean;
+    isManager?: boolean;
+    mustChangePassword?: boolean;
+    otpVerified?: boolean;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -14,7 +41,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
         if (!admin) return null;
 
-        const validPassword = await bcrypt.compare(credentials.password as string, admin.password);
+        const validPassword = await bcrypt.compare(
+          credentials.password as string,
+          admin.password
+        );
         if (!validPassword) return null;
 
         return {
@@ -23,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           role: "admin",
           totpEnabled: admin.totpEnabled,
           isManager: admin.isManager,
+          mustChangePassword: admin.mustChangePassword,
           otpVerified: false,
         };
       },
@@ -35,36 +66,60 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           where: { email: credentials.email as string },
         });
         if (!customer) return null;
-        const valid = await bcrypt.compare(credentials.password as string, customer.password);
+
+        const valid = await bcrypt.compare(
+          credentials.password as string,
+          customer.password
+        );
         if (!valid) return null;
-        return { id: customer.id, email: customer.email, role: "customer" };
+
+        return {
+          id: customer.id,
+          email: customer.email,
+          role: "customer",
+        };
       },
     }),
   ],
   callbacks: {
     jwt: async ({ token, user, trigger, session: updateData }) => {
       if (user) {
-        token.role = (user as { role: string }).role;
         token.id = user.id;
-        if ((user as { role: string }).role === "admin") {
-          token.totpEnabled = (user as { totpEnabled: boolean }).totpEnabled;
-          token.isManager = (user as { isManager: boolean }).isManager;
+        token.role = user.role;
+        if (user.role === "admin") {
+          token.totpEnabled = user.totpEnabled;
+          token.isManager = user.isManager;
+          token.mustChangePassword = user.mustChangePassword;
           token.otpVerified = false;
         }
       }
-      if (trigger === "update" && updateData?.otpVerified) {
-        token.otpVerified = true;
+
+      if (trigger === "update" && updateData) {
+        const newMustChange =
+          updateData.mustChangePassword ?? updateData.user?.mustChangePassword;
+        const newOtpVerified =
+          updateData.otpVerified ?? updateData.user?.otpVerified;
+
+        if (typeof newMustChange === "boolean") {
+          token.mustChangePassword = newMustChange;
+        }
+        if (typeof newOtpVerified === "boolean") {
+          token.otpVerified = newOtpVerified;
+        }
       }
+
       return token;
     },
     session: async ({ session, token }) => {
       if (session.user) {
-        (session.user as { role?: string }).role = token.role as string;
-        (session.user as { id?: string }).id = token.id as string;
+        session.user.id = token.id as string;
+        session.user.role = token.role;
+
         if (token.role === "admin") {
-          (session.user as { totpEnabled?: boolean }).totpEnabled = token.totpEnabled as boolean;
-          (session.user as { isManager?: boolean }).isManager = token.isManager as boolean;
-          (session.user as { otpVerified?: boolean }).otpVerified = token.otpVerified as boolean;
+          session.user.totpEnabled = token.totpEnabled;
+          session.user.isManager = token.isManager;
+          session.user.mustChangePassword = token.mustChangePassword;
+          session.user.otpVerified = token.otpVerified;
         }
       }
       return session;
