@@ -99,38 +99,78 @@ export default async function Home() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {featuredProducts.map((product) => (
-                <Link
-                  key={product.id}
-                  href={`/prodotto/${product.slug}`}
-                  className="bg-white border border-line hover:border-grass-deep hover:shadow-md transition-all"
-                >
-                  <div className="aspect-square bg-line/40 relative overflow-hidden">
-                    {product.images[0] ? (
-                      <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3">
-                        [nessuna foto]
-                      </div>
-                    )}
-                    {product.waterColumn && (
-                      <span className="absolute top-2 right-2 bg-grass-deep text-white text-[10px] font-bold px-2 py-1">
-                        {product.waterColumn}MM
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-3 sm:p-4">
-                    <h3 className="text-ink text-sm font-semibold mb-1.5 leading-tight line-clamp-2">
-                      {product.name}
-                    </h3>
-                    {product.variants[0] && (
-                      <span className="text-soil-deep font-bold text-sm sm:text-base">
-                        €{(product.variants[0].priceCents / 100).toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
+              {featuredProducts.map((product) => {
+                const minPriceCents =
+                  product.variants && product.variants.length > 0
+                    ? Math.min(...product.variants.map((v) => v.priceCents))
+                    : 0;
+
+                const isDiscountActive =
+                  product.discountPercent &&
+                  product.discountPercent > 0 &&
+                  (!product.discountUntil || new Date(product.discountUntil) > new Date());
+
+                const discountedPriceCents = isDiscountActive
+                  ? Math.round((minPriceCents * (100 - product.discountPercent!)) / 100)
+                  : minPriceCents;
+
+                const formattedPrice = (discountedPriceCents / 100).toFixed(2);
+                const formattedFullPrice = (minPriceCents / 100).toFixed(2);
+
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/prodotto/${product.slug}`}
+                    className="bg-white border border-line hover:border-grass-deep hover:shadow-md transition-all relative group"
+                  >
+                    <div className="aspect-square bg-line/40 relative overflow-hidden">
+                      {product.images[0] ? (
+                        <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3">
+                          [nessuna foto]
+                        </div>
+                      )}
+
+                      {/* Badge Sconto */}
+                      {isDiscountActive && (
+                        <span className="absolute top-2 left-2 bg-soil-deep text-white text-[10px] font-bold px-2 py-1">
+                          -{product.discountPercent}%
+                        </span>
+                      )}
+
+                      {product.waterColumn && (
+                        <span className="absolute top-2 right-2 bg-grass-deep text-white text-[10px] font-bold px-2 py-1">
+                          {product.waterColumn}MM
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-3 sm:p-4">
+                      <h3 className="text-ink text-sm font-semibold mb-1.5 leading-tight line-clamp-2">
+                        {product.name}
+                      </h3>
+                      {product.variants.length > 0 && (
+                        <div className="flex items-baseline gap-2">
+                          {isDiscountActive ? (
+                            <>
+                              <span className="text-soil-deep font-bold text-sm sm:text-base">
+                                €{formattedPrice}
+                              </span>
+                              <span className="text-ink-soft text-xs line-through">
+                                €{formattedFullPrice}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-soil-deep font-bold text-sm sm:text-base">
+                              €{formattedPrice}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
