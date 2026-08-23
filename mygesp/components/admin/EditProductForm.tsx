@@ -26,6 +26,9 @@ type Product = {
   category: string;
   waterColumn: number | null;
   minTemp: number | null;
+  featured?: boolean;
+  discountPercent?: number | null;
+  discountUntil?: string | Date | null;
   images: string[];
   variants: Variant[];
 };
@@ -39,12 +42,19 @@ export default function EditProductForm({ product }: { product: Product }) {
     category: product.category,
     waterColumn: product.waterColumn?.toString() ?? "",
     minTemp: product.minTemp?.toString() ?? "",
+    featured: product.featured ?? false,
+    discountPercent: product.discountPercent?.toString() ?? "",
+    discountUntil: product.discountUntil
+      ? new Date(product.discountUntil).toISOString().split("T")[0]
+      : "",
   });
+
   const [descriptionBlocks, setDescriptionBlocks] = useState<DescriptionBlock[]>(
     Array.isArray(product.descriptionBlocks) && product.descriptionBlocks.length > 0
       ? (product.descriptionBlocks as DescriptionBlock[])
       : [{ title: "", text: "" }]
   );
+
   const [variants, setVariants] = useState(
     product.variants.map((v) => ({
       size: v.size,
@@ -53,13 +63,20 @@ export default function EditProductForm({ product }: { product: Product }) {
       stock: v.stock.toString(),
     }))
   );
+
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>(product.images);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setForm((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleBlockChange = (index: number, field: "title" | "text", value: string) => {
@@ -125,10 +142,22 @@ export default function EditProductForm({ product }: { product: Product }) {
 
     const allImages = [...existingUrls, ...uploadedUrls];
 
+    const payload = {
+      ...form,
+      waterColumn: form.waterColumn ? Number(form.waterColumn) : null,
+      minTemp: form.minTemp ? Number(form.minTemp) : null,
+      featured: Boolean(form.featured),
+      discountPercent: form.discountPercent ? Number(form.discountPercent) : 0,
+      discountUntil: form.discountUntil ? new Date(form.discountUntil).toISOString() : null,
+      images: allImages,
+      variants,
+      descriptionBlocks,
+    };
+
     const res = await fetch(`/api/admin/prodotti/${product.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, images: allImages, variants, descriptionBlocks }),
+      body: JSON.stringify(payload),
     });
 
     setUploading(false);
@@ -225,6 +254,49 @@ export default function EditProductForm({ product }: { product: Product }) {
             <label className="block text-sm font-semibold text-ink mb-1">Temperatura minima (°C)</label>
             <input name="minTemp" value={form.minTemp} onChange={handleChange}
               className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
+          </div>
+
+          {/* Sezione Evidenza e Sconto */}
+          <div className="sm:col-span-2 border-t border-b border-line py-4 space-y-4 my-2">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="featured"
+                name="featured"
+                checked={form.featured}
+                onChange={handleChange}
+                className="w-4 h-4 accent-grass-deep cursor-pointer"
+              />
+              <label htmlFor="featured" className="text-sm font-semibold text-ink cursor-pointer select-none">
+                Mostra in prima pagina (In evidenza)
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label className="block text-sm font-semibold text-ink mb-1">Percentuale sconto (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  name="discountPercent"
+                  placeholder="es. 15"
+                  value={form.discountPercent}
+                  onChange={handleChange}
+                  className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-ink mb-1">Data fine sconto</label>
+                <input
+                  type="date"
+                  name="discountUntil"
+                  value={form.discountUntil}
+                  onChange={handleChange}
+                  className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none text-sm"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
