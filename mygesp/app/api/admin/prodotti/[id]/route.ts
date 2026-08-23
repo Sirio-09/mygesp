@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { revalidatePath } from "next/cache";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -55,6 +56,9 @@ export async function PUT(
       })),
     });
 
+    // Invalida la cache di Next.js per aggiornare istantaneamente Homepage, Catalogo e Pagina Prodotto
+    revalidatePath("/", "layout");
+
     const newMinPrice = Math.min(
       ...body.variants.map((v: { priceCents: string }) => parseInt(v.priceCents))
     );
@@ -101,6 +105,10 @@ export async function DELETE(
     await prisma.variant.deleteMany({ where: { productId: id } });
     await prisma.review.deleteMany({ where: { productId: id } });
     await prisma.product.delete({ where: { id } });
+
+    // Invalida la cache per rimuovere il prodotto eliminato da tutte le pagine
+    revalidatePath("/", "layout");
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Errore eliminazione prodotto:", err);
