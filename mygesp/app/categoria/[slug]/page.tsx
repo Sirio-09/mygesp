@@ -49,20 +49,20 @@ export default async function CategoriaPage({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-[18px]">
           {products.map((product) => {
-            // 1. Verifica se lo sconto è attivo (percentuale > 0 e data valida/non scaduta)
+            // Verifica sconto attivo
             const isDiscountActive = Boolean(
               product.discountPercent &&
                 product.discountPercent > 0 &&
                 (!product.discountUntil || new Date(product.discountUntil) > new Date())
             );
 
-            // 2. Prezzo minimo tra le varianti
+            // Prezzo minimo tra le varianti
             const minPriceCents =
               product.variants && product.variants.length > 0
                 ? Math.min(...product.variants.map((v) => v.priceCents))
                 : 0;
 
-            // 3. Prezzo scontato
+            // Prezzo scontato
             const discountedPriceCents = isDiscountActive
               ? Math.round((minPriceCents * (100 - product.discountPercent!)) / 100)
               : minPriceCents;
@@ -80,14 +80,14 @@ export default async function CategoriaPage({
                     <span>[nessuna foto]</span>
                   )}
 
-                  {/* Badge Sconto (In alto a sinistra) */}
+                  {/* Badge Sconto (in alto a sinistra) */}
                   {isDiscountActive && (
-                    <span className="absolute top-2.5 left-2.5 bg-rust text-canvas font-mono text-[10px] font-bold py-1 px-2 z-10">
+                    <span className="absolute top-2.5 left-2.5 bg-rust text-canvas font-mono text-[10px] py-1 px-2 z-10 font-bold">
                       -{product.discountPercent}%
                     </span>
                   )}
 
-                  {/* Badge Colonna d'acqua (In alto a destra) */}
+                  {/* Badge Colonna d'acqua (in alto a destra) */}
                   {product.waterColumn && (
                     <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
                       {product.waterColumn}MM
@@ -100,7 +100,6 @@ export default async function CategoriaPage({
                     {product.name}
                   </h3>
 
-                  {/* Blocco Prezzo */}
                   {product.variants.length > 0 && (
                     <div className="flex items-baseline gap-2">
                       {isDiscountActive ? (
