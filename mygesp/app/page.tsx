@@ -12,45 +12,45 @@ export default async function Home() {
 
   return (
     <main className="bg-paper min-h-screen">
-      {/* hero */}
+      {/* hero (RIDOTTO IN ALTEZZA) */}
       <section className="relative bg-ink overflow-hidden border-b border-line/10">
         {/* Pattern decorativo di sfondo */}
         <div className="absolute inset-0 bg-[radial-gradient(#2d3732_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
 
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24 lg:py-32 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-10 sm:py-16 lg:py-20 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-grass/10 border border-grass/20 mb-6">
-              <span className="w-2 h-2 rounded-full bg-grass animate-pulse" />
-              <p className="text-grass text-xs sm:text-sm font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-grass/10 border border-grass/20 mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-grass animate-pulse" />
+              <p className="text-grass text-xs font-bold uppercase tracking-wider">
                 Uragan-Tex · Bisont
               </p>
             </div>
             
-            <h1 className="text-white font-extrabold text-3xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight mb-6">
+            <h1 className="text-white font-extrabold text-3xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-tight mb-5">
               Testati in stalla,<br />
               <span className="text-paper-warm/60 font-light">non in laboratorio</span>
             </h1>
             
-            <p className="text-paper-warm/80 text-base sm:text-lg max-w-[480px] mb-8 leading-relaxed font-normal">
+            <p className="text-paper-warm/80 text-base sm:text-lg max-w-[480px] mb-6 leading-relaxed font-normal">
               Abbigliamento impermeabile e stivali termici per chi lavora ogni giorno tra pioggia, fango e freddo. Scelti da allevatori, non da un catalogo.
             </p>
             
             <Link
               href="/categoria/abbigliamento"
-              className="inline-flex items-center justify-center bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base px-8 py-4 transition-all duration-300 shadow-lg hover:shadow-grass/20 hover:-translate-y-0.5 active:translate-y-0"
+              className="inline-flex items-center justify-center bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base px-7 py-3.5 transition-all duration-300 shadow-lg hover:shadow-grass/20"
             >
               Scopri l&apos;abbigliamento tecnico →
             </Link>
           </div>
 
-          {/* Immagine Hero Inquadrata in Verticale */}
-          <div className="relative aspect-[4/5] lg:aspect-[3/4] max-h-[550px] w-full mx-auto bg-ink-soft/40 border border-white/10 rounded-2xl overflow-hidden shadow-2xl group">
+          {/* Immagine Hero Inquadrata in Verticale (Ridotta la dimensione massima) */}
+          <div className="relative aspect-[4/5] lg:aspect-[3/4] max-h-[440px] w-full mx-auto bg-ink-soft/40 border border-white/10 rounded-2xl overflow-hidden shadow-xl group">
             <Image
               src="/allevatore_che_indossa_giacca_lunga_impermeabile_uragan_tex.jpg"
               alt="Allevatore che indossa giacca lunga impermeabile Uragan-Tex"
               fill
               priority
-              className="object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-700 ease-out"
+              className="object-cover object-[center_25%]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent opacity-80 pointer-events-none" />
           </div>
@@ -144,7 +144,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* prodotti in evidenza (SEZIONE I PIÙ SCELTI MINIMALISTA E IN PALETTE) */}
+      {/* prodotti in evidenza (SCONTO PIÙ GRANDE E VERDE) */}
       {featuredProducts.length > 0 && (
         <section className="bg-paper-warm/40 border-y border-line py-16 sm:py-20">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
@@ -183,7 +183,7 @@ export default async function Home() {
                     href={`/prodotto/${product.slug}`}
                     className="bg-white block relative group border border-line hover:border-grass-deep transition-colors duration-200"
                   >
-                    {/* Immagine Quadrata pulita con sottile bordo inferiore */}
+                    {/* Immagine Quadrata */}
                     <div className="aspect-square bg-paper-warm/30 relative w-full overflow-hidden border-b border-line/60">
                       {product.images[0] ? (
                         <Image
@@ -198,22 +198,22 @@ export default async function Home() {
                         </div>
                       )}
 
-                      {/* Badge Sconto in Palette (Inks/Minimal) */}
+                      {/* BADGE SCONTO MOLTO PIÙ GRANDE E VERDE */}
                       {isDiscountActive && (
-                        <span className="absolute top-2.5 left-2.5 bg-ink text-white text-[11px] font-bold px-2 py-0.5 rounded-sm">
+                        <span className="absolute top-3 left-3 bg-grass-deep text-white text-xs sm:text-sm font-extrabold px-3 py-1 rounded shadow-md z-10 tracking-wide">
                           -{product.discountPercent}%
                         </span>
                       )}
 
                       {/* Badge Colonna d'Acqua */}
                       {product.waterColumn && (
-                        <span className="absolute top-2.5 right-2.5 bg-grass-deep text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
+                        <span className="absolute top-3 right-3 bg-ink/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm backdrop-blur-sm">
                           {product.waterColumn}MM
                         </span>
                       )}
                     </div>
 
-                    {/* Dettagli Prodotto in Palette */}
+                    {/* Dettagli Prodotto */}
                     <div className="p-4 sm:p-5 bg-white">
                       <h3 className="text-sm font-bold text-ink mb-3 leading-snug line-clamp-2 group-hover:text-grass-deep transition-colors">
                         {product.name}
