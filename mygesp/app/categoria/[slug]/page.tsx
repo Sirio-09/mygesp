@@ -71,41 +71,41 @@ export default async function CategoriaPage({
                 className="bg-white border border-canvas-deep relative block hover:border-rust transition-colors"
               >
                 {/* Contenitore Immagine */}
-                <div className="aspect-square bg-white flex items-center justify-center relative overflow-hidden">
+                <div className="aspect-square bg-white flex items-center justify-center text-[11px] text-mud text-center p-4 relative overflow-hidden">
                   {product.images[0] ? (
                     <Image
                       src={product.images[0]}
                       alt={product.name}
                       fill
-                      className="object-contain p-2"
+                      className="object-contain"
                     />
                   ) : (
-                    <span className="text-[11px] text-mud">[nessuna foto]</span>
+                    <span>[nessuna foto]</span>
                   )}
 
-                  {/* Badge Sconto (Rettangolo pieno come nella Home) */}
+                  {/* Badge Sconto (Rettangolo marrone pieno con testo bianco come Immagine 2) */}
                   {isDiscountActive && (
-                    <span className="absolute top-2 left-2 bg-rust text-white text-xs font-bold px-2 py-1 z-10">
+                    <span className="absolute top-2.5 left-2.5 bg-rust text-white text-xs font-bold px-2 py-1 z-10">
                       -{product.discountPercent}%
                     </span>
                   )}
 
-                  {/* Badge Colonna d'Acqua */}
+                  {/* Badge Colonna d'acqua */}
                   {product.waterColumn && (
-                    <span className="absolute top-2 right-2 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
+                    <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
                       {product.waterColumn}MM
                     </span>
                   )}
                 </div>
 
                 {/* Dettagli Prodotto */}
-                <div className="p-4 bg-white border-t border-canvas-deep/30">
-                  <h3 className="text-sm font-bold text-loden-deep mb-3 leading-tight">
+                <div className="p-4">
+                  <h3 className="text-sm font-bold text-loden-deep mb-2 leading-tight">
                     {product.name}
                   </h3>
 
                   {product.variants.length > 0 && (
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex items-baseline gap-2 font-mono">
                       {isDiscountActive ? (
                         <>
                           <span className="font-bold text-base text-rust">
