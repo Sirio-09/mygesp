@@ -31,36 +31,50 @@ export default function VerifyOtpPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-ink flex items-center justify-center px-4 sm:px-6 py-16">
-      <div className="w-full max-w-[380px]">
-        <div className="bg-white border-t-4 border-grass p-8">
-          <h1 className="text-ink font-extrabold text-2xl text-center mb-2">
-            Verifica in due passaggi
+    <main className="min-h-[calc(100vh-80px)] bg-paper-warm flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md bg-white border border-line p-8 space-y-6">
+        <div className="text-center space-y-2">
+          <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+            Autenticazione Sicura
+          </span>
+          <h1 className="text-2xl font-extrabold text-ink">
+            Verifica 2FA
           </h1>
-          <p className="text-sm text-ink-soft text-center mb-6">
-            Inserisci il codice dalla tua app di autenticazione.
+          <p className="text-xs text-ink-soft leading-relaxed">
+            Inserisci il codice temporaneo a 6 cifre generato dalla tua app di autenticazione.
           </p>
+        </div>
 
-          <form onSubmit={handleVerify} className="space-y-4">
+        <form onSubmit={handleVerify} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
+              Codice di verifica
+            </label>
             <input
               type="text"
               maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="123456"
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="000000"
               autoFocus
-              className="w-full border border-line px-3 py-2.5 text-sm text-ink text-center tracking-widest focus:border-grass-deep outline-none"
+              className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 disabled:opacity-50 transition-colors"
-            >
-              {loading ? "Verifica in corso..." : "Conferma"}
-            </button>
-            {error && <p className="text-soil-deep text-sm text-center">{error}</p>}
-          </form>
-        </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || code.length !== 6}
+            className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50"
+          >
+            {loading ? "Verifica in corso..." : "Conferma"}
+          </button>
+
+          {error && (
+            <p className="text-xs text-soil-deep text-center font-semibold pt-1">
+              {error}
+            </p>
+          )}
+        </form>
       </div>
     </main>
   );

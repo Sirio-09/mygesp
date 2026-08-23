@@ -81,8 +81,8 @@ export default function UtentiAdminPage() {
     }
   };
 
-  const handleDelete = async (id: string, username: string) => {
-    if (!confirm(`Eliminare l'utente "${username}"? L'azione non è reversibile.`)) {
+  const handleDelete = async (id: string, targetUsername: string) => {
+    if (!confirm(`Eliminare l'utente "${targetUsername}"? L'azione non è reversibile.`)) {
       return;
     }
     const res = await fetch(`/api/admin/utenti/${id}`, { method: "DELETE" });
@@ -95,126 +95,190 @@ export default function UtentiAdminPage() {
   };
 
   return (
-    <main className="max-w-[600px] mx-auto px-8 py-12">
-      <Link href="/admin" className="text-sm text-mud hover:text-rust mb-6 inline-block">
-        ← Torna al catalogo
-      </Link>
-      <h1 className="font-display text-3xl uppercase text-loden-deep tracking-wide mb-8">
-        Gestione utenti staff
-      </h1>
+    <div className="max-w-3xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="border-b border-line pb-6">
+        <Link
+          href="/admin"
+          className="text-xs uppercase tracking-wider font-semibold text-ink-soft hover:text-grass-deep transition-colors inline-block mb-4"
+        >
+          ← Torna al catalogo
+        </Link>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
+          Gestione Utenti Staff
+        </h1>
+        <p className="text-xs sm:text-sm text-ink-soft mt-1">
+          Amministra gli accessi e le credenziali del personale abilitato al pannello.
+        </p>
+      </div>
 
-      <div className="mb-10">
-        <h2 className="text-sm font-medium text-loden-deep uppercase tracking-wide mb-3">
-          Staff attuale
-        </h2>
-        <div className="border-t border-canvas-deep">
+      {/* Lista Staff */}
+      <div className="bg-white border border-line p-6 sm:p-8 space-y-4">
+        <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
+          Membri Staff Attuali
+        </span>
+
+        <div className="divide-y divide-line border-t border-b border-line">
           {admins.map((admin) => (
-            <div key={admin.id} className="py-3 border-b border-canvas-deep">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm text-loden-deep">{admin.username}</span>
+            <div key={admin.id} className="py-4 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-ink">{admin.username}</span>
+                  <span className="text-xs text-ink-soft font-mono">({admin.email})</span>
                   {admin.isManager && (
-                    <span className="ml-2 text-[10px] font-mono bg-loden text-canvas px-1.5 py-0.5">
-                      MANAGER
+                    <span className="text-[10px] font-mono font-bold bg-ink text-white px-2 py-0.5 uppercase tracking-wider">
+                      Manager
                     </span>
                   )}
                 </div>
+
                 <div className="flex items-center gap-3">
-                  <span className={`text-xs font-mono ${admin.totpEnabled ? "text-signal" : "text-mud"}`}>
-                    {admin.totpEnabled ? "2FA attivo" : "2FA non configurato"}
+                  <span
+                    className={`text-xs font-mono font-semibold px-2 py-0.5 border ${
+                      admin.totpEnabled
+                        ? "border-grass-deep/30 bg-grass-deep/10 text-grass-deep"
+                        : "border-line bg-paper-warm text-ink-soft"
+                    }`}
+                  >
+                    {admin.totpEnabled ? "2FA Attivo" : "2FA Disattivo"}
                   </span>
+
                   {isManager && (
-                    <>
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setEditingId(editingId === admin.id ? null : admin.id)}
-                        className="text-xs text-mud hover:text-rust underline"
+                        type="button"
+                        onClick={() => {
+                          setEditingId(editingId === admin.id ? null : admin.id);
+                          setActionError("");
+                        }}
+                        className="text-xs font-semibold text-ink-soft hover:text-grass-deep underline transition-colors"
                       >
-                        Password
+                        {editingId === admin.id ? "Annulla" : "Password"}
                       </button>
+
                       {admin.id !== currentUserId && (
                         <button
+                          type="button"
                           onClick={() => handleDelete(admin.id, admin.username)}
-                          className="text-xs text-rust hover:text-rust-deep underline"
+                          className="text-xs font-semibold text-soil-deep hover:underline transition-colors"
                         >
                           Elimina
                         </button>
                       )}
-                    </>
+                    </div>
                   )}
                 </div>
               </div>
 
+              {/* Form Cambio Password Inline */}
               {editingId === admin.id && (
-                <div className="mt-3 flex gap-2">
-                  <input
-                    type="password"
-                    placeholder="Nuova password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="flex-1 border border-mud px-3 py-1.5 text-sm focus:border-rust outline-none"
-                  />
-                  <button
-                    onClick={() => handlePasswordChange(admin.id)}
-                    className="bg-rust hover:bg-rust-deep text-white text-xs font-medium px-3 py-1.5"
-                  >
-                    Salva
-                  </button>
+                <div className="p-4 bg-paper-warm border border-line space-y-2">
+                  <span className="text-xs font-semibold text-ink uppercase tracking-wider block">
+                    Nuova password per {admin.username}
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      placeholder="Minimo 8 caratteri"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="flex-1 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handlePasswordChange(admin.id)}
+                      className="bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider px-4 py-2 transition-colors"
+                    >
+                      Salva
+                    </button>
+                  </div>
+                  {actionError && (
+                    <p className="text-xs text-soil-deep font-bold pt-1">{actionError}</p>
+                  )}
                 </div>
-              )}
-              {editingId === admin.id && actionError && (
-                <p className="text-rust text-xs mt-1">{actionError}</p>
               )}
             </div>
           ))}
         </div>
       </div>
 
+      {/* Creazione Nuovo Utente (Solo per Manager) */}
       {isManager ? (
-        <div>
-          <h2 className="text-sm font-medium text-loden-deep uppercase tracking-wide mb-3">
-            Aggiungi nuovo membro dello staff
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <input
-              type="text"
-              placeholder="Nome utente"
-              required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-mud px-3 py-2 focus:border-rust outline-none"
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-mud px-3 py-2 focus:border-rust outline-none"
-            />
-            <input
-              type="password"
-              placeholder="Password temporanea (min. 8 caratteri)"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-mud px-3 py-2 focus:border-rust outline-none"
-            />
+        <div className="bg-white border border-line p-6 sm:p-8 space-y-6">
+          <div className="space-y-1">
+            <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
+              Nuova Utenza
+            </span>
+            <h2 className="text-lg font-bold text-ink">Aggiungi membro dello staff</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                  Nome Utente *
+                </label>
+                <input
+                  type="text"
+                  placeholder="es. mario.rossi"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                  Indirizzo Email *
+                </label>
+                <input
+                  type="email"
+                  placeholder="es. mario@azienda.it"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                Password Temporanea *
+              </label>
+              <input
+                type="password"
+                placeholder="Minimo 8 caratteri"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="bg-rust hover:bg-rust-deep text-white font-display uppercase tracking-wide text-sm font-semibold py-3 px-5 disabled:opacity-50"
+              className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-3.5 transition-colors disabled:opacity-50"
             >
-              {loading ? "Creazione in corso..." : "Crea utente"}
+              {loading ? "Creazione in corso..." : "Crea Utente Staff"}
             </button>
-            {error && <p className="text-rust text-sm">{error}</p>}
+
+            {error && (
+              <p className="text-xs text-soil-deep font-bold text-center pt-1">{error}</p>
+            )}
           </form>
-          <p className="text-xs text-mud mt-3">
-            Comunica username e password al nuovo membro dello staff. Al primo accesso dovrà configurare il proprio Google Authenticator.
+
+          <p className="text-xs text-ink-soft leading-relaxed border-t border-line pt-4">
+            Comunica le credenziali al nuovo utente. Al primo accesso gli verrà richiesto di configurare il proprio token 2FA tramite Google Authenticator.
           </p>
         </div>
       ) : (
-        <p className="text-sm text-mud">Solo il manager può gestire lo staff.</p>
+        <div className="p-4 bg-paper-warm border border-line text-xs text-ink-soft">
+          Nota: Soltanto i profili con privilegi di Manager possono aggiungere o modificare gli account dello staff.
+        </div>
       )}
-    </main>
+    </div>
   );
 }

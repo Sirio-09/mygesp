@@ -23,5 +23,11 @@ export default async function EditProductPage({
     notFound();
   }
 
-  return <EditProductForm product={product} />;
+  return (
+    <main className="min-h-[calc(100vh-80px)] bg-paper-warm py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <EditProductForm product={product} />
+      </div>
+    </main>
+  );
 }
