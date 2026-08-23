@@ -48,34 +48,81 @@ export default async function CategoriaPage({
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-[18px]">
-          {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/prodotto/${product.slug}`}
-              className="bg-white border border-canvas-deep relative block hover:border-rust transition-colors"
-            >
-              <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[11px] text-mud text-center p-4 relative overflow-hidden">
-                {product.images[0] ? (
-                  <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
-                ) : (
-                  <span>[nessuna foto]</span>
-                )}
-                {product.waterColumn && (
-                  <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
-                    {product.waterColumn}MM
-                  </span>
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="text-sm font-medium text-loden-deep mb-2 leading-tight">{product.name}</h3>
-                {product.variants[0] && (
-                  <span className="font-mono font-medium text-base text-rust-deep">
-                    €{(product.variants[0].priceCents / 100).toFixed(2)}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
+          {products.map((product) => {
+            // 1. Verifica se lo sconto è attivo (percentuale > 0 e data valida/non scaduta)
+            const isDiscountActive = Boolean(
+              product.discountPercent &&
+                product.discountPercent > 0 &&
+                (!product.discountUntil || new Date(product.discountUntil) > new Date())
+            );
+
+            // 2. Prezzo minimo tra le varianti
+            const minPriceCents =
+              product.variants && product.variants.length > 0
+                ? Math.min(...product.variants.map((v) => v.priceCents))
+                : 0;
+
+            // 3. Prezzo scontato
+            const discountedPriceCents = isDiscountActive
+              ? Math.round((minPriceCents * (100 - product.discountPercent!)) / 100)
+              : minPriceCents;
+
+            return (
+              <Link
+                key={product.id}
+                href={`/prodotto/${product.slug}`}
+                className="bg-white border border-canvas-deep relative block hover:border-rust transition-colors"
+              >
+                <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[11px] text-mud text-center p-4 relative overflow-hidden">
+                  {product.images[0] ? (
+                    <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                  ) : (
+                    <span>[nessuna foto]</span>
+                  )}
+
+                  {/* Badge Sconto (In alto a sinistra) */}
+                  {isDiscountActive && (
+                    <span className="absolute top-2.5 left-2.5 bg-rust text-canvas font-mono text-[10px] font-bold py-1 px-2 z-10">
+                      -{product.discountPercent}%
+                    </span>
+                  )}
+
+                  {/* Badge Colonna d'acqua (In alto a destra) */}
+                  {product.waterColumn && (
+                    <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
+                      {product.waterColumn}MM
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <h3 className="text-sm font-medium text-loden-deep mb-2 leading-tight">
+                    {product.name}
+                  </h3>
+
+                  {/* Blocco Prezzo */}
+                  {product.variants.length > 0 && (
+                    <div className="flex items-baseline gap-2">
+                      {isDiscountActive ? (
+                        <>
+                          <span className="font-mono font-medium text-base text-rust-deep">
+                            €{(discountedPriceCents / 100).toFixed(2)}
+                          </span>
+                          <span className="font-mono text-xs text-mud line-through">
+                            €{(minPriceCents / 100).toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-mono font-medium text-base text-rust-deep">
+                          €{(minPriceCents / 100).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </main>
