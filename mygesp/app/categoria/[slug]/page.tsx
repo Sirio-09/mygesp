@@ -49,20 +49,17 @@ export default async function CategoriaPage({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-[18px]">
           {products.map((product) => {
-            // Verifica sconto attivo
             const isDiscountActive = Boolean(
               product.discountPercent &&
                 product.discountPercent > 0 &&
                 (!product.discountUntil || new Date(product.discountUntil) > new Date())
             );
 
-            // Prezzo minimo tra le varianti
             const minPriceCents =
               product.variants && product.variants.length > 0
                 ? Math.min(...product.variants.map((v) => v.priceCents))
                 : 0;
 
-            // Prezzo scontato
             const discountedPriceCents = isDiscountActive
               ? Math.round((minPriceCents * (100 - product.discountPercent!)) / 100)
               : minPriceCents;
@@ -73,30 +70,37 @@ export default async function CategoriaPage({
                 href={`/prodotto/${product.slug}`}
                 className="bg-white border border-canvas-deep relative block hover:border-rust transition-colors"
               >
-                <div className="aspect-square bg-[#DCD4BF] flex items-center justify-center text-[11px] text-mud text-center p-4 relative overflow-hidden">
+                {/* Contenitore Immagine */}
+                <div className="aspect-square bg-white flex items-center justify-center relative overflow-hidden">
                   {product.images[0] ? (
-                    <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-contain p-2"
+                    />
                   ) : (
-                    <span>[nessuna foto]</span>
+                    <span className="text-[11px] text-mud">[nessuna foto]</span>
                   )}
 
-                  {/* Badge Sconto (in alto a sinistra) */}
+                  {/* Badge Sconto (Rettangolo pieno come nella Home) */}
                   {isDiscountActive && (
-                    <span className="absolute top-2.5 left-2.5 bg-rust text-canvas font-mono text-[10px] py-1 px-2 z-10 font-bold">
+                    <span className="absolute top-2 left-2 bg-rust text-white text-xs font-bold px-2 py-1 z-10">
                       -{product.discountPercent}%
                     </span>
                   )}
 
-                  {/* Badge Colonna d'acqua (in alto a destra) */}
+                  {/* Badge Colonna d'Acqua */}
                   {product.waterColumn && (
-                    <span className="absolute top-2.5 right-2.5 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
+                    <span className="absolute top-2 right-2 bg-loden text-canvas font-mono text-[10px] py-1 px-2 z-10">
                       {product.waterColumn}MM
                     </span>
                   )}
                 </div>
 
-                <div className="p-4">
-                  <h3 className="text-sm font-medium text-loden-deep mb-2 leading-tight">
+                {/* Dettagli Prodotto */}
+                <div className="p-4 bg-white border-t border-canvas-deep/30">
+                  <h3 className="text-sm font-bold text-loden-deep mb-3 leading-tight">
                     {product.name}
                   </h3>
 
@@ -104,15 +108,15 @@ export default async function CategoriaPage({
                     <div className="flex items-baseline gap-2">
                       {isDiscountActive ? (
                         <>
-                          <span className="font-mono font-medium text-base text-rust-deep">
+                          <span className="font-bold text-base text-rust">
                             €{(discountedPriceCents / 100).toFixed(2)}
                           </span>
-                          <span className="font-mono text-xs text-mud line-through">
+                          <span className="text-xs text-mud line-through">
                             €{(minPriceCents / 100).toFixed(2)}
                           </span>
                         </>
                       ) : (
-                        <span className="font-mono font-medium text-base text-rust-deep">
+                        <span className="font-bold text-base text-rust">
                           €{(minPriceCents / 100).toFixed(2)}
                         </span>
                       )}
