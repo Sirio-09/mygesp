@@ -65,13 +65,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
       {/* Griglia Prodotti */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-12">
-        {/* Barra contatore prodotti */}
-        <div className="flex items-center justify-between border-b border-line pb-4 mb-8">
-          <span className="text-xs font-mono text-ink-soft uppercase tracking-wider">
-            {products.length} {products.length === 1 ? "prodotto" : "prodotti"} trovati
-          </span>
-        </div>
-
         {products.length === 0 ? (
           <div className="bg-white border border-line p-12 text-center my-12">
             <p className="text-ink-soft text-base font-medium mb-4">
@@ -126,7 +119,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                       </div>
                     )}
 
-                    {/* Badge Sconto Verde e Visibile */}
+                    {/* Badge Sconto Verde Visibile */}
                     {isDiscountActive && (
                       <span className="absolute top-3 left-3 bg-grass-deep text-white text-xs sm:text-sm font-extrabold px-3 py-1 rounded shadow-md z-10 tracking-wide">
                         -{product.discountPercent}%
