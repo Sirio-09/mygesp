@@ -6,9 +6,16 @@ import Image from "next/image"
 export default function NuovoProdotto() {
   const router = useRouter()
   const [form, setForm] = useState({
-    name: "", slug: "", brand: "", category: "",
-    waterColumn: "", minTemp: "",
-    discountPercent: "", discountUntil: "",
+    name: "",
+    slug: "",
+    shortTitle: "",
+    shortDescription: "",
+    brand: "",
+    category: "",
+    waterColumn: "",
+    minTemp: "",
+    discountPercent: "",
+    discountUntil: "",
   })
   const [featured, setFeatured] = useState(false)
   const [descriptionBlocks, setDescriptionBlocks] = useState([{ title: "", text: "" }])
@@ -81,10 +88,20 @@ export default function NuovoProdotto() {
       uploadedUrls.push(uploadData.url)
     }
 
+    const payload = {
+      ...form,
+      shortTitle: form.shortTitle.trim() ? form.shortTitle.trim() : null,
+      shortDescription: form.shortDescription.trim() ? form.shortDescription.trim() : null,
+      images: uploadedUrls,
+      variants,
+      descriptionBlocks,
+      featured,
+    }
+
     const res = await fetch("/api/admin/prodotti", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, images: uploadedUrls, variants, descriptionBlocks, featured }),
+      body: JSON.stringify(payload),
     })
 
     setUploading(false)
@@ -138,6 +155,18 @@ export default function NuovoProdotto() {
             <input name="slug" value={form.slug} onChange={handleChange} required
               placeholder="es. giacca-uragan-tex"
               className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-semibold text-ink mb-1">Titolo breve / Sottotitolo (opzionale)</label>
+            <input name="shortTitle" value={form.shortTitle} onChange={handleChange}
+              placeholder="es. Giacca impermeabile ad alta visibilità"
+              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none text-sm" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-semibold text-ink mb-1">Descrizione breve (opzionale)</label>
+            <textarea name="shortDescription" value={form.shortDescription} onChange={handleChange} rows={2}
+              placeholder="Un breve riassunto da mostrare in alto nella pagina del prodotto..."
+              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none text-sm resize-y" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-ink mb-1">Marchio</label>

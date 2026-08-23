@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,22 +11,24 @@ datasource db {
 }
 
 model Product {
-  id                String    @id @default(cuid())
-  name              String
-  slug              String    @unique
+  id               String    @id @default(cuid())
+  name             String
+  slug             String    @unique
+  shortTitle       String?
+  shortDescription String?
   descriptionBlocks Json
-  brand             String
-  category          String
-  activities        String[]
-  variants          Variant[]
-  images            String[]
-  waterColumn       Int?
-  minTemp           Int?
-  reviews           Review[]
-  featured          Boolean   @default(false)
-  discountPercent   Int?
-  discountUntil     DateTime?
-  createdAt         DateTime  @default(now())
+  brand            String
+  category         String
+  activities       String[]
+  variants         Variant[]
+  images           String[]
+  waterColumn      Int?
+  minTemp          Int?
+  reviews          Review[]
+  featured         Boolean   @default(false)
+  discountPercent  Int?
+  discountUntil    DateTime?
+  createdAt        DateTime  @default(now())
 }
 
 model Variant {
@@ -44,21 +44,21 @@ model Variant {
 }
 
 model Order {
-  id             String      @id @default(cuid())
-  customerEmail  String
-  customerId     String?
-  customer       Customer?   @relation(fields: [customerId], references: [id])
-  shippingName   String?
-  shippingLine1  String?
-  shippingLine2  String?
-  shippingCity   String?
-  shippingZip    String?
-  shippingState  String?
+  id              String      @id @default(cuid())
+  customerEmail   String
+  customerId      String?
+  customer        Customer?   @relation(fields: [customerId], references: [id])
+  shippingName    String?
+  shippingLine1   String?
+  shippingLine2   String?
+  shippingCity    String?
+  shippingZip     String?
+  shippingState   String?
   shippingCountry String?
-  items          OrderItem[]
-  totalCents     Int
-  status         String      @default("pending")
-  createdAt      DateTime    @default(now())
+  items           OrderItem[]
+  totalCents      Int
+  status          String      @default("pending")
+  createdAt       DateTime    @default(now())
 }
 
 model OrderItem {

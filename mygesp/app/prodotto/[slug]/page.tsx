@@ -27,7 +27,7 @@ export async function generateMetadata({
   }
 
   const blocks = product.descriptionBlocks as unknown as DescriptionBlock[];
-  const firstText = blocks?.[0]?.text ?? product.name;
+  const firstText = product.shortDescription ?? blocks?.[0]?.text ?? product.name;
 
   return {
     title: `${product.name} — ${product.brand} | MyGesp`,
@@ -107,6 +107,22 @@ export default async function ProductPage({
               {product.name}
             </h1>
 
+            {/* Titolo Breve e Descrizione Breve (Affiancati/Sopra il box d'acquisto) */}
+            {(product.shortTitle || product.shortDescription) && (
+              <div className="p-4 bg-white border border-line space-y-1.5">
+                {product.shortTitle && (
+                  <p className="text-ink font-bold text-xs uppercase tracking-wider">
+                    {product.shortTitle}
+                  </p>
+                )}
+                {product.shortDescription && (
+                  <p className="text-ink-soft text-sm leading-relaxed">
+                    {product.shortDescription}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Specifiche Tecniche (Colonna d'Acqua & Temperatura) */}
             {(product.waterColumn || product.minTemp) && (
               <div className="grid grid-cols-2 gap-3 p-4 bg-paper-warm/40 border border-line">
@@ -130,22 +146,6 @@ export default async function ProductPage({
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Blocchi Descrittivi */}
-            {descriptionBlocks && descriptionBlocks.length > 0 && (
-              <div className="p-5 bg-white border border-line space-y-4">
-                {descriptionBlocks.map((block, i) => (
-                  <div key={i} className={i > 0 ? "pt-3 border-t border-line/60" : ""}>
-                    {block.title && (
-                      <h3 className="text-ink font-bold text-xs uppercase tracking-wider mb-1">
-                        {block.title}
-                      </h3>
-                    )}
-                    <p className="text-ink-soft text-sm leading-relaxed">{block.text}</p>
-                  </div>
-                ))}
               </div>
             )}
 
@@ -176,6 +176,32 @@ export default async function ProductPage({
             </div>
           </div>
         </div>
+
+        {/* Sezione Descrizioni Estese (Sotto la foto/box d'acquisto e prima delle recensioni) */}
+        {descriptionBlocks && descriptionBlocks.length > 0 && (
+          <section className="pt-12 border-t border-line space-y-6">
+            <div className="max-w-2xl">
+              <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-1">
+                Specifiche di dettaglio
+              </p>
+              <h2 className="text-ink font-extrabold text-2xl tracking-tight uppercase">
+                Descrizione Prodotto
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {descriptionBlocks.map((block, i) => (
+                <div key={i} className="p-5 bg-white border border-line space-y-2">
+                  {block.title && (
+                    <h3 className="text-ink font-bold text-xs uppercase tracking-wider">
+                      {block.title}
+                    </h3>
+                  )}
+                  <p className="text-ink-soft text-sm leading-relaxed">{block.text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Recensioni in Basso */}
         <div className="pt-12 border-t border-line">

@@ -21,6 +21,8 @@ type Product = {
   id: string;
   name: string;
   slug: string;
+  shortTitle?: string | null;
+  shortDescription?: string | null;
   descriptionBlocks: unknown;
   brand: string;
   category: string;
@@ -38,6 +40,8 @@ export default function EditProductForm({ product }: { product: Product }) {
   const [form, setForm] = useState({
     name: product.name,
     slug: product.slug,
+    shortTitle: product.shortTitle ?? "",
+    shortDescription: product.shortDescription ?? "",
     brand: product.brand,
     category: product.category,
     waterColumn: product.waterColumn?.toString() ?? "",
@@ -144,6 +148,8 @@ export default function EditProductForm({ product }: { product: Product }) {
 
     const payload = {
       ...form,
+      shortTitle: form.shortTitle.trim() ? form.shortTitle.trim() : null,
+      shortDescription: form.shortDescription.trim() ? form.shortDescription.trim() : null,
       waterColumn: form.waterColumn ? Number(form.waterColumn) : null,
       minTemp: form.minTemp ? Number(form.minTemp) : null,
       featured: Boolean(form.featured),
@@ -234,6 +240,18 @@ export default function EditProductForm({ product }: { product: Product }) {
             <label className="block text-sm font-semibold text-ink mb-1">Slug (URL)</label>
             <input name="slug" value={form.slug} onChange={handleChange} required
               className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-semibold text-ink mb-1">Titolo breve / Sottotitolo (opzionale)</label>
+            <input name="shortTitle" value={form.shortTitle} onChange={handleChange}
+              placeholder="es. Giacca impermeabile ad alta visibilità"
+              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none text-sm" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-semibold text-ink mb-1">Descrizione breve (opzionale)</label>
+            <textarea name="shortDescription" value={form.shortDescription} onChange={handleChange} rows={2}
+              placeholder="Un breve riassunto da mostrare in alto nella pagina del prodotto..."
+              className="w-full border border-line px-3 py-2 focus:border-grass-deep outline-none text-sm resize-y" />
           </div>
           <div>
             <label className="block text-sm font-semibold text-ink mb-1">Marchio</label>

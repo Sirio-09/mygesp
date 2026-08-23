@@ -33,6 +33,8 @@ export async function PUT(
       data: {
         name: body.name,
         slug: body.slug,
+        shortTitle: body.shortTitle || null,
+        shortDescription: body.shortDescription || null,
         descriptionBlocks: body.descriptionBlocks,
         brand: body.brand,
         category: body.category,
