@@ -43,16 +43,16 @@ export default async function Home() {
             </Link>
           </div>
 
-          {/* Immagine Hero */}
-          <div className="relative aspect-[4/3] bg-ink-soft/40 border border-white/10 rounded-2xl overflow-hidden shadow-2xl group">
+          {/* Immagine Hero Inquadrata in Verticale */}
+          <div className="relative aspect-[4/5] lg:aspect-[3/4] max-h-[550px] w-full mx-auto bg-ink-soft/40 border border-white/10 rounded-2xl overflow-hidden shadow-2xl group">
             <Image
               src="/allevatore_che_indossa_giacca_lunga_impermeabile_uragan_tex.jpg"
               alt="Allevatore che indossa giacca lunga impermeabile Uragan-Tex"
               fill
               priority
-              className="object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
+              className="object-cover object-[center_25%] group-hover:scale-105 transition-transform duration-700 ease-out"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent opacity-80 pointer-events-none" />
           </div>
         </div>
       </section>
