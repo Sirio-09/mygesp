@@ -28,7 +28,6 @@ export default async function CategoriaPage({
   });
 
   return (
-    /* Sfondo beige/panna caldo dell'intera pagina come nella foto 1 */
     <div className="bg-[#F5F2EB] min-h-screen py-12">
       <main className="max-w-[1200px] mx-auto px-8">
         <Link href="/" className="text-sm text-mud hover:text-rust mb-6 inline-block">
@@ -49,7 +48,7 @@ export default async function CategoriaPage({
             <p className="text-slate">Nessun prodotto disponibile in questa categoria al momento.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {products.map((product) => {
               const isDiscountActive = Boolean(
                 product.discountPercent &&
@@ -67,14 +66,14 @@ export default async function CategoriaPage({
                 : minPriceCents;
 
               return (
-                /* Card bianca senza bordi neri spessi */
+                /* Card con contorno leggero e transizione al passaggio del mouse */
                 <Link
                   key={product.id}
                   href={`/prodotto/${product.slug}`}
-                  className="bg-white block relative overflow-hidden group"
+                  className="bg-white block relative overflow-hidden group border border-[#E5E0D8] hover:border-[#80532b]/60 transition-colors"
                 >
-                  {/* Contenitore immagine con taglio tight in alto (object-cover object-top) */}
-                  <div className="aspect-[4/5] bg-white relative w-full overflow-hidden">
+                  {/* Proporzione quadrata per ridurre l'altezza della card */}
+                  <div className="aspect-square bg-white relative w-full overflow-hidden">
                     {product.images[0] ? (
                       <Image
                         src={product.images[0]}
@@ -88,17 +87,17 @@ export default async function CategoriaPage({
                       </div>
                     )}
 
-                    {/* Badge Sconto marrone pieno in alto a sinistra */}
+                    {/* Badge Sconto marrone */}
                     {isDiscountActive && (
-                      <span className="absolute top-3 left-3 bg-[#80532b] text-white text-xs font-bold px-2 py-1 z-10">
+                      <span className="absolute top-2.5 left-2.5 bg-[#80532b] text-white text-xs font-bold px-2 py-1 z-10">
                         -{product.discountPercent}%
                       </span>
                     )}
                   </div>
 
-                  {/* Dettagli prodotto */}
-                  <div className="p-5 bg-white">
-                    <h3 className="text-base font-bold text-[#1F2925] mb-3 leading-snug">
+                  {/* Dettagli prodotto compatti */}
+                  <div className="p-4 bg-white">
+                    <h3 className="text-sm font-bold text-[#1F2925] mb-2 leading-snug line-clamp-2">
                       {product.name}
                     </h3>
 
@@ -106,17 +105,15 @@ export default async function CategoriaPage({
                       <div className="flex items-baseline gap-2 font-mono">
                         {isDiscountActive ? (
                           <>
-                            {/* Prezzo scontato in marrone/ruggine */}
-                            <span className="font-bold text-lg text-[#80532b]">
+                            <span className="font-bold text-base text-[#80532b]">
                               €{(discountedPriceCents / 100).toFixed(2)}
                             </span>
-                            {/* Prezzo originale barrato in grigio */}
-                            <span className="text-sm text-[#7A7A7A] line-through">
+                            <span className="text-xs text-[#7A7A7A] line-through">
                               €{(minPriceCents / 100).toFixed(2)}
                             </span>
                           </>
                         ) : (
-                          <span className="font-bold text-lg text-[#80532b]">
+                          <span className="font-bold text-base text-[#80532b]">
                             €{(minPriceCents / 100).toFixed(2)}
                           </span>
                         )}
