@@ -27,7 +27,8 @@ export default function NuovoProdotto() {
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBlockChange = (index: number, field: "title" | "text", value: string) => {
@@ -93,10 +94,14 @@ export default function NuovoProdotto() {
       ...form,
       shortTitle: form.shortTitle.trim() ? form.shortTitle.trim() : null,
       shortDescription: form.shortDescription.trim() ? form.shortDescription.trim() : null,
+      waterColumn: form.waterColumn ? Number(form.waterColumn) : null,
+      minTemp: form.minTemp ? Number(form.minTemp) : null,
+      featured: Boolean(featured),
+      discountPercent: form.discountPercent ? Number(form.discountPercent) : 0,
+      discountUntil: form.discountUntil ? new Date(form.discountUntil).toISOString() : null,
       images: uploadedUrls,
       variants,
       descriptionBlocks,
-      featured,
     };
 
     const res = await fetch("/api/admin/prodotti", {
@@ -304,6 +309,8 @@ export default function NuovoProdotto() {
                 </label>
                 <input
                   type="number"
+                  min="0"
+                  max="100"
                   name="discountPercent"
                   value={form.discountPercent}
                   onChange={handleChange}
@@ -404,47 +411,77 @@ export default function NuovoProdotto() {
 
             <div className="space-y-2">
               {variants.map((v, i) => (
-                <div key={i} className="grid grid-cols-2 sm:grid-cols-[1fr_1.5fr_1.5fr_1fr_auto] gap-2 items-center bg-paper-warm p-2 border border-line">
-                  <input
-                    placeholder="Taglia (es. XL)"
-                    value={v.size}
-                    onChange={(e) => handleVariantChange(i, "size", e.target.value)}
-                    required
-                    className="border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none"
-                  />
-                  <input
-                    placeholder="SKU univoco"
-                    value={v.sku}
-                    onChange={(e) => handleVariantChange(i, "sku", e.target.value)}
-                    required
-                    className="border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
-                  />
-                  <input
-                    placeholder="Prezzo (in centesimi, es. 12900)"
-                    value={v.priceCents}
-                    onChange={(e) => handleVariantChange(i, "priceCents", e.target.value)}
-                    required
-                    className="border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Giacenza"
-                    value={v.stock}
-                    onChange={(e) => handleVariantChange(i, "stock", e.target.value)}
-                    required
-                    className="border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none"
-                  />
-                  {variants.length > 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => removeVariant(i)}
-                      className="text-ink-soft hover:text-soil-deep font-bold text-sm px-2"
-                    >
-                      ✕
-                    </button>
-                  ) : (
-                    <div className="w-6" />
-                  )}
+                <div
+                  key={i}
+                  className="grid grid-cols-2 sm:grid-cols-[1fr_1.5fr_1.5fr_1fr_auto] gap-2 items-center bg-paper-warm p-3 border border-line"
+                >
+                  <div className="min-w-0">
+                    <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
+                      Taglia
+                    </label>
+                    <input
+                      placeholder="Taglia (es. XL)"
+                      value={v.size}
+                      onChange={(e) => handleVariantChange(i, "size", e.target.value)}
+                      required
+                      className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
+                      SKU
+                    </label>
+                    <input
+                      placeholder="SKU univoco"
+                      value={v.sku}
+                      onChange={(e) => handleVariantChange(i, "sku", e.target.value)}
+                      required
+                      className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
+                      Prezzo (cent)
+                    </label>
+                    <input
+                      placeholder="Prezzo (in centesimi)"
+                      value={v.priceCents}
+                      onChange={(e) => handleVariantChange(i, "priceCents", e.target.value)}
+                      required
+                      className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
+                      Giacenza
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Giacenza"
+                      value={v.stock}
+                      onChange={(e) => handleVariantChange(i, "stock", e.target.value)}
+                      required
+                      className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
+                    />
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-1 flex justify-end sm:justify-center pt-1 sm:pt-0">
+                    {variants.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(i)}
+                        className="text-ink-soft hover:text-soil-deep font-bold text-sm px-2 py-1"
+                        title="Elimina variante"
+                      >
+                        ✕
+                      </button>
+                    ) : (
+                      <div className="w-6" />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
