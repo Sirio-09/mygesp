@@ -57,7 +57,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* gamma prodotti (VERSIONE MINIMALISTA E PULITA) */}
+      {/* gamma prodotti */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-20">
         <div className="mb-10 sm:mb-12">
           <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-2">
@@ -144,19 +144,17 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* prodotti in evidenza */}
+      {/* prodotti in evidenza (SEZIONE I PIÙ SCELTI MINIMALISTA E IN PALETTE) */}
       {featuredProducts.length > 0 && (
-        <section className="bg-paper-warm/60 border-y border-line py-16 sm:py-24">
+        <section className="bg-paper-warm/40 border-y border-line py-16 sm:py-20">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 sm:mb-14 gap-4">
-              <div>
-                <p className="text-grass-deep text-xs sm:text-sm font-bold uppercase tracking-widest mb-2">
-                  I più scelti
-                </p>
-                <h2 className="text-ink font-extrabold text-2xl sm:text-4xl tracking-tight">
-                  Uragan-Tex &amp; Bisont
-                </h2>
-              </div>
+            <div className="mb-10 sm:mb-12">
+              <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-2">
+                I più scelti
+              </p>
+              <h2 className="text-ink font-extrabold text-2xl sm:text-3xl tracking-tight">
+                Uragan-Tex &amp; Bisont
+              </h2>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -183,16 +181,16 @@ export default async function Home() {
                   <Link
                     key={product.id}
                     href={`/prodotto/${product.slug}`}
-                    className="bg-white block relative overflow-hidden group border border-[#E5E0D8] hover:border-[#80532b]/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                    className="bg-white block relative group border border-line hover:border-grass-deep transition-colors duration-200"
                   >
-                    {/* Immagine Quadrata con zoom su hover */}
-                    <div className="aspect-square bg-white relative w-full overflow-hidden">
+                    {/* Immagine Quadrata pulita con sottile bordo inferiore */}
+                    <div className="aspect-square bg-paper-warm/30 relative w-full overflow-hidden border-b border-line/60">
                       {product.images[0] ? (
                         <Image
                           src={product.images[0]}
                           alt={product.name}
                           fill
-                          className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                          className="object-cover object-top"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3 font-mono">
@@ -200,39 +198,39 @@ export default async function Home() {
                         </div>
                       )}
 
-                      {/* Badge Sconto Marrone */}
+                      {/* Badge Sconto in Palette (Inks/Minimal) */}
                       {isDiscountActive && (
-                        <span className="absolute top-2.5 left-2.5 bg-[#80532b] text-white text-xs font-bold px-2.5 py-1 z-10 shadow-sm">
+                        <span className="absolute top-2.5 left-2.5 bg-ink text-white text-[11px] font-bold px-2 py-0.5 rounded-sm">
                           -{product.discountPercent}%
                         </span>
                       )}
 
                       {/* Badge Colonna d'Acqua */}
                       {product.waterColumn && (
-                        <span className="absolute top-2.5 right-2.5 bg-grass-deep text-white text-[10px] font-bold px-2.5 py-1 z-10 shadow-sm">
+                        <span className="absolute top-2.5 right-2.5 bg-grass-deep text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
                           {product.waterColumn}MM
                         </span>
                       )}
                     </div>
 
-                    {/* Dettagli Prodotto */}
-                    <div className="p-4 sm:p-5 bg-white border-t border-line/50">
-                      <h3 className="text-sm font-bold text-[#1F2925] mb-3 leading-snug line-clamp-2 group-hover:text-grass-deep transition-colors">
+                    {/* Dettagli Prodotto in Palette */}
+                    <div className="p-4 sm:p-5 bg-white">
+                      <h3 className="text-sm font-bold text-ink mb-3 leading-snug line-clamp-2 group-hover:text-grass-deep transition-colors">
                         {product.name}
                       </h3>
                       {product.variants.length > 0 && (
                         <div className="flex items-baseline gap-2 font-mono">
                           {isDiscountActive ? (
                             <>
-                              <span className="font-bold text-base text-[#80532b]">
+                              <span className="font-bold text-base text-grass-deep">
                                 €{formattedPrice}
                               </span>
-                              <span className="text-xs text-[#7A7A7A] line-through">
+                              <span className="text-xs text-ink-soft/60 line-through">
                                 €{formattedFullPrice}
                               </span>
                             </>
                           ) : (
-                            <span className="font-bold text-base text-[#80532b]">
+                            <span className="font-bold text-base text-grass-deep">
                               €{formattedPrice}
                             </span>
                           )}
