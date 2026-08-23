@@ -7,6 +7,11 @@ export default function SetupOtpPage() {
   const router = useRouter();
   const { update } = useSession();
   const [qrCode, setQrCode] = useState<string | null>(null);
+  
+  // 1. Aggiungiamo lo stato per la chiave testuale e per il bottone "Copia"
+  const [secret, setSecret] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,8 +19,21 @@ export default function SetupOtpPage() {
   useEffect(() => {
     fetch("/api/admin/2fa/setup", { method: "POST" })
       .then((res) => res.json())
-      .then((data) => setQrCode(data.qrCodeDataUrl));
+      .then((data) => {
+        setQrCode(data.qrCodeDataUrl);
+        // 2. Salviamo anche il segreto (assicurati che la tua API lo restituisca!)
+        setSecret(data.secret); 
+      });
   }, []);
+
+  // 3. Funzione per copiare il codice negli appunti
+  const handleCopy = () => {
+    if (secret) {
+      navigator.clipboard.writeText(secret);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +70,8 @@ export default function SetupOtpPage() {
           </p>
         </div>
 
-        <div className="flex justify-center py-2">
+        <div className="flex flex-col items-center py-2 space-y-5">
+          {/* QR CODE */}
           {qrCode ? (
             <div className="p-3 bg-paper-warm border border-line">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,9 +82,33 @@ export default function SetupOtpPage() {
               <span className="text-xs text-ink-soft animate-pulse">Generazione in corso...</span>
             </div>
           )}
+
+          {/* 4. SOLUZIONE PER MOBILE: Testo e bottone copia */}
+          {secret && (
+            <div className="w-full pt-4 border-t border-line text-center space-y-2">
+              <p className="text-[11px] font-bold text-ink uppercase tracking-wider">
+                Non puoi scansionare il QR?
+              </p>
+              <p className="text-[11px] text-ink-soft mb-2">
+                Copia questo codice e inseriscilo manualmente nell&apos;app:
+              </p>
+              <div className="flex items-center justify-center gap-2">
+                <code className="bg-paper-warm px-3 py-1.5 text-xs font-mono border border-line tracking-widest text-soil-deep">
+                  {secret}
+                </code>
+                <button
+                  type="button" // IMPORTANTISSIMO: type="button" per non inviare il form!
+                  onClick={handleCopy}
+                  className="bg-line hover:bg-ink-soft text-ink hover:text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                >
+                  {copied ? "COPIATO!" : "COPIA"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <form onSubmit={handleConfirm} className="space-y-4">
+        <form onSubmit={handleConfirm} className="space-y-4 pt-2">
           <div>
             <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
               Codice di verifica (6 cifre)

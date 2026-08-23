@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: admin.id,
           email: admin.email,
           role: "admin",
-          totpEnabled: admin.totpEnabled,
+          totpEnabled: admin.totpEnabled, // Legge se ha già abilitato il 2FA
           isManager: admin.isManager,
           mustChangePassword: admin.mustChangePassword,
           otpVerified: false,
@@ -94,17 +94,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
+      // Gestione degli aggiornamenti via `update()`
       if (trigger === "update" && updateData) {
         const newMustChange =
           updateData.mustChangePassword ?? updateData.user?.mustChangePassword;
         const newOtpVerified =
           updateData.otpVerified ?? updateData.user?.otpVerified;
+        const newTotpEnabled =
+          updateData.totpEnabled ?? updateData.user?.totpEnabled;
 
         if (typeof newMustChange === "boolean") {
           token.mustChangePassword = newMustChange;
         }
         if (typeof newOtpVerified === "boolean") {
           token.otpVerified = newOtpVerified;
+        }
+        // AGGIUNTO: Permette di aggiornare totpEnabled dinamico dopo il setup del 2FA o il reset
+        if (typeof newTotpEnabled === "boolean") {
+          token.totpEnabled = newTotpEnabled;
         }
       }
 
