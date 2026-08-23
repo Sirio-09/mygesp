@@ -38,6 +38,9 @@ export async function PUT(
         images: body.images ?? [],
         waterColumn: body.waterColumn ? parseInt(body.waterColumn) : null,
         minTemp: body.minTemp ? parseInt(body.minTemp) : null,
+        featured: Boolean(body.featured),
+        discountPercent: body.discountPercent ? parseInt(body.discountPercent) : 0,
+        discountUntil: body.discountUntil ? new Date(body.discountUntil) : null,
       },
     });
 
