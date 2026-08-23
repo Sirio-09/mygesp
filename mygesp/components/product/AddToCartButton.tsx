@@ -15,11 +15,13 @@ export default function AddToCartButton({
   productSlug,
   productName,
   discountPercent,
+  productImage, // Aggiunto!
 }: {
   variants: Variant[];
   productSlug: string;
   productName: string;
   discountPercent?: number | null;
+  productImage?: string | null; // Aggiunto!
 }) {
   const router = useRouter();
   const [selectedSize, setSelectedSize] = useState(variants[0]?.size ?? "");
@@ -33,6 +35,7 @@ export default function AddToCartButton({
 
   const handleAdd = () => {
     if (!selectedVariant) return;
+    
     addItem({
       variantId: selectedVariant.id,
       productSlug,
@@ -40,7 +43,9 @@ export default function AddToCartButton({
       size: selectedVariant.size,
       priceCents: finalPriceCents ?? selectedVariant.priceCents,
       quantity,
+      image: productImage, // Ora l'immagine viene finalmente inviata allo store del carrello!
     });
+    
     router.push("/carrello");
   };
 

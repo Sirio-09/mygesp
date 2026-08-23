@@ -10,15 +10,33 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Calcolo totale
   const totalCents = items.reduce((acc, item: any) => acc + item.priceCents * item.quantity, 0)
   const totalEuro = (totalCents / 100).toFixed(2)
 
-  // Calcolo soglia spedizione gratuita (€99)
   const freeShippingThresholdCents = 9900
   const missingForFreeShippingCents = Math.max(0, freeShippingThresholdCents - totalCents)
   const missingForFreeShippingEuro = (missingForFreeShippingCents / 100).toFixed(2)
   const progressPercent = Math.min(100, (totalCents / freeShippingThresholdCents) * 100)
+
+  // Estrattore Immagine
+  const getFirstImage = (item: any): string | null => {
+    const raw =
+      item.image ||
+      item.imageUrl ||
+      item.coverImage ||
+      item.src ||
+      (Array.isArray(item.images) ? item.images[0] : null) ||
+      item.product?.image ||
+      item.product?.imageUrl ||
+      (Array.isArray(item.product?.images) ? item.product.images[0] : null) ||
+      item.variant?.image ||
+      (Array.isArray(item.variant?.images) ? item.variant.images[0] : null) ||
+      null
+
+    if (!raw) return null
+    if (typeof raw === 'string') return raw
+    return raw.url || raw.src || null
+  }
 
   const handleCheckout = async () => {
     setLoading(true)
@@ -52,180 +70,217 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-6">
-        <div className="w-20 h-20 bg-paper-warm border border-line rounded-full flex items-center justify-center mx-auto text-3xl">
-          🛒
-        </div>
-        <h1 className="text-2xl font-black text-ink uppercase tracking-tight">Il tuo carrello è vuoto</h1>
-        <p className="text-sm text-ink-soft max-w-md mx-auto">
-          Non hai ancora aggiunto prodotti. Esplora il nostro catalogo di abbigliamento e stivali professionali.
-        </p>
-        <div>
+      <main className="min-h-[calc(100vh-80px)] bg-paper-warm/30 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md bg-white border border-line p-8 space-y-6 text-center">
+          <div className="w-16 h-16 bg-paper-warm border border-line flex items-center justify-center mx-auto text-2xl text-ink">
+            🛒
+          </div>
+          <div className="space-y-2">
+            <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+              Carrello Vuoto
+            </span>
+            <h1 className="text-2xl font-extrabold text-ink">
+              Il tuo carrello è vuoto
+            </h1>
+            <p className="text-xs text-ink-soft max-w-xs mx-auto">
+              Non hai ancora aggiunto prodotti. Esplora il nostro catalogo.
+            </p>
+          </div>
           <Link
             href="/"
-            className="inline-block px-8 py-3 bg-grass hover:bg-grass-deep text-paper font-bold text-xs uppercase tracking-wider rounded-md transition-colors"
+            className="inline-block w-full bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3.5 transition-colors"
           >
             Inizia gli acquisti
           </Link>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      <h1 className="text-2xl sm:text-3xl font-black text-ink uppercase tracking-tight">Il tuo carrello</h1>
-
-      {/* SOGLIA SPEDIZIONE GRATUITA */}
-      <div className="p-4 bg-paper-warm border border-line rounded-lg space-y-2">
-        <div className="flex justify-between items-center text-xs font-bold uppercase text-ink">
-          {missingForFreeShippingCents > 0 ? (
-            <span>Aggiungi ancora €{missingForFreeShippingEuro} per la <strong>Spedizione Gratuita</strong>!</span>
-          ) : (
-            <span className="text-grass-deep">✓ Complimenti! Hai diritto alla <strong>Spedizione Gratuita</strong></span>
-          )}
-          <span>{Math.round(progressPercent)}%</span>
+    <main className="min-h-[calc(100vh-80px)] bg-paper-warm/30 px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        <div className="space-y-1">
+          <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+            Riepilogo Selezione
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
+            Il tuo carrello
+          </h1>
         </div>
-        <div className="w-full bg-line rounded-full h-2.5 overflow-hidden">
-          <div
-            className="bg-grass h-2.5 rounded-full transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
+
+        <div className="bg-white border border-line p-4 space-y-2.5">
+          <div className="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-ink">
+            {missingForFreeShippingCents > 0 ? (
+              <span>
+                Aggiungi ancora <strong className="text-grass-deep">€{missingForFreeShippingEuro}</strong> per la Spedizione Gratuita!
+              </span>
+            ) : (
+              <span className="text-grass-deep">
+                ✓ Complimenti! Hai diritto alla Spedizione Gratuita
+              </span>
+            )}
+            <span className="font-bold">{Math.round(progressPercent)}%</span>
+          </div>
+          <div className="w-full bg-paper-warm border border-line h-2 overflow-hidden">
+            <div
+              className="bg-grass h-2 transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
         </div>
-      </div>
 
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-md">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="p-4 bg-white border border-red-300 text-soil-deep text-xs font-semibold text-center">
+            {error}
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* ELENCO ARTICOLI (8 colonne) */}
-        <div className="lg:col-span-8 space-y-4">
-          {items.map((item: any) => {
-            const itemTotalEuro = ((item.priceCents * item.quantity) / 100).toFixed(2)
-            const unitPriceEuro = (item.priceCents / 100).toFixed(2)
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <div className="lg:col-span-8 space-y-4">
+            {items.map((item: any) => {
+              const itemTotalEuro = ((item.priceCents * item.quantity) / 100).toFixed(2)
+              const unitPriceEuro = (item.priceCents / 100).toFixed(2)
+              const imageUrl = getFirstImage(item)
 
-            return (
-              <div
-                key={item.variantId}
-                className="bg-paper border border-line rounded-lg p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              return (
+                <div
+                  key={item.variantId}
+                  className="bg-white border border-line p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    {imageUrl ? (
+                      <div className="relative w-20 h-20 bg-paper-warm border border-line shrink-0 overflow-hidden">
+                        <Image
+                          src={imageUrl}
+                          alt={item.productName || 'Prodotto'}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 bg-paper-warm border border-line flex items-center justify-center text-[10px] text-center text-ink-soft shrink-0 font-medium p-2 leading-tight">
+                        Immagine mancante
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <h2 className="font-extrabold text-ink text-sm sm:text-base">
+                        {item.productName}
+                      </h2>
+                      <div className="text-xs text-ink-soft space-x-2">
+                        <span>Taglia: <strong className="text-ink">{item.size}</strong></span>
+                        {item.color && <span>• Colore: <strong className="text-ink">{item.color}</strong></span>}
+                      </div>
+                      <div className="text-xs font-semibold text-ink-soft sm:hidden">
+                        €{unitPriceEuro} cad.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6 border-t sm:border-t-0 border-line pt-3 sm:pt-0">
+                    
+                    <div className="flex items-center border border-line bg-white">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (item.quantity > 1) {
+                            updateQuantity(item.variantId, item.quantity - 1)
+                          }
+                        }}
+                        disabled={item.quantity <= 1}
+                        className="px-3 py-1.5 text-ink hover:bg-paper-warm text-sm font-bold transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                      >
+                        -
+                      </button>
+                      <span className="px-3 py-1.5 text-xs font-bold text-ink border-x border-line min-w-[40px] text-center">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                        className="px-3 py-1.5 text-ink hover:bg-paper-warm text-sm font-bold transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-base font-extrabold text-ink">€{itemTotalEuro}</div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.variantId)}
+                        className="text-xs text-soil-deep hover:underline mt-0.5 font-semibold transition-colors"
+                      >
+                        Rimuovi
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className="flex justify-between items-center pt-2">
+              <button
+                type="button"
+                onClick={handleClearCart}
+                className="text-xs text-ink-soft hover:text-ink underline uppercase font-semibold tracking-wider transition-colors"
               >
-                <div className="flex items-center gap-4 flex-1">
-                  {item.image ? (
-                    <div className="relative w-20 h-20 bg-paper-warm border border-line rounded-md overflow-hidden shrink-0">
-                      <Image src={item.image} alt={item.productName} fill className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 bg-paper-warm border border-line rounded-md flex items-center justify-center text-xs text-ink-soft shrink-0">
-                      Foto
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <h2 className="font-bold text-ink uppercase text-sm sm:text-base">{item.productName}</h2>
-                    <div className="text-xs text-ink-soft space-x-2">
-                      <span>Taglia: <strong>{item.size}</strong></span>
-                      {item.color && <span>• Colore: <strong>{item.color}</strong></span>}
-                    </div>
-                    <div className="text-xs font-bold text-soil sm:hidden">€{unitPriceEuro} cad.</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6 border-t sm:border-t-0 border-line pt-3 sm:pt-0">
-                  {/* SELETTORE QUANTITÀ */}
-                  <div className="flex items-center border border-line rounded-md bg-paper">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                      className="px-3 py-1 text-ink hover:bg-paper-warm text-sm font-bold"
-                    >
-                      -
-                    </button>
-                    <span className="px-3 py-1 text-sm font-bold text-ink border-x border-line">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                      className="px-3 py-1 text-ink hover:bg-paper-warm text-sm font-bold"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  {/* PREZZO ED ELIMINAZIONE */}
-                  <div className="text-right">
-                    <div className="text-base font-black text-ink">€{itemTotalEuro}</div>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.variantId)}
-                      className="text-xs text-red-600 hover:underline mt-1 font-medium"
-                    >
-                      Rimuovi
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-
-          <div className="flex justify-between items-center pt-2">
-            <button
-              type="button"
-              onClick={handleClearCart}
-              className="text-xs text-ink-soft hover:text-ink underline uppercase font-semibold"
-            >
-              Svuota Carrello
-            </button>
-            <Link href="/" className="text-xs text-grass hover:text-grass-deep font-bold uppercase">
-              ← Continua lo shopping
-            </Link>
+                Svuota Carrello
+              </button>
+              <Link
+                href="/"
+                className="text-xs text-grass-deep hover:underline font-bold uppercase tracking-wider"
+              >
+                ← Continua lo shopping
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {/* RIEPILOGO E CHECKOUT (4 colonne) */}
-        <div className="lg:col-span-4">
-          <div className="bg-paper border border-line rounded-lg p-6 space-y-6 sticky top-24 shadow-sm">
-            <h2 className="text-lg font-black text-ink uppercase tracking-tight border-b border-line pb-3">
-              Riepilogo Ordine
-            </h2>
-
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between text-ink-soft">
-                <span>Subtotale prodotti</span>
-                <span className="font-bold text-ink">€{totalEuro}</span>
-              </div>
-              <div className="flex justify-between text-ink-soft">
-                <span>Spedizione</span>
-                <span className="font-bold text-ink">
-                  {missingForFreeShippingCents === 0 ? 'GRATIS' : 'Calcolata al checkout'}
+          <div className="lg:col-span-4">
+            <div className="bg-white border border-line p-6 space-y-6 sticky top-24">
+              <div className="border-b border-line pb-4">
+                <span className="text-[10px] uppercase tracking-widest font-semibold text-grass-deep block">
+                  Ordine
                 </span>
+                <h2 className="text-lg font-extrabold text-ink">
+                  Riepilogo
+                </h2>
               </div>
-              <div className="pt-3 border-t border-line flex justify-between items-baseline">
-                <span className="font-bold uppercase text-ink">Totale stimato</span>
-                <span className="text-2xl font-black text-ink">€{totalEuro}</span>
+
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between text-ink-soft">
+                  <span>Subtotale prodotti</span>
+                  <span className="font-bold text-ink">€{totalEuro}</span>
+                </div>
+                <div className="flex justify-between text-ink-soft">
+                  <span>Spedizione</span>
+                  <span className="font-bold text-ink">
+                    {missingForFreeShippingCents === 0 ? 'GRATIS' : 'Calcolata al checkout'}
+                  </span>
+                </div>
+                <div className="pt-3 border-t border-line flex justify-between items-baseline">
+                  <span className="font-bold uppercase tracking-wider text-ink text-xs">Totale stimato</span>
+                  <span className="text-2xl font-extrabold text-ink">€{totalEuro}</span>
+                </div>
               </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={handleCheckout}
-              disabled={loading}
-              className="w-full py-4 bg-grass hover:bg-grass-deep text-paper font-bold text-sm uppercase tracking-wider rounded-md transition-colors disabled:opacity-50 shadow-md"
-            >
-              {loading ? 'Preparazione Checkout...' : 'Procedi al Checkout Sicuro →'}
-            </button>
-
-            {/* GARANZIE PAGAMENTO */}
-            <div className="space-y-2 text-[11px] text-ink-soft pt-2 border-t border-line text-center">
-              <p className="font-bold uppercase text-ink">Pagamento SSL Crittografato</p>
-              <p>Accettiamo Carte di Credito, Debito e Stripe.</p>
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={loading || items.length === 0}
+                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3.5 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Preparazione...' : 'Procedi al Checkout →'}
+              </button>
             </div>
           </div>
+
         </div>
       </div>
-    </div>
+    </main>
   )
 }

@@ -60,8 +60,8 @@ export default async function ProductPage({
 
   const isDiscountActive = Boolean(
     product.discountPercent &&
-      product.discountPercent > 0 &&
-      (!product.discountUntil || new Date(product.discountUntil) > new Date())
+    product.discountPercent > 0 &&
+    (!product.discountUntil || new Date(product.discountUntil) > new Date())
   );
 
   return (
@@ -82,7 +82,7 @@ export default async function ProductPage({
       {/* Grid Principale Prodotto */}
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 space-y-16">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
+
           {/* Galleria Immagini (Sinistra) */}
           <div className="lg:col-span-7 sticky top-20">
             <ProductGallery images={product.images} productName={product.name} />
@@ -156,9 +156,10 @@ export default async function ProductPage({
                 productSlug={product.slug}
                 productName={product.name}
                 discountPercent={isDiscountActive ? product.discountPercent : null}
+                productImage={product.images[0]} // ✅ ECCO LA RIGA MAGICA
               />
             </div>
-
+            
             {/* Vantaggi / Garanzie */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-line">
               <div className="bg-paper-warm/40 p-3.5 border border-line">
