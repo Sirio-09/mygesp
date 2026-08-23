@@ -15,44 +15,45 @@ export default function Navbar() {
       {/* Contenitore Principale Navigazione */}
       <div className="max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-10">
         <nav className="h-16 sm:h-20 flex items-center justify-between gap-4">
-          {/* Logo e Menu Mobile */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          {/* Logo, Menu Mobile e Link Categorie attaccati */}
+          <div className="flex items-center gap-4 lg:gap-8">
             <MobileMenu />
+            
             <Link 
               href="/" 
-              className="text-ink text-xl sm:text-2xl font-extrabold tracking-tight hover:opacity-90 transition-opacity"
+              className="text-ink text-xl sm:text-2xl font-extrabold tracking-tight hover:opacity-90 transition-opacity shrink-0"
             >
               MY<span className="text-grass-deep">GESP</span>
             </Link>
-          </div>
 
-          {/* Link Categorie Principali */}
-          <ul className="hidden lg:flex items-center gap-8">
-            <li>
-              <Link 
-                href="/categoria/abbigliamento" 
-                className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
-              >
-                Abbigliamento
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href="/categoria/stivali" 
-                className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
-              >
-                Stivali
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href="/categoria/attrezzature" 
-                className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
-              >
-                Attrezzature
-              </Link>
-            </li>
-          </ul>
+            {/* Categorie affiancate al logo */}
+            <ul className="hidden lg:flex items-center gap-6 ml-2">
+              <li>
+                <Link 
+                  href="/categoria/abbigliamento" 
+                  className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
+                >
+                  Abbigliamento
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/categoria/stivali" 
+                  className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
+                >
+                  Stivali
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/categoria/attrezzature" 
+                  className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
+                >
+                  Attrezzature
+                </Link>
+              </li>
+            </ul>
+          </div>
 
           {/* Icone Azioni */}
           <div className="flex items-center gap-2 sm:gap-3">
