@@ -105,10 +105,11 @@ export default async function Home() {
                     ? Math.min(...product.variants.map((v) => v.priceCents))
                     : 0;
 
-                const isDiscountActive =
+                const isDiscountActive = Boolean(
                   product.discountPercent &&
-                  product.discountPercent > 0 &&
-                  (!product.discountUntil || new Date(product.discountUntil) > new Date());
+                    product.discountPercent > 0 &&
+                    (!product.discountUntil || new Date(product.discountUntil) > new Date())
+                );
 
                 const discountedPriceCents = isDiscountActive
                   ? Math.round((minPriceCents * (100 - product.discountPercent!)) / 100)
@@ -121,47 +122,56 @@ export default async function Home() {
                   <Link
                     key={product.id}
                     href={`/prodotto/${product.slug}`}
-                    className="bg-white border border-line hover:border-grass-deep hover:shadow-md transition-all relative group"
+                    className="bg-white block relative overflow-hidden group border border-[#E5E0D8] hover:border-[#80532b]/60 transition-colors"
                   >
-                    <div className="aspect-square bg-line/40 relative overflow-hidden">
+                    {/* Immagine Quadrata con taglio in alto */}
+                    <div className="aspect-square bg-white relative w-full overflow-hidden">
                       {product.images[0] ? (
-                        <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          fill
+                          className="object-cover object-top"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3">
+                        <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3 font-mono">
                           [nessuna foto]
                         </div>
                       )}
 
-                      {/* Badge Sconto */}
+                      {/* Badge Sconto Marrone */}
                       {isDiscountActive && (
-                        <span className="absolute top-2 left-2 bg-soil-deep text-white text-[10px] font-bold px-2 py-1">
+                        <span className="absolute top-2.5 left-2.5 bg-[#80532b] text-white text-xs font-bold px-2 py-1 z-10">
                           -{product.discountPercent}%
                         </span>
                       )}
 
+                      {/* Badge Colonna d'Acqua */}
                       {product.waterColumn && (
-                        <span className="absolute top-2 right-2 bg-grass-deep text-white text-[10px] font-bold px-2 py-1">
+                        <span className="absolute top-2.5 right-2.5 bg-grass-deep text-white text-[10px] font-bold px-2 py-1 z-10">
                           {product.waterColumn}MM
                         </span>
                       )}
                     </div>
-                    <div className="p-3 sm:p-4">
-                      <h3 className="text-ink text-sm font-semibold mb-1.5 leading-tight line-clamp-2">
+
+                    {/* Dettagli Prodotto */}
+                    <div className="p-4 bg-white">
+                      <h3 className="text-sm font-bold text-[#1F2925] mb-2 leading-snug line-clamp-2">
                         {product.name}
                       </h3>
                       {product.variants.length > 0 && (
-                        <div className="flex items-baseline gap-2">
+                        <div className="flex items-baseline gap-2 font-mono">
                           {isDiscountActive ? (
                             <>
-                              <span className="text-soil-deep font-bold text-sm sm:text-base">
+                              <span className="font-bold text-base text-[#80532b]">
                                 €{formattedPrice}
                               </span>
-                              <span className="text-ink-soft text-xs line-through">
+                              <span className="text-xs text-[#7A7A7A] line-through">
                                 €{formattedFullPrice}
                               </span>
                             </>
                           ) : (
-                            <span className="text-soil-deep font-bold text-sm sm:text-base">
+                            <span className="font-bold text-base text-[#80532b]">
                               €{formattedPrice}
                             </span>
                           )}
