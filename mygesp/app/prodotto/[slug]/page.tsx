@@ -57,8 +57,13 @@ export default async function ProductPage({
   }
 
   const descriptionBlocks = product.descriptionBlocks as unknown as DescriptionBlock[];
-  const isDiscountActive =
-    product.discountPercent && product.discountUntil && new Date(product.discountUntil) > new Date();
+
+  // Lo sconto è attivo se è > 0 e se la data non c'è oppure è futura
+  const isDiscountActive = Boolean(
+    product.discountPercent &&
+    product.discountPercent > 0 &&
+    (!product.discountUntil || new Date(product.discountUntil) > new Date())
+  );
 
   return (
     <main className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10 space-y-12">
