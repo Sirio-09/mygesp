@@ -57,61 +57,125 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* gamma prodotti */}
+      {/* gamma prodotti (NUOVA SEZIONE NUOVA E MODERNA) */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24">
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-          <p className="text-grass-deep text-xs sm:text-sm font-bold uppercase tracking-widest mb-3">
-            Gamma prodotti
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 sm:mb-16 gap-6 border-b border-line/60 pb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-grass-deep/10 text-grass-deep text-xs font-bold uppercase tracking-widest mb-3">
+              <span>Collezioni Tecniche</span>
+            </div>
+            <h2 className="text-ink font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight">
+              Equipaggiamento per il lavoro vero
+            </h2>
+          </div>
+          <p className="text-ink-soft text-sm sm:text-base max-w-md font-normal leading-relaxed">
+            Seleziona la tua categoria per scoprire i prodotti testati in condizioni estreme sul campo e in stalla.
           </p>
-          <h2 className="text-ink font-extrabold text-2xl sm:text-4xl tracking-tight">
-            Vai dritto a quello che ti serve
-          </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {/* Card 1 - Abbigliamento */}
           <Link
             href="/categoria/abbigliamento"
-            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col items-center text-center transition-all duration-300 hover:border-grass-deep hover:shadow-xl hover:-translate-y-1"
+            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 hover:border-grass-deep hover:shadow-2xl hover:-translate-y-1.5 overflow-hidden"
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-paper-warm flex items-center justify-center mb-6 text-3xl sm:text-4xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-              🧥
+            {/* Barra superiore colorata in hover */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-grass-deep transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <span className="font-mono text-xs font-bold tracking-widest text-grass-deep bg-grass-deep/10 px-3 py-1.5 rounded-md">
+                  01 / IMPERMEABILE
+                </span>
+                <div className="w-12 h-12 rounded-xl bg-paper-warm flex items-center justify-center text-grass-deep group-hover:bg-grass-deep group-hover:text-white transition-colors duration-300 shadow-sm">
+                  {/* Icona Giacca / Mantella */}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                  </svg>
+                </div>
+              </div>
+
+              <h3 className="text-ink font-bold text-xl sm:text-2xl mb-3 group-hover:text-grass-deep transition-colors">
+                Abbigliamento Tecnico
+              </h3>
+              <p className="text-ink-soft text-sm leading-relaxed mb-8">
+                Giacche ad alta tenacità, salopette e mantelle anti-strappo traspiranti e 100% impermeabili.
+              </p>
             </div>
-            <h3 className="text-ink font-bold text-lg sm:text-xl mb-2 group-hover:text-grass-deep transition-colors">
-              Abbigliamento impermeabile
-            </h3>
-            <p className="text-ink-soft text-sm leading-relaxed">
-              Giacche, pantaloni, mantelle
-            </p>
+
+            <div className="flex items-center justify-between text-sm font-bold text-ink group-hover:text-grass-deep transition-colors pt-4 border-t border-line/60">
+              <span>Esplora la gamma</span>
+              <span className="transform group-hover:translate-x-2 transition-transform duration-200">→</span>
+            </div>
           </Link>
 
+          {/* Card 2 - Stivali */}
           <Link
             href="/categoria/stivali"
-            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col items-center text-center transition-all duration-300 hover:border-grass-deep hover:shadow-xl hover:-translate-y-1"
+            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 hover:border-grass-deep hover:shadow-2xl hover:-translate-y-1.5 overflow-hidden"
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-paper-warm flex items-center justify-center mb-6 text-3xl sm:text-4xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-              🥾
+            <div className="absolute top-0 left-0 w-full h-1 bg-grass-deep transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <span className="font-mono text-xs font-bold tracking-widest text-grass-deep bg-grass-deep/10 px-3 py-1.5 rounded-md">
+                  02 / CALZATURE
+                </span>
+                <div className="w-12 h-12 rounded-xl bg-paper-warm flex items-center justify-center text-grass-deep group-hover:bg-grass-deep group-hover:text-white transition-colors duration-300 shadow-sm">
+                  {/* Icona Stivale / Protezione */}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+              </div>
+
+              <h3 className="text-ink font-bold text-xl sm:text-2xl mb-3 group-hover:text-grass-deep transition-colors">
+                Stivali e Calzature Termiche
+              </h3>
+              <p className="text-ink-soft text-sm leading-relaxed mb-8">
+                Stivali termici e scarponi da lavoro con isolamento dal freddo e suola ad altissimo grip antiscivolo.
+              </p>
             </div>
-            <h3 className="text-ink font-bold text-lg sm:text-xl mb-2 group-hover:text-grass-deep transition-colors">
-              Stivali e calzature
-            </h3>
-            <p className="text-ink-soft text-sm leading-relaxed">
-              Termici, da lavoro, da campo
-            </p>
+
+            <div className="flex items-center justify-between text-sm font-bold text-ink group-hover:text-grass-deep transition-colors pt-4 border-t border-line/60">
+              <span>Scopri i modelli</span>
+              <span className="transform group-hover:translate-x-2 transition-transform duration-200">→</span>
+            </div>
           </Link>
 
+          {/* Card 3 - Attrezzature */}
           <Link
             href="/categoria/attrezzature"
-            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col items-center text-center transition-all duration-300 hover:border-grass-deep hover:shadow-xl hover:-translate-y-1"
+            className="group relative bg-white border border-line p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 hover:border-grass-deep hover:shadow-2xl hover:-translate-y-1.5 overflow-hidden"
           >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-paper-warm flex items-center justify-center mb-6 text-3xl sm:text-4xl group-hover:scale-110 transition-transform duration-300 shadow-sm">
-              🧰
+            <div className="absolute top-0 left-0 w-full h-1 bg-grass-deep transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <span className="font-mono text-xs font-bold tracking-widest text-grass-deep bg-grass-deep/10 px-3 py-1.5 rounded-md">
+                  03 / STRUMENTI
+                </span>
+                <div className="w-12 h-12 rounded-xl bg-paper-warm flex items-center justify-center text-grass-deep group-hover:bg-grass-deep group-hover:text-white transition-colors duration-300 shadow-sm">
+                  {/* Icona Attrezzatura / Utensili */}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <h3 className="text-ink font-bold text-xl sm:text-2xl mb-3 group-hover:text-grass-deep transition-colors">
+                Attrezzature e Accessori
+              </h3>
+              <p className="text-ink-soft text-sm leading-relaxed mb-8">
+                Soluzioni professionali robuste pensate per semplificare il lavoro quotidiano in stalla e sul campo.
+              </p>
             </div>
-            <h3 className="text-ink font-bold text-lg sm:text-xl mb-2 group-hover:text-grass-deep transition-colors">
-              Attrezzature e accessori
-            </h3>
-            <p className="text-ink-soft text-sm leading-relaxed">
-              Tutto per il lavoro quotidiano
-            </p>
+
+            <div className="flex items-center justify-between text-sm font-bold text-ink group-hover:text-grass-deep transition-colors pt-4 border-t border-line/60">
+              <span>Vedi le attrezzature</span>
+              <span className="transform group-hover:translate-x-2 transition-transform duration-200">→</span>
+            </div>
           </Link>
         </div>
       </section>
