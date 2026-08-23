@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 type Review = {
   id: string;
@@ -11,27 +12,59 @@ type Review = {
 };
 
 export default function ProductReviews({ productId }: { productId: string }) {
-  const { data: session } = useSession();
-  const isCustomer = (session?.user as { role?: string })?.role === "customer";
+  const { data: session, status } = useSession();
+  const isLoadingSession = status === "loading";
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  
+  // Nuovo stato: l'utente ha comprato questo prodotto?
+  const [hasPurchased, setHasPurchased] = useState<boolean | null>(null); 
+  
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const loadReviews = async () => {
-    const res = await fetch(`/api/recensioni/${productId}`);
-    const data = await res.json();
-    setReviews(data);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/recensioni/${productId}`);
+      const data = await res.json();
+      setReviews(data);
+    } catch (err) {
+      console.error("Errore caricamento recensioni:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Funzione per controllare se l'utente ha acquistato il prodotto
+  const checkPurchaseStatus = async () => {
+    if (!session) return;
+    try {
+      // Dovrai creare questa API nel tuo backend per controllare gli ordini!
+      const res = await fetch(`/api/recensioni/check-acquisto?productId=${productId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setHasPurchased(data.hasPurchased);
+      } else {
+        setHasPurchased(false);
+      }
+    } catch (err) {
+      setHasPurchased(false);
+    }
   };
 
   useEffect(() => {
     loadReviews();
   }, [productId]);
+
+  useEffect(() => {
+    if (session) {
+      checkPurchaseStatus();
+    }
+  }, [session, productId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,13 +110,30 @@ export default function ProductReviews({ productId }: { productId: string }) {
             </p>
           )}
         </div>
-        {isCustomer && !showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-grass-deep hover:underline text-sm font-semibold w-fit"
-          >
-            Scrivi una recensione
-          </button>
+
+        {/* LOGICA BOTTONI RECENSIONE */}
+        {!isLoadingSession && !showForm && (
+          <div className="w-fit">
+            {!session ? (
+              <Link 
+                href="/account/login" // <-- Modifica qui se la tua pagina di login ha un URL diverso
+                className="text-soil-deep hover:underline text-sm font-semibold uppercase tracking-wider"
+              >
+                Accedi per recensire
+              </Link>
+            ) : hasPurchased === true ? (
+              <button
+                onClick={() => setShowForm(true)}
+                className="text-grass-deep hover:underline text-sm font-semibold"
+              >
+                Scrivi una recensione
+              </button>
+            ) : hasPurchased === false ? (
+              <span className="text-ink-soft text-xs italic">
+                *Solo chi ha acquistato l&apos;articolo può recensirlo.
+              </span>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -150,7 +200,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                   {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
                 </span>
                 <span className="text-sm font-semibold text-ink">
-                  {review.customer.name || review.customer.email.split("@")[0]}
+                  {review.customer?.name || review.customer?.email?.split("@")[0] || "Utente"}
                 </span>
               </div>
               <p className="text-sm text-ink-soft">{review.comment}</p>
