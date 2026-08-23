@@ -43,11 +43,16 @@ export default async function Home() {
             </Link>
           </div>
 
-          <div className="relative aspect-[4/3] bg-ink-soft/40 border border-white/10 rounded-2xl overflow-hidden flex items-center justify-center text-paper-warm/50 text-xs sm:text-sm text-center p-6 shadow-2xl backdrop-blur-sm group">
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent opacity-60" />
-            <span className="relative z-10 font-mono tracking-wide">
-              [foto: allevatore con giacca Uragan-Tex sotto la pioggia, in alpeggio]
-            </span>
+          {/* Immagine Hero */}
+          <div className="relative aspect-[4/3] bg-ink-soft/40 border border-white/10 rounded-2xl overflow-hidden shadow-2xl group">
+            <Image
+              src="/allevatore_che_indossa_giacca_lunga_impermeabile_uragan_tex.jpg"
+              alt="Allevatore che indossa giacca lunga impermeabile Uragan-Tex"
+              fill
+              priority
+              className="object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent opacity-80" />
           </div>
         </div>
       </section>
