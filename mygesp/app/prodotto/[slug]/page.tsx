@@ -58,131 +58,129 @@ export default async function ProductPage({
 
   const descriptionBlocks = product.descriptionBlocks as unknown as DescriptionBlock[];
 
-  // Lo sconto è attivo se è > 0 e se la data non c'è oppure è futura
   const isDiscountActive = Boolean(
     product.discountPercent &&
-    product.discountPercent > 0 &&
-    (!product.discountUntil || new Date(product.discountUntil) > new Date())
+      product.discountPercent > 0 &&
+      (!product.discountUntil || new Date(product.discountUntil) > new Date())
   );
 
   return (
-    <main className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10 space-y-12">
-      {/* Breadcrumb / Pulsante Ritorno */}
-      <div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink-soft hover:text-grass-deep transition-colors group"
-        >
-          <span className="group-hover:-translate-x-1 transition-transform">←</span>
-          <span>Torna al catalogo</span>
-        </Link>
+    <main className="bg-paper min-h-screen pb-20 sm:pb-28">
+      {/* Header / Breadcrumb Minimalista */}
+      <div className="bg-paper-warm/40 border-b border-line py-4">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink-soft hover:text-grass-deep transition-colors group"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            <span>Torna al catalogo</span>
+          </Link>
+        </div>
       </div>
 
       {/* Grid Principale Prodotto */}
-      <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        {/* Galleria Immagini (Sinistra) */}
-        <div className="lg:col-span-7 sticky top-20">
-          <ProductGallery images={product.images} productName={product.name} />
-        </div>
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 space-y-16">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          
+          {/* Galleria Immagini (Sinistra) */}
+          <div className="lg:col-span-7 sticky top-20">
+            <ProductGallery images={product.images} productName={product.name} />
+          </div>
 
-        {/* Informazioni e Acquisto (Destra) */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Header Marca e Sconto */}
-          <div className="flex items-center justify-between gap-3 pb-2 border-b border-line">
-            <span className="text-grass-deep text-xs font-black uppercase tracking-widest bg-grass/10 px-3 py-1 rounded-md">
-              {product.brand}
-            </span>
-            {isDiscountActive && (
-              <span className="bg-soil-deep text-white text-xs font-black px-2.5 py-1 rounded-md uppercase tracking-wider shadow-xs">
-                -{product.discountPercent}% Sconto
+          {/* Informazioni e Acquisto (Destra) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Header Marca e Sconto */}
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-line">
+              <span className="text-grass-deep text-xs font-bold uppercase tracking-widest">
+                {product.brand}
               </span>
+              {isDiscountActive && (
+                <span className="bg-grass-deep text-white text-xs font-extrabold px-3 py-1 rounded shadow-md tracking-wide">
+                  -{product.discountPercent}% SCONTO
+                </span>
+              )}
+            </div>
+
+            {/* Titolo Prodotto */}
+            <h1 className="text-ink font-extrabold text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-tight">
+              {product.name}
+            </h1>
+
+            {/* Specifiche Tecniche (Colonna d'Acqua & Temperatura) */}
+            {(product.waterColumn || product.minTemp) && (
+              <div className="grid grid-cols-2 gap-3 p-4 bg-paper-warm/40 border border-line">
+                {product.waterColumn && (
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                      Colonna d&apos;acqua
+                    </div>
+                    <div className="text-lg font-mono font-bold text-ink">
+                      {product.waterColumn} MM
+                    </div>
+                  </div>
+                )}
+                {product.minTemp && (
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                      Temperatura minima
+                    </div>
+                    <div className="text-lg font-mono font-bold text-ink">
+                      {product.minTemp}°C
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
 
-          {/* Titolo Prodotto */}
-          <h1 className="text-ink font-black text-2xl sm:text-3xl lg:text-4xl tracking-tight uppercase leading-tight">
-            {product.name}
-          </h1>
-
-          {/* Specifiche Tecniche (Colonna d'Acqua & Temperatura) */}
-          {(product.waterColumn || product.minTemp) && (
-            <div className="grid grid-cols-2 gap-3 p-4 bg-paper-warm border border-line rounded-xl">
-              {product.waterColumn && (
-                <div className="space-y-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                    Colonna d&apos;acqua
+            {/* Blocchi Descrittivi */}
+            {descriptionBlocks && descriptionBlocks.length > 0 && (
+              <div className="p-5 bg-white border border-line space-y-4">
+                {descriptionBlocks.map((block, i) => (
+                  <div key={i} className={i > 0 ? "pt-3 border-t border-line/60" : ""}>
+                    {block.title && (
+                      <h3 className="text-ink font-bold text-xs uppercase tracking-wider mb-1">
+                        {block.title}
+                      </h3>
+                    )}
+                    <p className="text-ink-soft text-sm leading-relaxed">{block.text}</p>
                   </div>
-                  <div className="text-xl font-black text-soil-deep">
-                    {product.waterColumn} mm
-                  </div>
-                </div>
-              )}
-              {product.minTemp && (
-                <div className="space-y-1">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                    Temperatura minima
-                  </div>
-                  <div className="text-xl font-black text-soil-deep">
-                    {product.minTemp}°C
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
-          {/* Blocchi Descrittivi */}
-          {descriptionBlocks && descriptionBlocks.length > 0 && (
-            <div className="p-4 bg-paper rounded-xl border border-line shadow-xs space-y-3">
-              {descriptionBlocks.map((block, i) => (
-                <div key={i} className={i > 0 ? "pt-3 border-t border-line/60" : ""}>
-                  {block.title && (
-                    <h3 className="text-ink font-bold text-xs uppercase tracking-wide mb-1">
-                      {block.title}
-                    </h3>
-                  )}
-                  <p className="text-ink-soft text-sm leading-relaxed">{block.text}</p>
-                </div>
-              ))}
+            {/* Bottone d'Acquisto */}
+            <div className="pt-2">
+              <AddToCartButton
+                variants={product.variants}
+                productSlug={product.slug}
+                productName={product.name}
+                discountPercent={isDiscountActive ? product.discountPercent : null}
+              />
             </div>
-          )}
 
-          {/* Bottone d'Acquisto */}
-          <div className="pt-2">
-            <AddToCartButton
-              variants={product.variants}
-              productSlug={product.slug}
-              productName={product.name}
-              discountPercent={isDiscountActive ? product.discountPercent : null}
-            />
-          </div>
-
-          {/* Vantaggi / Garanzie */}
-          <div className="p-4 bg-paper-warm/60 border border-line rounded-xl text-xs font-semibold text-ink space-y-2.5">
-            <div className="flex items-center gap-2.5">
-              <span className="w-5 h-5 rounded-full bg-grass/20 text-grass-deep flex items-center justify-center text-xs font-bold shrink-0">
-                ✓
-              </span>
-              <span>Testato sul campo in stalla e al pascolo</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="w-5 h-5 rounded-full bg-grass/20 text-grass-deep flex items-center justify-center text-xs font-bold shrink-0">
-                ✓
-              </span>
-              <span>Reso gratuito e garantito entro 30 giorni</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="w-5 h-5 rounded-full bg-grass/20 text-grass-deep flex items-center justify-center text-xs font-bold shrink-0">
-                ✓
-              </span>
-              <span>Spedizione gratuita sopra i 99€</span>
+            {/* Vantaggi / Garanzie */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-line">
+              <div className="bg-paper-warm/40 p-3.5 border border-line">
+                <p className="text-ink font-bold text-xs mb-0.5">Testato in Stalla</p>
+                <p className="text-ink-soft text-[11px]">Resistenza professionale sul campo</p>
+              </div>
+              <div className="bg-paper-warm/40 p-3.5 border border-line">
+                <p className="text-ink font-bold text-xs mb-0.5">Reso Facile</p>
+                <p className="text-ink-soft text-[11px]">30 giorni di tempo per il reso</p>
+              </div>
+              <div className="bg-paper-warm/40 p-3.5 border border-line">
+                <p className="text-ink font-bold text-xs mb-0.5">Spedizione Rapida</p>
+                <p className="text-ink-soft text-[11px]">Gratuita per ordini sopra i 99€</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Recensioni in Basso */}
-      <div className="pt-10 border-t border-line">
-        <ProductReviews productId={product.id} />
+        {/* Recensioni in Basso */}
+        <div className="pt-12 border-t border-line">
+          <ProductReviews productId={product.id} />
+        </div>
       </div>
     </main>
   );
