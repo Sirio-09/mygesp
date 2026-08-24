@@ -8,9 +8,13 @@ export default function SetupOtpPage() {
   const { update } = useSession();
   const [qrCode, setQrCode] = useState<string | null>(null);
   
-  // 1. Aggiungiamo lo stato per la chiave testuale e per il bottone "Copia"
+  // Stato per la chiave testuale e il bottone "Copia"
   const [secret, setSecret] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // NUOVO: Stato per i codici di recupero e feedback di copia
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [copiedCodes, setCopiedCodes] = useState(false);
   
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -21,18 +25,43 @@ export default function SetupOtpPage() {
       .then((res) => res.json())
       .then((data) => {
         setQrCode(data.qrCodeDataUrl);
-        // 2. Salviamo anche il segreto (assicurati che la tua API lo restituisca!)
         setSecret(data.secret); 
+        // Salviamo anche i codici di recupero se restituiti dall'API
+        if (data.backupCodes) {
+          setBackupCodes(data.backupCodes);
+        }
       });
   }, []);
 
-  // 3. Funzione per copiare il codice negli appunti
+  // Funzione per copiare il segreto negli appunti
   const handleCopy = () => {
     if (secret) {
       navigator.clipboard.writeText(secret);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  // NUOVO: Funzione per copiare tutti i codici di recupero
+  const handleCopyBackupCodes = () => {
+    if (backupCodes.length === 0) return;
+    const textToCopy = `CODICI DI RECUPERO 2FA - MYGESP\n\n` + backupCodes.join("\n");
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedCodes(true);
+    setTimeout(() => setCopiedCodes(false), 2000);
+  };
+
+  // NUOVO: Funzione per scaricare i codici di recupero in un file .txt
+  const handleDownloadBackupCodes = () => {
+    if (backupCodes.length === 0) return;
+    const content = `CODICI DI RECUPERO 2FA - MYGESP\nConserva questi codici in un luogo sicuro.\n\n` + backupCodes.join("\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "mygesp-backup-codes.txt";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleConfirm = async (e: React.FormEvent) => {
@@ -47,7 +76,7 @@ export default function SetupOtpPage() {
     });
 
     if (res.ok) {
-      await update({ otpVerified: true });
+      await update({ otpVerified: true, totpEnabled: true });
       router.push("/admin");
     } else {
       setError("Codice non valido, riprova.");
@@ -57,7 +86,7 @@ export default function SetupOtpPage() {
 
   return (
     <main className="min-h-[calc(100vh-80px)] bg-paper-warm flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white border border-line p-8 space-y-6">
+      <div className="w-full max-w-lg bg-white border border-line p-8 space-y-6">
         <div className="text-center space-y-2">
           <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
             Sicurezza Account
@@ -83,7 +112,7 @@ export default function SetupOtpPage() {
             </div>
           )}
 
-          {/* 4. SOLUZIONE PER MOBILE: Testo e bottone copia */}
+          {/* SOLUZIONE PER MOBILE: Testo e bottone copia */}
           {secret && (
             <div className="w-full pt-4 border-t border-line text-center space-y-2">
               <p className="text-[11px] font-bold text-ink uppercase tracking-wider">
@@ -97,7 +126,7 @@ export default function SetupOtpPage() {
                   {secret}
                 </code>
                 <button
-                  type="button" // IMPORTANTISSIMO: type="button" per non inviare il form!
+                  type="button"
                   onClick={handleCopy}
                   className="bg-line hover:bg-ink-soft text-ink hover:text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
                 >
@@ -107,6 +136,48 @@ export default function SetupOtpPage() {
             </div>
           )}
         </div>
+
+        {/* NUOVA SEZIONE: CODICI DI RECUPERO */}
+        {backupCodes.length > 0 && (
+          <div className="bg-paper-warm border border-line p-4 space-y-3">
+            <div className="text-center">
+              <p className="text-xs font-bold text-ink uppercase tracking-wider">
+                Codici di Recupero d&apos;Emergenza
+              </p>
+              <p className="text-[11px] text-ink-soft mt-1">
+                Salva questi codici. Ti permetteranno di accedere se perdi il dispositivo 2FA.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 py-1">
+              {backupCodes.map((bCode, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white border border-line py-1.5 text-center font-mono text-xs font-bold text-ink tracking-wider"
+                >
+                  {bCode}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleCopyBackupCodes}
+                className="bg-white hover:bg-line border border-line text-ink text-[11px] font-bold px-3 py-1.5 transition-colors"
+              >
+                {copiedCodes ? "Copiati!" : "Copia Tutti"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadBackupCodes}
+                className="bg-white hover:bg-line border border-line text-ink text-[11px] font-bold px-3 py-1.5 transition-colors"
+              >
+                Scarica .TXT
+              </button>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleConfirm} className="space-y-4 pt-2">
           <div>

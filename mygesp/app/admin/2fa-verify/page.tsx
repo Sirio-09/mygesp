@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function VerifyOtpPage() {
         <form onSubmit={handleVerify} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
-              Codice di verifica
+              Codice di verifica (6 cifre)
             </label>
             <input
               type="text"
@@ -74,6 +75,15 @@ export default function VerifyOtpPage() {
               {error}
             </p>
           )}
+
+          <div className="text-center pt-2 border-t border-line">
+            <Link
+              href="/admin/2fa-recovery"
+              className="text-xs font-medium text-ink-soft hover:text-grass-deep underline transition-colors"
+            >
+              Ho perso l&apos;accesso all&apos;app Authenticator
+            </Link>
+          </div>
         </form>
       </div>
     </main>

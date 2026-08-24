@@ -12,9 +12,10 @@ export default auth((req) => {
   if (!pathname.startsWith("/admin")) return;
 
   const isLoginPage = pathname === "/admin/login";
-  const is2faSetupPage = pathname === "/admin/2fa-setup"; // Modifica qui se il percorso della tua pagina con il QR è diverso (es. /admin/2fa/setup)
+  const is2faSetupPage = pathname === "/admin/2fa-setup";
   const is2faVerifyPage = pathname === "/admin/2fa-verify";
-  const is2faPage = is2faSetupPage || is2faVerifyPage;
+  const is2faRecoveryPage = pathname === "/admin/2fa-recovery"; // <-- NUOVA ROTTA
+  const is2faPage = is2faSetupPage || is2faVerifyPage || is2faRecoveryPage;
   const isCambiaPasswordPage = pathname === "/admin/cambia-password";
 
   // 1. Se la rotta è /admin/login, PERMETTI SEMPRE la visione della pagina
@@ -39,24 +40,24 @@ export default auth((req) => {
 
   // 4. PRIORITÀ 2: VERIFICA / SETUP 2FA
   if (!otpVerified) {
-    // SCENARIO A: L'admin NON ha mai configurato il 2FA (o è stato resettato)
+    // SCENARIO A: L'admin NON ha il 2FA attivo
     if (!totpEnabled) {
       if (!is2faSetupPage) {
-        return NextResponse.redirect(new URL("/admin/2fa-setup", req.url)); // <-- MANDA AL QR CODE
+        return NextResponse.redirect(new URL("/admin/2fa-setup", req.url));
       }
       return;
     }
 
-    // SCENARIO B: L'admin HA GIA' configurato il 2FA e deve solo inserire il codice
+    // SCENARIO B: L'admin HA il 2FA attivo e deve verificare (o usare il recupero)
     if (totpEnabled) {
-      if (!is2faVerifyPage) {
-        return NextResponse.redirect(new URL("/admin/2fa-verify", req.url)); // <-- MANDA ALLE 6 CIFRE
+      if (!is2faVerifyPage && !is2faRecoveryPage) {
+        return NextResponse.redirect(new URL("/admin/2fa-verify", req.url));
       }
       return;
     }
   }
 
-  // Se è già verificato ma sta provando a stare sulle pagine di 2FA, lo rimandiamo alla dashboard
+  // Se è già verificato ma tenta di andare sulle pagine 2FA, lo mandiamo alla dashboard
   if (otpVerified && is2faPage) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
