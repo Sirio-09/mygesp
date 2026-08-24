@@ -83,8 +83,8 @@ export default async function ProductPage({
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 space-y-16">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
-          {/* Galleria Immagini (Sinistra) */}
-          <div className="lg:col-span-7 sticky top-20">
+          {/* Galleria Immagini (Sinistra - Sticky solo su Desktop) */}
+          <div className="lg:col-span-7 lg:sticky lg:top-20">
             <ProductGallery images={product.images} productName={product.name} />
           </div>
 
@@ -107,7 +107,7 @@ export default async function ProductPage({
               {product.name}
             </h1>
 
-            {/* Titolo Breve e Descrizione Breve (Affiancati/Sopra il box d'acquisto) */}
+            {/* Titolo Breve e Descrizione Breve */}
             {(product.shortTitle || product.shortDescription) && (
               <div className="p-4 bg-white border border-line space-y-1.5">
                 {product.shortTitle && (
@@ -123,7 +123,7 @@ export default async function ProductPage({
               </div>
             )}
 
-            {/* Specifiche Tecniche (Colonna d'Acqua & Temperatura) */}
+            {/* Specifiche Tecniche */}
             {(product.waterColumn || product.minTemp) && (
               <div className="grid grid-cols-2 gap-3 p-4 bg-paper-warm/40 border border-line">
                 {product.waterColumn && (
@@ -156,10 +156,10 @@ export default async function ProductPage({
                 productSlug={product.slug}
                 productName={product.name}
                 discountPercent={isDiscountActive ? product.discountPercent : null}
-                productImage={product.images[0]} // ✅ ECCO LA RIGA MAGICA
+                productImage={product.images[0]}
               />
             </div>
-            
+
             {/* Vantaggi / Garanzie */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-line">
               <div className="bg-paper-warm/40 p-3.5 border border-line">
@@ -178,7 +178,7 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {/* Sezione Descrizioni Estese (Sotto la foto/box d'acquisto e prima delle recensioni) */}
+        {/* Sezione Descrizioni Estese */}
         {descriptionBlocks && descriptionBlocks.length > 0 && (
           <section className="pt-12 border-t border-line space-y-6">
             <div className="max-w-2xl">
