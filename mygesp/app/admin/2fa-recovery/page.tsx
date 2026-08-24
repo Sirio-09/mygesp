@@ -8,62 +8,76 @@ export default function RecoveryOtpPage() {
   const router = useRouter();
   const { update } = useSession();
 
-  // Stato del flusso: 1 = Inserimento codice recupero, 2 = Mostra solo QR Code
   const [step, setStep] = useState<1 | 2>(1);
 
-  // Dati per lo step 1
   const [recoveryCode, setRecoveryCode] = useState("");
   const [error, setError] = useState("");
+  const [isLocked, setIsLocked] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Dati per lo step 2 (QR Code generato)
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [copiedSecret, setCopiedSecret] = useState(false);
   const [confirmCode, setConfirmCode] = useState("");
 
-  // STEP 1: Invia codice di recupero
   const handleVerifyRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/2fa/recovery", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: recoveryCode }),
-    });
+    try {
+      const res = await fetch("/api/admin/2fa/recovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: recoveryCode }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      setQrCode(data.qrCodeDataUrl);
-      setSecret(data.secret);
-      await update({ totpEnabled: false });
-      setStep(2); // Passa alla vista con SOLO il QR Code
-    } else {
-      setError(data.error || "Codice di recupero non valido");
+      if (res.ok) {
+        setQrCode(data.qrCodeDataUrl);
+        setSecret(data.secret);
+        await update({ totpEnabled: false });
+        setStep(2);
+      } else {
+        setError(data.error || "Codice di recupero non valido.");
+        if (res.status === 429) {
+          setIsLocked(true);
+        }
+      }
+    } catch {
+      setError("Si è verificato un errore di connessione.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // STEP 2: Conferma associazione del nuovo QR Code
   const handleConfirmNewQr = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/2fa/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: confirmCode }),
-    });
+    try {
+      const res = await fetch("/api/admin/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: confirmCode }),
+      });
 
-    if (res.ok) {
-      await update({ otpVerified: true, totpEnabled: true });
-      router.push("/admin");
-    } else {
-      setError("Codice errato. Inserisci le 6 cifre dall'app authenticator.");
+      const data = await res.json();
+
+      if (res.ok) {
+        await update({ otpVerified: true, totpEnabled: true });
+        router.push("/admin");
+      } else {
+        setError(data.error || "Codice errato dall'app authenticator.");
+        if (res.status === 429) {
+          setIsLocked(true);
+        }
+      }
+    } catch {
+      setError("Si è verificato un errore di connessione.");
+    } finally {
       setLoading(false);
     }
   };
@@ -79,7 +93,6 @@ export default function RecoveryOtpPage() {
     <main className="min-h-[calc(100vh-80px)] bg-paper-warm flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-white border border-line p-8 space-y-6">
         
-        {/* STEP 1: INSERIMENTO CODICE DI RECUPERO */}
         {step === 1 && (
           <>
             <div className="text-center space-y-2">
@@ -90,9 +103,26 @@ export default function RecoveryOtpPage() {
                 Codice di Recupero
               </h1>
               <p className="text-xs text-ink-soft leading-relaxed">
-                Inserisci uno dei tuoi codici d&apos;emergenza. Il vecchio 2FA verrà azzerato e potrai scansionare un nuovo QR Code.
+                Inserisci uno dei tuoi codici d&apos;emergenza per rigenerare il tuo QR Code.
               </p>
             </div>
+
+            {error && (
+              <div
+                className={`p-4 text-xs font-semibold rounded text-center transition-colors ${
+                  isLocked
+                    ? "bg-red-100 text-red-800 border border-red-300"
+                    : "bg-amber-50 text-amber-900 border border-amber-200"
+                }`}
+              >
+                {isLocked && (
+                  <span className="block font-bold uppercase tracking-wider mb-1">
+                    🔒 Account Bloccato
+                  </span>
+                )}
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleVerifyRecovery} className="space-y-4">
               <div>
@@ -102,27 +132,22 @@ export default function RecoveryOtpPage() {
                 <input
                   type="text"
                   maxLength={12}
+                  disabled={isLocked}
                   value={recoveryCode}
                   onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
                   placeholder="XXXX-XXXX"
                   autoFocus
-                  className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.2em] text-ink focus:border-grass-deep outline-none transition-colors uppercase"
+                  className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.2em] text-ink focus:border-grass-deep outline-none transition-colors uppercase disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={loading || recoveryCode.trim().length < 6}
-                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50"
+                disabled={loading || recoveryCode.trim().length < 6 || isLocked}
+                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Verifica in corso..." : "Continua al nuovo QR Code"}
               </button>
-
-              {error && (
-                <p className="text-xs text-soil-deep text-center font-semibold pt-1">
-                  {error}
-                </p>
-              )}
 
               <div className="text-center pt-2 border-t border-line">
                 <Link
@@ -136,7 +161,6 @@ export default function RecoveryOtpPage() {
           </>
         )}
 
-        {/* STEP 2: MOSTRA SOLO IL NUOVO QR CODE */}
         {step === 2 && (
           <>
             <div className="text-center space-y-2">
@@ -150,6 +174,23 @@ export default function RecoveryOtpPage() {
                 Scansiona questo nuovo QR Code con la tua app Authenticator per associare il dispositivo.
               </p>
             </div>
+
+            {error && (
+              <div
+                className={`p-4 text-xs font-semibold rounded text-center transition-colors ${
+                  isLocked
+                    ? "bg-red-100 text-red-800 border border-red-300"
+                    : "bg-amber-50 text-amber-900 border border-amber-200"
+                }`}
+              >
+                {isLocked && (
+                  <span className="block font-bold uppercase tracking-wider mb-1">
+                    🔒 Account Bloccato
+                  </span>
+                )}
+                {error}
+              </div>
+            )}
 
             <div className="flex flex-col items-center py-2 space-y-4">
               {qrCode && (
@@ -188,26 +229,21 @@ export default function RecoveryOtpPage() {
                 <input
                   type="text"
                   maxLength={6}
+                  disabled={isLocked}
                   value={confirmCode}
                   onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="000000"
-                  className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors"
+                  className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={loading || confirmCode.length !== 6}
-                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50"
+                disabled={loading || confirmCode.length !== 6 || isLocked}
+                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Attivazione in corso..." : "Associa e Accedi"}
               </button>
-
-              {error && (
-                <p className="text-xs text-soil-deep text-center font-semibold pt-1">
-                  {error}
-                </p>
-              )}
             </form>
           </>
         )}

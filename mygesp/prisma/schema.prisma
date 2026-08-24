@@ -72,15 +72,17 @@ model OrderItem {
 }
 
 model Admin {
-  id                 String   @id @default(cuid())
-  username           String   @unique
-  email              String   @unique
+  id                 String    @id @default(cuid())
+  username           String    @unique
+  email              String    @unique
   password           String
-  isManager          Boolean  @default(false)
+  isManager          Boolean   @default(false)
   totpSecret         String?
-  totpEnabled        Boolean  @default(false)
-  mustChangePassword Boolean  @default(false)
-  backupCodes        String[] @default([])
+  totpEnabled        Boolean   @default(false)
+  mustChangePassword Boolean   @default(false)
+  backupCodes        String[]  @default([])
+  failed2faAttempts  Int       @default(0)
+  lockoutUntil       DateTime?
 }
 
 model Customer {

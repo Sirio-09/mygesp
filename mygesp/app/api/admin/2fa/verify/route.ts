@@ -3,6 +3,9 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OTP } from "otplib";
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session || (session.user as { role?: string })?.role !== "admin") {
@@ -22,28 +25,40 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "2FA non configurato" }, { status: 400 });
   }
 
+  // 1. Controllo se l'account è temporaneamente bloccato
+  if (admin.lockoutUntil && admin.lockoutUntil > new Date()) {
+    const minutesLeft = Math.ceil((admin.lockoutUntil.getTime() - Date.now()) / (1000 * 60));
+    return NextResponse.json(
+      { error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? 'o' : 'i'}.` },
+      { status: 429 }
+    );
+  }
+
   const cleanCode = code.trim().toUpperCase();
   const normalizedInput = cleanCode.replace(/-/g, "");
 
-  // 1. Verifichiamo se è un codice TOTP valido (6 cifre)
+  // 2. Verifica del codice TOTP (6 cifre)
   const otp = new OTP({ strategy: "totp" });
   const result = await otp.verify({ token: cleanCode, secret: admin.totpSecret });
 
   if (result.valid) {
     await prisma.admin.update({
       where: { id: admin.id },
-      data: { totpEnabled: true },
+      data: {
+        totpEnabled: true,
+        failed2faAttempts: 0,
+        lockoutUntil: null,
+      },
     });
     return NextResponse.json({ success: true });
   }
 
-  // 2. Se il TOTP fallisce, verifichiamo se è un codice di backup valido
+  // 3. Se il TOTP fallisce, verifica se è un codice di backup valido
   const backupIndex = (admin.backupCodes || []).findIndex(
     (bCode) => bCode.replace(/-/g, "") === normalizedInput
   );
 
   if (backupIndex !== -1) {
-    // Rimuoviamo il codice di backup usato per non farlo riutilizzare
     const updatedBackupCodes = admin.backupCodes.filter((_, idx) => idx !== backupIndex);
 
     await prisma.admin.update({
@@ -51,6 +66,8 @@ export async function POST(req: Request) {
       data: {
         totpEnabled: true,
         backupCodes: updatedBackupCodes,
+        failed2faAttempts: 0,
+        lockoutUntil: null,
       },
     });
 
@@ -61,5 +78,31 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ error: "Codice non valido" }, { status: 400 });
+  // 4. Gestione tentativi errati e blocco temporaneo
+  const newAttempts = (admin.failed2faAttempts || 0) + 1;
+  const shouldLock = newAttempts >= MAX_ATTEMPTS;
+  const lockoutTime = shouldLock
+    ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
+    : null;
+
+  await prisma.admin.update({
+    where: { id: admin.id },
+    data: {
+      failed2faAttempts: newAttempts,
+      lockoutUntil: lockoutTime,
+    },
+  });
+
+  if (shouldLock) {
+    return NextResponse.json(
+      { error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.` },
+      { status: 429 }
+    );
+  }
+
+  const remainingAttempts = MAX_ATTEMPTS - newAttempts;
+  return NextResponse.json(
+    { error: `Codice non valido. Tentativi rimasti: ${remainingAttempts}` },
+    { status: 400 }
+  );
 }

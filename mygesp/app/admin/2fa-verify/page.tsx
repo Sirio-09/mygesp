@@ -9,6 +9,7 @@ export default function VerifyOtpPage() {
   const { update } = useSession();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [isLocked, setIsLocked] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -16,17 +17,27 @@ export default function VerifyOtpPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/2fa/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
+    try {
+      const res = await fetch("/api/admin/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
 
-    if (res.ok) {
-      await update({ otpVerified: true });
-      router.push("/admin");
-    } else {
-      setError("Codice non valido");
+      const data = await res.json();
+
+      if (res.ok) {
+        await update({ otpVerified: true });
+        router.push("/admin");
+      } else {
+        setError(data.error || "Codice non valido.");
+        if (res.status === 429) {
+          setIsLocked(true);
+        }
+      }
+    } catch {
+      setError("Si è verificato un errore di connessione.");
+    } finally {
       setLoading(false);
     }
   };
@@ -42,46 +53,58 @@ export default function VerifyOtpPage() {
             Verifica 2FA
           </h1>
           <p className="text-xs text-ink-soft leading-relaxed">
-            Inserisci il codice temporaneo a 6 cifre generato dalla tua app di autenticazione.
+            Inserisci il codice a 6 cifre generato dalla tua app Authenticator.
           </p>
         </div>
+
+        {error && (
+          <div
+            className={`p-4 text-xs font-semibold rounded text-center transition-colors ${
+              isLocked
+                ? "bg-red-100 text-red-800 border border-red-300"
+                : "bg-amber-50 text-amber-900 border border-amber-200"
+            }`}
+          >
+            {isLocked && (
+              <span className="block font-bold uppercase tracking-wider mb-1">
+                🔒 Account Bloccato
+              </span>
+            )}
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleVerify} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
-              Codice di verifica (6 cifre)
+              Codice TOTP
             </label>
             <input
               type="text"
               maxLength={6}
+              disabled={isLocked}
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               placeholder="000000"
               autoFocus
-              className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors"
+              className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading || code.length !== 6}
-            className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50"
+            disabled={loading || code.length !== 6 || isLocked}
+            className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Verifica in corso..." : "Conferma"}
+            {loading ? "Verifica in corso..." : "Verifica e Accedi"}
           </button>
-
-          {error && (
-            <p className="text-xs text-soil-deep text-center font-semibold pt-1">
-              {error}
-            </p>
-          )}
 
           <div className="text-center pt-2 border-t border-line">
             <Link
               href="/admin/2fa-recovery"
               className="text-xs font-medium text-ink-soft hover:text-grass-deep underline transition-colors"
             >
-              Ho perso l&apos;accesso all&apos;app Authenticator
+              Usa un codice di recupero d&apos;emergenza
             </Link>
           </div>
         </form>
