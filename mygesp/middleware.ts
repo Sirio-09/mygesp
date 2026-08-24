@@ -14,12 +14,17 @@ export default auth((req) => {
   const isLoginPage = pathname === "/admin/login";
   const is2faSetupPage = pathname === "/admin/2fa-setup";
   const is2faVerifyPage = pathname === "/admin/2fa-verify";
-  const is2faRecoveryPage = pathname === "/admin/2fa-recovery"; // <-- NUOVA ROTTA
+  const is2faRecoveryPage = pathname === "/admin/2fa-recovery";
   const is2faPage = is2faSetupPage || is2faVerifyPage || is2faRecoveryPage;
   const isCambiaPasswordPage = pathname === "/admin/cambia-password";
 
-  // 1. Se la rotta è /admin/login, PERMETTI SEMPRE la visione della pagina
-  if (isLoginPage) return;
+  // 1. Se è già autenticato e verificato, non deve accedere alla pagina di Login
+  if (isLoginPage) {
+    if (isLoggedIn && otpVerified) {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
+    return;
+  }
 
   // 2. UTENTE NON AUTENTICATO -> Reindirizza a login
   if (!isLoggedIn || role !== "admin") {
@@ -38,9 +43,12 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
-  // 4. PRIORITÀ 2: VERIFICA / SETUP 2FA
+  // 4. PRIORITÀ 2: VERIFICA / SETUP / RECUPERO 2FA
   if (!otpVerified) {
-    // SCENARIO A: L'admin NON ha il 2FA attivo
+    // Permette sempre di stare nella pagina di recupero anche se totpEnabled passa a false
+    if (is2faRecoveryPage) return;
+
+    // SCENARIO A: L'admin NON ha ancora configurato il 2FA
     if (!totpEnabled) {
       if (!is2faSetupPage) {
         return NextResponse.redirect(new URL("/admin/2fa-setup", req.url));
@@ -48,16 +56,14 @@ export default auth((req) => {
       return;
     }
 
-    // SCENARIO B: L'admin HA il 2FA attivo e deve verificare (o usare il recupero)
-    if (totpEnabled) {
-      if (!is2faVerifyPage && !is2faRecoveryPage) {
-        return NextResponse.redirect(new URL("/admin/2fa-verify", req.url));
-      }
-      return;
+    // SCENARIO B: L'admin HA il 2FA attivo e deve verificare
+    if (!is2faVerifyPage) {
+      return NextResponse.redirect(new URL("/admin/2fa-verify", req.url));
     }
+    return;
   }
 
-  // Se è già verificato ma tenta di andare sulle pagine 2FA, lo mandiamo alla dashboard
+  // 5. Se è già verificato ma tenta di andare sulle pagine 2FA, lo mandiamo alla dashboard
   if (otpVerified && is2faPage) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
