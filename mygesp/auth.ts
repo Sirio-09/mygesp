@@ -10,6 +10,7 @@ declare module "next-auth" {
     isManager?: boolean;
     mustChangePassword?: boolean;
     otpVerified?: boolean;
+    isVerified?: boolean;
   }
   interface Session {
     user: User & {
@@ -27,6 +28,7 @@ declare module "@auth/core/jwt" {
     isManager?: boolean;
     mustChangePassword?: boolean;
     otpVerified?: boolean;
+    isVerified?: boolean;
   }
 }
 
@@ -51,7 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: admin.id,
           email: admin.email,
           role: "admin",
-          totpEnabled: admin.totpEnabled, // Legge se ha già abilitato il 2FA
+          totpEnabled: admin.totpEnabled,
           isManager: admin.isManager,
           mustChangePassword: admin.mustChangePassword,
           otpVerified: false,
@@ -62,9 +64,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       id: "customer-login",
       credentials: { email: {}, password: {} },
       authorize: async (credentials) => {
+        const email = (credentials.email as string)?.trim().toLowerCase();
         const customer = await prisma.customer.findUnique({
-          where: { email: credentials.email as string },
+          where: { email },
         });
+
         if (!customer) return null;
 
         const valid = await bcrypt.compare(
@@ -73,10 +77,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
         if (!valid) return null;
 
+        // Blocco accesso per utenti non ancora verificati
+        if (!customer.isVerified) {
+          throw new Error("Devi prima confermare il tuo indirizzo email per accedere.");
+        }
+
         return {
           id: customer.id,
           email: customer.email,
           role: "customer",
+          isVerified: customer.isVerified,
         };
       },
     }),
@@ -86,6 +96,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.isVerified = user.isVerified;
+
         if (user.role === "admin") {
           token.totpEnabled = user.totpEnabled;
           token.isManager = user.isManager;
@@ -94,7 +106,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      // Gestione degli aggiornamenti via `update()`
       if (trigger === "update" && updateData) {
         const newMustChange =
           updateData.mustChangePassword ?? updateData.user?.mustChangePassword;
@@ -102,6 +113,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           updateData.otpVerified ?? updateData.user?.otpVerified;
         const newTotpEnabled =
           updateData.totpEnabled ?? updateData.user?.totpEnabled;
+        const newIsVerified =
+          updateData.isVerified ?? updateData.user?.isVerified;
 
         if (typeof newMustChange === "boolean") {
           token.mustChangePassword = newMustChange;
@@ -109,9 +122,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (typeof newOtpVerified === "boolean") {
           token.otpVerified = newOtpVerified;
         }
-        // AGGIUNTO: Permette di aggiornare totpEnabled dinamico dopo il setup del 2FA o il reset
         if (typeof newTotpEnabled === "boolean") {
           token.totpEnabled = newTotpEnabled;
+        }
+        if (typeof newIsVerified === "boolean") {
+          token.isVerified = newIsVerified;
         }
       }
 
@@ -121,6 +136,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role;
+        session.user.isVerified = token.isVerified;
 
         if (token.role === "admin") {
           session.user.totpEnabled = token.totpEnabled;
@@ -132,5 +148,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
-  pages: { signIn: "/admin/login" },
+  pages: { signIn: "/account/login" },
 });

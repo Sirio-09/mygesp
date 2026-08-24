@@ -86,14 +86,25 @@ model Admin {
 }
 
 model Customer {
-  id          String               @id @default(cuid())
-  email       String               @unique
+  id          String              @id @default(cuid())
+  email       String              @unique
   password    String
   name        String?
+  isVerified  Boolean             @default(false)
+  tokens      VerificationToken[]
   orders      Order[]
   resetTokens PasswordResetToken[]
   reviews     Review[]
-  createdAt   DateTime             @default(now())
+  createdAt   DateTime            @default(now())
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
 }
 
 model PasswordResetToken {
