@@ -73,16 +73,77 @@ export async function POST(req: Request) {
       to: cleanEmail,
       subject: "Conferma la tua email — MyGesp",
       html: `
-        <div style="font-family: sans-serif; padding: 20px;">
-          <h2>Benvenuto su MyGesp!</h2>
-          <p>Conferma il tuo indirizzo email cliccando sul pulsante in basso:</p>
-          <a href="${verifyUrl}" style="background-color: #2e7d32; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold; margin: 12px 0;">
-            Conferma Email
-          </a>
-        </div>
-      `,
-    });
+    <!DOCTYPE html>
+    <html lang="it">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Conferma Email</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f7f7f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1a1a;">
+      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f7f7f5; padding: 40px 10px;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);">
+              
+              <!-- Brand Header -->
+              <tr>
+                <td style="padding: 32px 32px 0 32px; text-align: center;">
+                  <span style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: #1a1a1a; letter-spacing: 1.5px;">MYGESP</span>
+                </td>
+              </tr>
 
+              <!-- Main Content -->
+              <tr>
+                <td style="padding: 32px;">
+                  <h1 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 800; color: #1a1a1a; text-transform: uppercase; tracking: -0.2px; text-align: center;">
+                    Verifica il tuo account
+                  </h1>
+                  <p style="margin: 0 0 28px 0; font-size: 14px; line-height: 1.6; color: #555555; text-align: center;">
+                    Grazie per esserti registrato su <strong>MyGesp</strong>! Manca solo un ultimo passaggio: clicca sul pulsante qui sotto per confermare la tua email e attivare l'account.
+                  </p>
+                  
+                  <!-- CTA Button -->
+                  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 32px;">
+                    <tr>
+                      <td align="center">
+                        <a href="${verifyUrl}" target="_blank" style="display: inline-block; background-color: #2e7d32; color: #ffffff; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; padding: 14px 28px; border-radius: 6px; box-shadow: 0 3px 6px rgba(46, 125, 50, 0.2);">
+                          Conferma Email
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Fallback Link -->
+                  <div style="border-top: 1px solid #f0f0f0; padding-top: 20px;">
+                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #888888; text-align: center;">
+                      Se il pulsante non funziona, copia e incolla questo link nel browser:
+                    </p>
+                    <p style="margin: 0; font-size: 11px; word-break: break-all; text-align: center;">
+                      <a href="${verifyUrl}" style="color: #2e7d32; text-decoration: underline;">${verifyUrl}</a>
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #fafafa; padding: 20px 32px; border-top: 1px solid #f0f0f0; text-align: center;">
+                  <p style="margin: 0; font-size: 11px; color: #999999; line-height: 1.5;">
+                    Se non hai richiesto tu la creazione di questo account, puoi ignorare in tutta sicurezza questa email.<br>
+                    &copy; ${new Date().getFullYear()} MyGesp. Tutti i diritti riservati.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `,
+    });
     if (emailError) {
       console.error("Errore Resend:", emailError);
       return NextResponse.json(
