@@ -21,51 +21,48 @@ export default auth((req) => {
   // 1. Se è già autenticato e verificato, non deve accedere alla pagina di Login
   if (isLoginPage) {
     if (isLoggedIn && otpVerified) {
-      return NextResponse.redirect(new URL("/admin", req.url));
+      return NextResponse.redirect(new URL("/admin", req.nextUrl));
     }
     return;
   }
 
   // 2. UTENTE NON AUTENTICATO -> Reindirizza a login
   if (!isLoggedIn || role !== "admin") {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
+    return NextResponse.redirect(new URL("/admin/login", req.nextUrl));
   }
 
   // 3. PRIORITÀ 1: OBBLIGO CAMBIO PASSWORD
   if (mustChangePassword) {
     if (!isCambiaPasswordPage) {
-      return NextResponse.redirect(new URL("/admin/cambia-password", req.url));
+      return NextResponse.redirect(new URL("/admin/cambia-password", req.nextUrl));
     }
     return;
   }
 
   if (!mustChangePassword && isCambiaPasswordPage) {
-    return NextResponse.redirect(new URL("/admin", req.url));
+    return NextResponse.redirect(new URL("/admin", req.nextUrl));
   }
 
   // 4. PRIORITÀ 2: VERIFICA / SETUP / RECUPERO 2FA
   if (!otpVerified) {
-    // Permette sempre di stare nella pagina di recupero anche se totpEnabled passa a false
     if (is2faRecoveryPage) return;
 
-    // SCENARIO A: L'admin NON ha ancora configurato il 2FA
     if (!totpEnabled) {
       if (!is2faSetupPage) {
-        return NextResponse.redirect(new URL("/admin/2fa-setup", req.url));
+        return NextResponse.redirect(new URL("/admin/2fa-setup", req.nextUrl));
       }
       return;
     }
 
-    // SCENARIO B: L'admin HA il 2FA attivo e deve verificare
     if (!is2faVerifyPage) {
-      return NextResponse.redirect(new URL("/admin/2fa-verify", req.url));
+      return NextResponse.redirect(new URL("/admin/2fa-verify", req.nextUrl));
     }
     return;
   }
 
   // 5. Se è già verificato ma tenta di andare sulle pagine 2FA, lo mandiamo alla dashboard
   if (otpVerified && is2faPage) {
-    return NextResponse.redirect(new URL("/admin", req.url));
+    return NextResponse.redirect(new URL("/admin", req.nextUrl));
   }
 
   return;

@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const q = searchParams.get("q")?.trim();
+    const q = req.nextUrl.searchParams.get("q")?.trim();
 
     if (!q || q.length < 2) {
       return NextResponse.json([]);
@@ -27,10 +26,11 @@ export async function GET(req: Request) {
 
     // Mappatura sicura per il frontend della SearchBar
     const formattedProducts = products.map((product) => {
-      // Estrae l'immagine dal prodotto o dalla prima variante che possiede immagini
       const productImages = (product as unknown as { images?: string[] }).images;
       const variantWithImage = product.variants?.find(
-        (v: unknown) => Array.isArray((v as { images?: string[] }).images) && (v as { images: string[] }).images.length > 0
+        (v: unknown) =>
+          Array.isArray((v as { images?: string[] }).images) &&
+          (v as { images: string[] }).images.length > 0
       ) as { images: string[] } | undefined;
 
       const mainImage =
@@ -49,6 +49,9 @@ export async function GET(req: Request) {
     return NextResponse.json(formattedProducts);
   } catch (error) {
     console.error("Errore durante la ricerca:", error);
-    return NextResponse.json({ error: "Errore interno durante la ricerca" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Errore interno durante la ricerca" },
+      { status: 500 }
+    );
   }
 }
