@@ -11,9 +11,23 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
+// Fallback sicuro per evitare crash in fase di build static/prerender
+const getSafeMetadataBase = (): URL => {
+  const envUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.NEXTAUTH_URL ||
+    "http://localhost:3000";
+  const cleanUrl = envUrl.replace(/^(https?:\/\/)+/i, "").replace(/\/+$/, "");
+  return new URL(
+    cleanUrl.startsWith("localhost") ? `http://${cleanUrl}` : `https://${cleanUrl}`
+  );
+};
+
 export const metadata: Metadata = {
+  metadataBase: getSafeMetadataBase(),
   title: "MyGesp — Abbigliamento tecnico e stivali per agricoltura e allevamento",
-  description: "Abbigliamento impermeabile, stivali termici e attrezzature professionali testati in stalla, al pascolo, nel fango.",
+  description:
+    "Abbigliamento impermeabile, stivali termici e attrezzature professionali testati in stalla, al pascolo, nel fango.",
 };
 
 export default function RootLayout({
