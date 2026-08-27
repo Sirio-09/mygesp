@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { authConfig } from "./auth.config";
 
 declare module "next-auth" {
   interface User {
@@ -33,7 +34,7 @@ declare module "@auth/core/jwt" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  trustHost: true,
+  ...authConfig,
   providers: [
     Credentials({
       id: "admin-login",
@@ -78,7 +79,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
         if (!valid) return null;
 
-        // Blocco accesso per utenti non ancora verificati
         if (!customer.isVerified) {
           throw new Error("Devi prima confermare il tuo indirizzo email per accedere.");
         }
@@ -92,62 +92,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt: async ({ token, user, trigger, session: updateData }) => {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.isVerified = user.isVerified;
-
-        if (user.role === "admin") {
-          token.totpEnabled = user.totpEnabled;
-          token.isManager = user.isManager;
-          token.mustChangePassword = user.mustChangePassword;
-          token.otpVerified = false;
-        }
-      }
-
-      if (trigger === "update" && updateData) {
-        const newMustChange =
-          updateData.mustChangePassword ?? updateData.user?.mustChangePassword;
-        const newOtpVerified =
-          updateData.otpVerified ?? updateData.user?.otpVerified;
-        const newTotpEnabled =
-          updateData.totpEnabled ?? updateData.user?.totpEnabled;
-        const newIsVerified =
-          updateData.isVerified ?? updateData.user?.isVerified;
-
-        if (typeof newMustChange === "boolean") {
-          token.mustChangePassword = newMustChange;
-        }
-        if (typeof newOtpVerified === "boolean") {
-          token.otpVerified = newOtpVerified;
-        }
-        if (typeof newTotpEnabled === "boolean") {
-          token.totpEnabled = newTotpEnabled;
-        }
-        if (typeof newIsVerified === "boolean") {
-          token.isVerified = newIsVerified;
-        }
-      }
-
-      return token;
-    },
-    session: async ({ session, token }) => {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role;
-        session.user.isVerified = token.isVerified;
-
-        if (token.role === "admin") {
-          session.user.totpEnabled = token.totpEnabled;
-          session.user.isManager = token.isManager;
-          session.user.mustChangePassword = token.mustChangePassword;
-          session.user.otpVerified = token.otpVerified;
-        }
-      }
-      return session;
-    },
-  },
-  pages: { signIn: "/account/login" },
 });
