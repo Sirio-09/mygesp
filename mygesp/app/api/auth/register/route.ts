@@ -7,7 +7,7 @@ import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name } = await req.json();
+    const { email, password, name, acceptTerms, subscribeNewsletter } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -16,9 +16,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // 1. Convalida accettazione Termini e Privacy Policy
+    if (!acceptTerms) {
+      return NextResponse.json(
+        { error: "È necessario accettare i Termini e la Privacy Policy." },
+        { status: 400 }
+      );
+    }
+
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Controllo validità dominio e record MX
+    // 2. Controllo validità dominio e record MX
     const isValidDomain = await hasValidMxRecords(cleanEmail);
     if (!isValidDomain) {
       return NextResponse.json(
@@ -27,7 +35,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Controllo duplicati
+    // 3. Controllo duplicati clienti
     const existing = await prisma.customer.findUnique({
       where: { email: cleanEmail },
     });
@@ -41,7 +49,7 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Creazione cliente non verificato
+    // 4. Creazione cliente non verificato
     const customer = await prisma.customer.create({
       data: {
         email: cleanEmail,
@@ -51,7 +59,26 @@ export async function POST(req: Request) {
       },
     });
 
-    // 4. Generazione token di verifica (valido 24 ore)
+    const envUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXTAUTH_URL ||
+      "http://localhost:3000";
+    const baseUrl = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+
+    // 5. Gestione iscrizione alla Newsletter (invoca l'endpoint dedicato senza dipendere dal modello Prisma)
+    if (subscribeNewsletter) {
+      try {
+        await fetch(`${baseUrl}/api/newsletter`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail }),
+        });
+      } catch (err) {
+        console.error("Errore salvataggio newsletter:", err);
+      }
+    }
+
+    // 6. Generazione token di verifica (valido 24 ore)
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -59,14 +86,9 @@ export async function POST(req: Request) {
       data: { token, customerId: customer.id, expiresAt },
     });
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXTAUTH_URL ||
-      "http://localhost:3000";
-
     const verifyUrl = `${baseUrl}/account/verify-email?token=${token}`;
 
-    // 5. Invio email stilizzata tramite Resend
+    // 7. Invio email stilizzata tramite Resend
     const { error: emailError } = await resend.emails.send({
       from: "MyGesp <onboarding@resend.dev>",
       to: cleanEmail,

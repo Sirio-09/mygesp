@@ -4,7 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 
 export default function RegistratiPage() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    acceptTerms: false,
+    subscribeNewsletter: false,
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,6 +21,11 @@ export default function RegistratiPage() {
 
     if (form.password.length < 6) {
       setError("La password deve contenere almeno 6 caratteri.");
+      return;
+    }
+
+    if (!form.acceptTerms) {
+      setError("Devi accettare i Termini e Condizioni e la Privacy Policy per registrarti.");
       return;
     }
 
@@ -90,6 +101,42 @@ export default function RegistratiPage() {
           minLength={6}
           className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none rounded-sm transition-colors"
         />
+
+        {/* Checkbox Termini e Newsletter */}
+        <div className="flex flex-col gap-2.5 my-1">
+          <label className="flex items-start gap-2 cursor-pointer text-xs text-ink-soft select-none">
+            <input
+              type="checkbox"
+              checked={form.acceptTerms}
+              onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })}
+              required
+              className="mt-0.5 accent-grass cursor-pointer"
+            />
+            <span>
+              Accetto i{" "}
+              <Link href="/termini" className="text-grass-deep underline hover:text-grass">
+                Termini e Condizioni
+              </Link>{" "}
+              e la{" "}
+              <Link href="/privacy" className="text-grass-deep underline hover:text-grass">
+                Privacy Policy
+              </Link>
+              . *
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2 cursor-pointer text-xs text-ink-soft select-none">
+            <input
+              type="checkbox"
+              checked={form.subscribeNewsletter}
+              onChange={(e) => setForm({ ...form, subscribeNewsletter: e.target.checked })}
+              className="mt-0.5 accent-grass cursor-pointer"
+            />
+            <span>
+              Desidero ricevere aggiornamenti, promozioni e informazioni commerciali tramite newsletter.
+            </span>
+          </label>
+        </div>
 
         <button
           type="submit"
