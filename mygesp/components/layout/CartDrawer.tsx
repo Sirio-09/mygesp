@@ -6,8 +6,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function CartDrawer() {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, totalCents } =
-    useCartStore();
+  // Selectors atomici per evitare re-render superflui
+  const items = useCartStore((s) => s.items);
+  const isOpen = useCartStore((s) => s.isOpen);
+  const closeCart = useCartStore((s) => s.closeCart);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const totalCents = useCartStore((s) => s.totalCents);
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -28,25 +34,26 @@ export default function CartDrawer() {
   if (!mounted) return null;
 
   const totalFormatted = (totalCents() / 100).toFixed(2);
+  const itemCount = items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
     <div
-      className={`fixed inset-0 z-50 overflow-hidden transition-all duration-300 ${
+      className={`fixed inset-0 z-50 overflow-hidden ${
         isOpen ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
-      {/* Sfondo Overlay con effetto Fade */}
+      {/* Overlay Sfondo (Rimosso backdrop-blur-sm, usata transition-opacity diretta) */}
       <div
         onClick={closeCart}
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ease-in-out ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        {/* Pannello Drawer con animazione Slide da destra */}
+        {/* Pannello Drawer (Aggiunto transform-gpu e will-change-transform per accelerazione hardware) */}
         <div
-          className={`w-screen max-w-md bg-white border-l border-line shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${
+          className={`w-screen max-w-md bg-white border-l border-line shadow-2xl flex flex-col justify-between transform-gpu will-change-transform transition-transform duration-300 ease-in-out ${
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
@@ -55,7 +62,7 @@ export default function CartDrawer() {
             <div className="flex items-center gap-2">
               <span className="text-lg">🛒</span>
               <h2 className="text-sm font-bold uppercase tracking-wider text-ink">
-                Il tuo Carrello ({items.reduce((acc, i) => acc + i.quantity, 0)})
+                Il tuo Carrello ({itemCount})
               </h2>
             </div>
             <button
@@ -90,6 +97,7 @@ export default function CartDrawer() {
                         src={item.image}
                         alt={item.productName}
                         fill
+                        sizes="64px"
                         className="object-cover"
                       />
                     ) : (
