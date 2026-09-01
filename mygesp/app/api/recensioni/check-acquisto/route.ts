@@ -5,30 +5,38 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const session = await auth();
   
-  // Se non è loggato o non è un cliente, blocchiamo la richiesta
   if (!session || (session.user as { role?: string })?.role !== "customer") {
-    return NextResponse.json({ hasPurchased: false });
+    return NextResponse.json({ hasPurchased: false, hasReviewed: false });
   }
 
-  // Estraiamo productId direttamente da req.nextUrl
   const productId = req.nextUrl.searchParams.get("productId");
   const customerId = (session.user as { id: string }).id;
 
   if (!productId) {
-    return NextResponse.json({ hasPurchased: false });
+    return NextResponse.json({ hasPurchased: false, hasReviewed: false });
   }
 
-  const hasPurchased = await prisma.order.findFirst({
-    where: {
-      customerId,
-      status: "paid",
-      items: {
-        some: {
-          variant: { productId },
+  const [hasPurchased, existingReview] = await Promise.all([
+    prisma.order.findFirst({
+      where: {
+        customerId,
+        status: "paid",
+        items: {
+          some: {
+            variant: { productId },
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.review.findUnique({
+      where: {
+        productId_customerId: { productId, customerId },
+      },
+    }),
+  ]);
 
-  return NextResponse.json({ hasPurchased: !!hasPurchased });
+  return NextResponse.json({
+    hasPurchased: !!hasPurchased,
+    hasReviewed: !!existingReview,
+  });
 }
