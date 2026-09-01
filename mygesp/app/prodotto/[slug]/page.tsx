@@ -92,15 +92,14 @@ export default async function ProductPage({
 
   return (
     <main className="bg-paper min-h-screen pb-20 sm:pb-28">
-      {/* Header / Breadcrumb Minimalista */}
-      <div className="bg-paper-warm/40 border-b border-line py-3.5">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between">
+      {/* Contenitore Principale */}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-6 sm:pt-8 space-y-10 sm:space-y-12">
+        {/* Pulsante Indietro Stile Boxed */}
+        <div>
           <BackButton />
         </div>
-      </div>
 
-      {/* Grid Principale Prodotto */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 space-y-16">
+        {/* Grid Principale Prodotto */}
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Galleria Immagini */}
           <div className="lg:col-span-7 lg:sticky lg:top-20">
