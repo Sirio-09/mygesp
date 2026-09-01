@@ -187,399 +187,265 @@ export default function EditProductForm({ product }: { product: Product }) {
     }
   };
 
+  // Classi CSS ricorrenti per mantenere coerenza e pulizia
+  const inputClass = "w-full bg-transparent border border-line/40 px-4 py-3 text-sm font-light text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light";
+  const labelClass = "block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2";
+
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-10">
+      
       {/* Header Form */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-line/40 pb-8">
         <div>
-          <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-2 block">
             Gestione Catalogo
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
+          <h1 className="text-3xl font-light text-ink tracking-tight mb-2">
             Modifica Prodotto
           </h1>
-          <p className="text-xs sm:text-sm text-ink-soft mt-1 font-mono">
-            ID: {product.id}
+          <p className="text-xs text-ink-soft font-mono font-light uppercase tracking-widest">
+            Ref: {product.id}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin"
-            className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink border border-line bg-white hover:bg-paper-warm transition-colors"
-          >
-            ← Annulla
-          </Link>
+        <div className="flex items-center gap-6 mb-1">
           <button
             type="button"
             onClick={handleDelete}
-            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-soil-deep border border-soil-deep hover:bg-soil-deep hover:text-white transition-colors"
+            className="text-[10px] font-semibold text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors"
           >
             Elimina Prodotto
           </button>
+          <span className="text-line/40">|</span>
+          <Link
+            href="/admin"
+            className="text-[10px] font-semibold text-ink-soft hover:text-ink uppercase tracking-widest transition-colors"
+          >
+            &larr; Annulla
+          </Link>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8 bg-white border border-line p-6 sm:p-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
         {/* Sezione Immagini */}
-        <div className="space-y-4 pb-6 border-b border-line">
-          <label className="block text-xs font-semibold text-ink uppercase tracking-wider">
-            Galleria Immagini
-          </label>
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="bg-transparent border border-line/40 p-8 space-y-6">
+          <div className="border-b border-line/40 pb-4">
+            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
+              Galleria Immagini
+            </span>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-4">
             {imagePreviews.map((src, i) => (
-              <div key={i} className="w-24 h-24 relative border border-line group bg-paper-warm">
-                <Image src={src} alt={`Anteprima ${i + 1}`} fill className="object-cover" />
+              <div key={i} className="w-24 h-24 relative border border-line/40 group overflow-hidden bg-transparent">
+                <Image src={src} alt={`Anteprima ${i + 1}`} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                 <button
                   type="button"
                   onClick={() => removeImage(i)}
-                  className="absolute -top-2 -right-2 bg-soil-deep text-white w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-red-700 transition-colors"
+                  className="absolute top-0 right-0 bg-ink text-white w-6 h-6 flex items-center justify-center text-[10px] font-medium opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                  title="Rimuovi immagine"
                 >
                   ✕
                 </button>
                 {i === 0 && (
-                  <span className="absolute bottom-0 inset-x-0 bg-ink/80 text-white text-[9px] font-semibold text-center py-0.5 uppercase tracking-wider">
+                  <span className="absolute bottom-0 inset-x-0 bg-ink/90 text-white text-[8px] font-semibold text-center py-1 uppercase tracking-widest backdrop-blur-sm">
                     Copertina
                   </span>
                 )}
               </div>
             ))}
-            <label className="w-24 h-24 bg-paper-warm border-2 border-dashed border-line flex flex-col items-center justify-center text-xs text-ink-soft cursor-pointer hover:border-grass-deep transition-colors text-center p-2">
-              <span className="text-lg font-bold text-grass-deep">+</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider mt-1">Aggiungi</span>
+            
+            <label className="w-24 h-24 border border-line/40 flex flex-col items-center justify-center cursor-pointer hover:border-grass transition-colors group">
+              <span className="text-xl font-light text-ink-soft group-hover:text-grass transition-colors mb-1">+</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-ink-soft group-hover:text-grass transition-colors">Carica</span>
               <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
             </label>
           </div>
-          <p className="text-xs text-ink-soft">
-            La prima immagine della lista verrà usata come immagine principale nelle schede prodotto e in Homepage.
+          <p className="text-xs text-ink-soft font-light">
+            La prima immagine sarà usata come copertina nella vetrina e nei risultati di ricerca.
           </p>
         </div>
 
         {/* Dati Principali */}
-        <div className="space-y-4 pb-6 border-b border-line">
-          <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
-            Informazioni Principali
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-transparent border border-line/40 p-8 space-y-6">
+          <div className="border-b border-line/40 pb-4 mb-6">
+            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
+              Informazioni Principali
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Nome Prodotto *
-              </label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                required
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Nome Prodotto *</label>
+              <input name="name" value={form.name} onChange={handleChange} required className={inputClass} />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Slug (URL univoco) *
-              </label>
-              <input
-                name="slug"
-                value={form.slug}
-                onChange={handleChange}
-                required
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors font-mono"
-              />
+              <label className={labelClass}>Slug (URL univoco) *</label>
+              <input name="slug" value={form.slug} onChange={handleChange} required className={`${inputClass} font-mono text-xs`} />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Marchio *
-              </label>
-              <input
-                name="brand"
-                value={form.brand}
-                onChange={handleChange}
-                required
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Marchio *</label>
+              <input name="brand" value={form.brand} onChange={handleChange} required className={inputClass} />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Categoria *
-              </label>
-              <input
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                required
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Categoria *</label>
+              <input name="category" value={form.category} onChange={handleChange} required className={inputClass} />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Titolo Breve / Sottotitolo (Opzionale)
-              </label>
-              <input
-                name="shortTitle"
-                value={form.shortTitle}
-                onChange={handleChange}
-                placeholder="es. Giacca ad alta visibilità certificata"
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Titolo Breve / Sottotitolo (Opzionale)</label>
+              <input name="shortTitle" value={form.shortTitle} onChange={handleChange} placeholder="es. Giacca ad alta visibilità certificata" className={inputClass} />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Descrizione Breve (Opzionale)
-              </label>
-              <textarea
-                name="shortDescription"
-                value={form.shortDescription}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Breve estratto visibile nella parte superiore della scheda prodotto..."
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors resize-y"
-              />
+              <label className={labelClass}>Descrizione Breve (Opzionale)</label>
+              <textarea name="shortDescription" value={form.shortDescription} onChange={handleChange} rows={3} placeholder="Breve estratto visibile nella parte superiore della scheda prodotto..." className={`${inputClass} resize-y`} />
             </div>
           </div>
         </div>
 
         {/* Specifiche e Sconti */}
-        <div className="space-y-4 pb-6 border-b border-line">
-          <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
-            Specifiche Tecniche & Sconti
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-transparent border border-line/40 p-8 space-y-6">
+          <div className="border-b border-line/40 pb-4 mb-6">
+            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
+              Specifiche Tecniche & Sconti
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Colonna d&apos;Acqua (mm)
-              </label>
-              <input
-                type="number"
-                name="waterColumn"
-                value={form.waterColumn}
-                onChange={handleChange}
-                placeholder="es. 10000"
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Colonna d&apos;Acqua (mm)</label>
+              <input type="number" name="waterColumn" value={form.waterColumn} onChange={handleChange} placeholder="es. 10000" className={inputClass} />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Temperatura Minima (°C)
-              </label>
-              <input
-                type="number"
-                name="minTemp"
-                value={form.minTemp}
-                onChange={handleChange}
-                placeholder="es. -5"
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Temperatura Minima (°C)</label>
+              <input type="number" name="minTemp" value={form.minTemp} onChange={handleChange} placeholder="es. -5" className={inputClass} />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Sconto (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                name="discountPercent"
-                value={form.discountPercent}
-                onChange={handleChange}
-                placeholder="es. 15"
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
-              />
+              <label className={labelClass}>Sconto (%)</label>
+              <input type="number" min="0" max="100" name="discountPercent" value={form.discountPercent} onChange={handleChange} placeholder="es. 15" className={inputClass} />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
-                Sconto Valido Fino Al
-              </label>
-              <input
-                type="date"
-                name="discountUntil"
-                value={form.discountUntil}
-                onChange={handleChange}
-                className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors bg-white"
-              />
+              <label className={labelClass}>Sconto Valido Fino Al</label>
+              <input type="date" name="discountUntil" value={form.discountUntil} onChange={handleChange} className={inputClass} />
             </div>
           </div>
 
-          <label className="flex items-center gap-3 pt-2 cursor-pointer">
-            <input
-              type="checkbox"
-              id="featured"
-              name="featured"
-              checked={form.featured}
-              onChange={handleChange}
-              className="w-4 h-4 accent-grass-deep cursor-pointer"
-            />
-            <span className="text-xs font-bold text-ink uppercase tracking-wider">
-              Mostra in prima pagina (In evidenza)
-            </span>
-          </label>
+          <div className="pt-4 border-t border-line/40">
+            <label className="flex items-center gap-4 cursor-pointer group w-max">
+              <input type="checkbox" name="featured" checked={form.featured} onChange={handleChange} className="w-4 h-4 accent-grass cursor-pointer" />
+              <span className="text-[10px] font-semibold text-ink uppercase tracking-widest group-hover:text-grass transition-colors">
+                Mostra in prima pagina (In evidenza)
+              </span>
+            </label>
+          </div>
         </div>
 
         {/* Descrizione a blocchi */}
-        <div className="space-y-4 pb-6 border-b border-line">
-          <div className="flex items-center justify-between">
-            <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
-              Descrizione Estesa (a blocchi)
+        <div className="bg-transparent border border-line/40 p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-line/40 pb-4 mb-6">
+            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
+              Descrizione Estesa
             </span>
-            <button
-              type="button"
-              onClick={addBlock}
-              className="text-xs font-bold uppercase tracking-wider text-grass-deep hover:underline"
-            >
+            <button type="button" onClick={addBlock} className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft hover:text-ink transition-colors">
               + Aggiungi Blocco
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {descriptionBlocks.map((block, i) => (
-              <div key={i} className="border border-line p-4 bg-paper-warm relative space-y-2">
+              <div key={i} className="border border-line/40 p-6 space-y-4 relative">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-ink-soft">Blocco #{i + 1}</span>
+                  <span className="text-[9px] uppercase tracking-[0.2em] font-semibold text-grass">Blocco {i + 1}</span>
                   {descriptionBlocks.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeBlock(i)}
-                      className="text-xs font-bold text-ink-soft hover:text-soil-deep transition-colors"
-                    >
+                    <button type="button" onClick={() => removeBlock(i)} className="text-[9px] font-semibold uppercase tracking-widest text-red-400 hover:text-red-600 transition-colors">
                       Elimina
                     </button>
                   )}
                 </div>
-                <input
-                  placeholder="Titolo del blocco (es. Impermeabilità e Traspirabilità)"
-                  value={block.title}
-                  onChange={(e) => handleBlockChange(i, "title", e.target.value)}
-                  className="w-full border border-line px-3 py-2 text-sm font-semibold text-ink bg-white focus:border-grass-deep outline-none"
-                />
-                <textarea
-                  placeholder="Contenuto e dettagli del blocco..."
-                  value={block.text}
-                  onChange={(e) => handleBlockChange(i, "text", e.target.value)}
-                  rows={2}
-                  className="w-full border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none resize-y"
-                />
+                <div>
+                  <input placeholder="Titolo del blocco (es. Impermeabilità)" value={block.title} onChange={(e) => handleBlockChange(i, "title", e.target.value)} className={`${inputClass} mb-4`} />
+                  <textarea placeholder="Contenuto e dettagli del blocco..." value={block.text} onChange={(e) => handleBlockChange(i, "text", e.target.value)} rows={3} className={`${inputClass} resize-y`} />
+                </div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Varianti (Taglie e Prezzi) */}
-        <div className="space-y-4 pb-6 border-b border-line">
-          <div className="flex items-center justify-between">
-            <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
-              Taglie e Inventario *
+        <div className="bg-transparent border border-line/40 p-8 space-y-6">
+          <div className="flex items-center justify-between border-b border-line/40 pb-4 mb-6">
+            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
+              Taglie & Inventario
             </span>
-            <button
-              type="button"
-              onClick={addVariant}
-              className="text-xs font-bold uppercase tracking-wider text-grass-deep hover:underline"
-            >
-              + Aggiungi Taglia
+            <button type="button" onClick={addVariant} className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft hover:text-ink transition-colors">
+              + Aggiungi Variante
             </button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             {variants.map((v, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-2 sm:grid-cols-[1fr_1.5fr_1.5fr_1fr_auto] gap-2 items-center bg-paper-warm p-3 border border-line"
-              >
-                <div className="min-w-0">
-                  <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
-                    Taglia
-                  </label>
-                  <input
-                    placeholder="Taglia (es. XL)"
-                    value={v.size}
-                    onChange={(e) => handleVariantChange(i, "size", e.target.value)}
-                    required
-                    className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none"
-                  />
+              <div key={i} className="flex flex-col sm:flex-row gap-4 items-end border border-line/40 p-6 relative">
+                <div className="w-full">
+                  <label className={labelClass}>Taglia *</label>
+                  <input placeholder="es. XL" value={v.size} onChange={(e) => handleVariantChange(i, "size", e.target.value)} required className={inputClass} />
                 </div>
-
-                <div className="min-w-0">
-                  <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
-                    SKU
-                  </label>
-                  <input
-                    placeholder="SKU univoco"
-                    value={v.sku}
-                    onChange={(e) => handleVariantChange(i, "sku", e.target.value)}
-                    required
-                    className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
-                  />
+                <div className="w-full">
+                  <label className={labelClass}>SKU *</label>
+                  <input placeholder="Codice Univoco" value={v.sku} onChange={(e) => handleVariantChange(i, "sku", e.target.value)} required className={`${inputClass} font-mono text-xs`} />
                 </div>
-
-                <div className="min-w-0">
-                  <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
-                    Prezzo (cent)
-                  </label>
-                  <input
-                    placeholder="Prezzo (in centesimi)"
-                    value={v.priceCents}
-                    onChange={(e) => handleVariantChange(i, "priceCents", e.target.value)}
-                    required
-                    className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
-                  />
+                <div className="w-full">
+                  <label className={labelClass}>Prezzo (Cent) *</label>
+                  <input type="number" placeholder="es. 12900" value={v.priceCents} onChange={(e) => handleVariantChange(i, "priceCents", e.target.value)} required className={`${inputClass} font-mono text-xs`} />
                 </div>
-
-                <div className="min-w-0">
-                  <label className="block sm:hidden text-[10px] uppercase font-bold text-ink-soft mb-1">
-                    Giacenza
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Giacenza"
-                    value={v.stock}
-                    onChange={(e) => handleVariantChange(i, "stock", e.target.value)}
-                    required
-                    className="w-full min-w-0 border border-line px-3 py-2 text-sm text-ink bg-white focus:border-grass-deep outline-none font-mono"
-                  />
+                <div className="w-full">
+                  <label className={labelClass}>Giacenza *</label>
+                  <input type="number" placeholder="Qtà" value={v.stock} onChange={(e) => handleVariantChange(i, "stock", e.target.value)} required className={`${inputClass} font-mono text-xs`} />
                 </div>
-
-                <div className="col-span-2 sm:col-span-1 flex justify-end sm:justify-center pt-1 sm:pt-0">
+                <div className="pb-3 sm:pl-2">
                   {variants.length > 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => removeVariant(i)}
-                      className="text-ink-soft hover:text-soil-deep font-bold text-sm px-2 py-1"
-                      title="Elimina variante"
-                    >
+                    <button type="button" onClick={() => removeVariant(i)} className="text-[12px] font-medium text-ink-soft hover:text-red-500 transition-colors" title="Rimuovi variante">
                       ✕
                     </button>
                   ) : (
-                    <div className="w-6" />
+                    <div className="w-3" /> // Placeholder per mantenere allineamento
                   )}
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[11px] text-ink-soft">
-            Nota: 12900 centesimi equivalgono a € 129,00.
+          <p className="text-xs text-ink-soft font-light">
+            Nota: I prezzi sono espressi in centesimi (es. 12900 = € 129,00).
           </p>
         </div>
 
-        {/* Pulsante Invio e Errori */}
-        <div className="space-y-3 pt-2">
-          <button
-            type="submit"
-            disabled={uploading}
-            className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-4 transition-colors disabled:opacity-50 uppercase tracking-wider"
-          >
-            {uploading ? "Salvataggio e caricamento in corso..." : "Salva Modifiche Prodotto"}
-          </button>
-
-          {error && (
-            <p className="text-xs text-soil-deep text-center font-bold pt-1">
-              {error}
-            </p>
-          )}
+        {/* Action Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4">
+          <p className="text-xs text-ink-soft font-light">
+            Ricontrolla i campi obbligatori contrassegnati da asterisco prima di procedere.
+          </p>
+          <div className="w-full sm:w-auto flex flex-col items-center">
+            <button
+              type="submit"
+              disabled={uploading}
+              className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-10 transition-colors disabled:opacity-30"
+            >
+              {uploading ? "Salvataggio..." : "Salva Modifiche"}
+            </button>
+            {error && (
+              <p className="text-[10px] font-semibold text-red-500 uppercase tracking-widest mt-4">
+                {error}
+              </p>
+            )}
+          </div>
         </div>
+
       </form>
     </div>
   );

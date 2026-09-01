@@ -24,7 +24,6 @@ export default function ProductGallery({
     setCurrent((c) => (c - 1 + images.length) % images.length);
   };
 
-  // Blocco dello scroll della pagina quando la modale è aperta
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -36,7 +35,6 @@ export default function ProductGallery({
     };
   }, [isOpen]);
 
-  // Gestione tastiera (ESC e Frecce)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -51,11 +49,11 @@ export default function ProductGallery({
   }, [isOpen, images.length]);
 
   return (
-    <div>
-      {/* Immagine Principale in Pagina */}
+    <div className="space-y-4">
+      {/* Immagine Principale */}
       <div
         onClick={() => hasImages && setIsOpen(true)}
-        className="aspect-square w-full bg-line/20 relative overflow-hidden cursor-pointer group rounded-sm border border-line"
+        className="aspect-square w-full bg-transparent relative overflow-hidden cursor-pointer group border border-line/40"
       >
         {hasImages ? (
           <>
@@ -63,40 +61,41 @@ export default function ProductGallery({
               src={images[current]}
               alt={productName}
               fill
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
+            
             {/* Badge Ingrandisci */}
-            <div className="absolute bottom-3 right-3 bg-white/95 text-grass-deep border border-line px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider opacity-95 group-hover:bg-grass-deep group-hover:text-white group-hover:border-grass-deep transition-all duration-300 shadow-md z-10 rounded-sm flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+            <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm text-ink border border-line/40 px-4 py-2 text-[9px] font-semibold uppercase tracking-widest opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10 flex items-center gap-2">
+              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
               </svg>
-              Ingrandisci
+              Espandi
             </div>
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs font-mono text-ink-soft text-center p-8">
-            [nessuna foto]
+          <div className="w-full h-full flex items-center justify-center text-[10px] font-mono uppercase tracking-widest text-ink-soft text-center p-8">
+            Nessuna immagine
           </div>
         )}
 
-        {/* Frecce In Pagina */}
+        {/* Frecce Navigazione In Pagina (visibili solo in hover sul contenitore) */}
         {hasImages && images.length > 1 && (
           <>
             <button
               onClick={prev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-grass-deep hover:text-white text-grass-deep w-9 h-9 flex items-center justify-center z-10 shadow-md border border-line rounded-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-ink hover:text-grass w-10 h-10 flex items-center justify-center z-10 border border-line/40 opacity-0 group-hover:opacity-100 transition-all duration-300"
               aria-label="Foto precedente"
             >
-              <svg className="w-4 h-4 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
+              <svg className="w-4 h-4 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none">
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
             <button
               onClick={next}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-grass-deep hover:text-white text-grass-deep w-9 h-9 flex items-center justify-center z-10 shadow-md border border-line rounded-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-ink hover:text-grass w-10 h-10 flex items-center justify-center z-10 border border-line/40 opacity-0 group-hover:opacity-100 transition-all duration-300"
               aria-label="Foto successiva"
             >
-              <svg className="w-4 h-4 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
+              <svg className="w-4 h-4 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
@@ -106,84 +105,83 @@ export default function ProductGallery({
 
       {/* Selettore Miniature */}
       {hasImages && images.length > 1 && (
-        <div className="flex gap-2.5 mt-3 overflow-x-auto pb-1">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {images.map((img, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`w-16 h-16 relative border-2 flex-shrink-0 transition-all rounded-sm overflow-hidden ${
+              className={`w-20 h-20 relative flex-shrink-0 transition-all duration-300 border ${
                 current === i
-                  ? "border-grass-deep opacity-100 ring-2 ring-grass-deep/20 -translate-y-0.5 shadow-sm"
-                  : "border-line opacity-60 hover:opacity-100 hover:border-ink/40"
+                  ? "border-grass opacity-100"
+                  : "border-line/40 opacity-50 hover:opacity-100 hover:border-ink/40"
               }`}
             >
-              <Image src={img} alt={`${productName} ${i + 1}`} fill className="object-cover" />
+              <Image src={img} alt={`${productName} anteprima ${i + 1}`} fill className="object-cover" />
             </button>
           ))}
         </div>
       )}
 
-      {/* MODALE LIGHTBOX */}
+      {/* MODALE LIGHTBOX ESTESA */}
       {isOpen && hasImages && (
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-[9999] bg-black/80 select-none"
+          className="fixed inset-0 z-[9999] bg-ink/95 backdrop-blur-md select-none flex flex-col items-center justify-center"
         >
-          {/* Area centrale tra navbar e fondo schermo */}
-          <div className="absolute top-16 sm:top-20 bottom-0 inset-x-0 flex flex-col items-center justify-center p-4 sm:p-6 pointer-events-none">
+          {/* Header Modale */}
+          <div className="absolute top-0 inset-x-0 p-6 flex justify-between items-center pointer-events-none">
+            <div className="text-[10px] font-mono text-white/50 tracking-widest uppercase">
+              {current + 1} / {images.length} — {productName}
+            </div>
             
-            {/* Box Immagine */}
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl h-[55vh] sm:h-[65vh] flex items-center justify-center pointer-events-auto"
+            <button
+              onClick={() => setIsOpen(false)}
+              className="pointer-events-auto text-white/70 hover:text-white flex items-center gap-3 text-[10px] font-semibold uppercase tracking-widest transition-colors group"
+              aria-label="Chiudi"
             >
-              {/* Tasto ESCI */}
-              <button
-                onClick={() => setIsOpen(false)}
-                className="absolute top-0 right-0 -translate-y-1/2 z-[10000] text-grass-deep bg-white hover:bg-grass-deep hover:text-white border border-line rounded-sm px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
-                aria-label="Esci dallo zoom"
-              >
-                <span>Esci</span>
-                <span className="text-xs font-mono leading-none">✕</span>
-              </button>
+              <span>Chiudi</span>
+              <span className="w-8 h-8 flex items-center justify-center border border-white/20 group-hover:border-white/60 transition-colors">
+                ✕
+              </span>
+            </button>
+          </div>
 
-              <Image
-                src={images[current]}
-                alt={`${productName} ingrandito`}
-                fill
-                className="object-contain"
-                priority
-              />
+          {/* Area Centrale Immagine */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-6xl h-[75vh] flex items-center justify-center"
+          >
+            <Image
+              src={images[current]}
+              alt={`${productName} ingrandito`}
+              fill
+              className="object-contain"
+              priority
+            />
 
-              {/* Frecce Modale */}
-              {images.length > 1 && (
-                <>
-                  <button
-                    onClick={prev}
-                    className="absolute left-2 sm:-left-6 top-1/2 -translate-y-1/2 bg-white text-grass-deep hover:bg-grass-deep hover:text-white w-10 h-10 sm:w-12 sm:h-12 rounded-sm flex items-center justify-center transition-all duration-200 border border-line z-[10000] cursor-pointer shadow-xl hover:scale-110 active:scale-95"
-                    aria-label="Foto precedente"
-                  >
-                    <svg className="w-5 h-5 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
-                      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                  <button
-                    onClick={next}
-                    className="absolute right-2 sm:-right-6 top-1/2 -translate-y-1/2 bg-white text-grass-deep hover:bg-grass-deep hover:text-white w-10 h-10 sm:w-12 sm:h-12 rounded-sm flex items-center justify-center transition-all duration-200 border border-line z-[10000] cursor-pointer shadow-xl hover:scale-110 active:scale-95"
-                    aria-label="Foto successiva"
-                  >
-                    <svg className="w-5 h-5 stroke-current stroke-[2.5]" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Contatore Modale */}
-            <div className="mt-5 bg-white border border-line text-grass-deep text-[11px] px-4 py-1.5 rounded-sm font-mono tracking-widest uppercase pointer-events-auto shadow-xl">
-              {current + 1} / {images.length}
-            </div>
+            {/* Frecce Modale Minimali */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prev}
+                  className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 text-white/50 hover:text-white w-12 h-12 flex items-center justify-center transition-colors z-[10000]"
+                  aria-label="Precedente"
+                >
+                  <svg className="w-8 h-8 stroke-current stroke-[1]" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={next}
+                  className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 text-white/50 hover:text-white w-12 h-12 flex items-center justify-center transition-colors z-[10000]"
+                  aria-label="Successiva"
+                >
+                  <svg className="w-8 h-8 stroke-current stroke-[1]" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
