@@ -1,14 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCartStore } from '@/lib/cart-store'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity } = useCartStore()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   const totalCents = items.reduce((acc, item: any) => acc + item.priceCents * item.quantity, 0)
   const totalEuro = (totalCents / 100).toFixed(2)
@@ -36,32 +33,6 @@ export default function CartPage() {
     if (!raw) return null
     if (typeof raw === 'string') return raw
     return raw.url || raw.src || null
-  }
-
-  const handleCheckout = async () => {
-    setLoading(true)
-    setError('')
-
-    try {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Errore durante l’avvio del checkout.')
-      }
-
-      if (data.url) {
-        window.location.href = data.url
-      }
-    } catch (err: any) {
-      setError(err.message || 'Impossibile completare l’operazione. Riprova.')
-      setLoading(false)
-    }
   }
 
   const handleClearCart = () => {
@@ -130,12 +101,6 @@ export default function CartPage() {
             />
           </div>
         </div>
-
-        {error && (
-          <div className="p-4 bg-white border border-red-300 text-soil-deep text-xs font-semibold text-center">
-            {error}
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
@@ -268,14 +233,12 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleCheckout}
-                disabled={loading || items.length === 0}
-                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3.5 transition-colors disabled:opacity-50"
+              <Link
+                href="/checkout"
+                className="block w-full text-center bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3.5 transition-colors"
               >
-                {loading ? 'Preparazione...' : 'Procedi al Checkout →'}
-              </button>
+                Procedi al Checkout →
+              </Link>
             </div>
           </div>
 

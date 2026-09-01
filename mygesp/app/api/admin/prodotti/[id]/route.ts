@@ -24,10 +24,15 @@ export async function PUT(
       include: { variants: true },
     });
 
-    const oldMinPrice = existingProduct
+    if (!existingProduct) {
+      return NextResponse.json({ error: "Prodotto non trovato" }, { status: 404 });
+    }
+
+    const oldMinPrice = existingProduct.variants.length > 0
       ? Math.min(...existingProduct.variants.map((v) => v.priceCents))
       : null;
 
+    // 1. Aggiornamento dei dati principali del prodotto
     await prisma.product.update({
       where: { id },
       data: {
@@ -47,26 +52,85 @@ export async function PUT(
       },
     });
 
-    await prisma.variant.deleteMany({ where: { productId: id } });
-    await prisma.variant.createMany({
-      data: body.variants.map((v: { size: string; sku: string; priceCents: string; stock: string }) => ({
-        productId: id,
-        size: v.size,
-        sku: v.sku,
-        priceCents: parseInt(v.priceCents),
-        stock: parseInt(v.stock),
-      })),
-    });
+    // 2. Gestione sicura ed elegante delle varianti
+    const existingVariants = existingProduct.variants;
+    const incomingVariants = body.variants || [];
 
-    // Invalida la cache di Next.js per aggiornare istantaneamente Homepage, Catalogo e Pagina Prodotto
-    revalidatePath("/", "layout");
+    const incomingIds = incomingVariants.map((v: { id?: string }) => v.id).filter(Boolean);
+    const incomingSkus = incomingVariants.map((v: { sku: string }) => v.sku).filter(Boolean);
 
-    const newMinPrice = Math.min(
-      ...body.variants.map((v: { priceCents: string }) => parseInt(v.priceCents))
+    // Identifica le varianti eliminate dal form
+    const variantsToDelete = existingVariants.filter(
+      (v) => !incomingIds.includes(v.id) && !incomingSkus.includes(v.sku)
     );
 
+    for (const variant of variantsToDelete) {
+      const orderCount = await prisma.orderItem.count({
+        where: { variantId: variant.id },
+      });
+
+      if (orderCount === 0) {
+        // Pulisce i carrelli degli utenti prima di eliminare la variante dal DB
+        if ("cartItem" in prisma) {
+          await (prisma as any).cartItem.deleteMany({
+            where: { variantId: variant.id },
+          });
+        }
+        await prisma.variant.delete({ where: { id: variant.id } });
+      } else {
+        // Se ha ordini collegati, ne azzera lo stock per preservare lo storico fatture
+        await prisma.variant.update({
+          where: { id: variant.id },
+          data: { stock: 0 },
+        });
+      }
+    }
+
+    // Aggiorna o crea le nuove varianti evitando duplicati di SKU
+    for (const v of incomingVariants) {
+      const priceCents = parseInt(v.priceCents || "0");
+      const stock = parseInt(v.stock || "0");
+
+      const existingBySku = v.sku
+        ? await prisma.variant.findUnique({ where: { sku: v.sku } })
+        : null;
+
+      const targetId = v.id || existingBySku?.id;
+
+      if (targetId) {
+        await prisma.variant.update({
+          where: { id: targetId },
+          data: {
+            productId: id,
+            size: v.size,
+            sku: v.sku,
+            priceCents,
+            stock,
+          },
+        });
+      } else {
+        await prisma.variant.create({
+          data: {
+            productId: id,
+            size: v.size,
+            sku: v.sku,
+            priceCents,
+            stock,
+          },
+        });
+      }
+    }
+
+    // 3. Invalida la cache di Next.js per aggiornare subito il sito pubblico
+    revalidatePath("/", "layout");
+
+    // 4. Invio Newsletter se il prezzo si è abbassato
+    const newMinPrice = incomingVariants.length > 0
+      ? Math.min(...incomingVariants.map((v: { priceCents: string }) => parseInt(v.priceCents)))
+      : 0;
+
     if (oldMinPrice !== null && newMinPrice < oldMinPrice && process.env.RESEND_API_KEY) {
-      const subscribers = await prisma.newsletterSubscriber.findMany();
+      const subscribers = await prisma.newsletter.findMany();
 
       if (subscribers.length > 0) {
         for (const subscriber of subscribers) {
@@ -86,9 +150,9 @@ export async function PUT(
     }
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Errore aggiornamento prodotto:", err);
-    return NextResponse.json({ error: "Errore salvataggio" }, { status: 500 });
+    return NextResponse.json({ error: err.message || "Errore salvataggio" }, { status: 500 });
   }
 }
 
@@ -104,16 +168,54 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    await prisma.variant.deleteMany({ where: { productId: id } });
-    await prisma.review.deleteMany({ where: { productId: id } });
-    await prisma.product.delete({ where: { id } });
+    // Transazione per eliminare prima tutte le dipendenze in cascata e poi il prodotto
+    await prisma.$transaction(async (tx) => {
+      // 1. Individua tutte le varianti collegate al prodotto
+      const variants = await tx.variant.findMany({
+        where: { productId: id },
+        select: { id: true },
+      });
+      const variantIds = variants.map((v) => v.id);
 
-    // Invalida la cache per rimuovere il prodotto eliminato da tutte le pagine
+      if (variantIds.length > 0) {
+        // 2. Elimina le righe negli ordini di test (OrderItem)
+        await tx.orderItem.deleteMany({
+          where: { variantId: { in: variantIds } },
+        });
+
+        // 3. Elimina gli articoli nei carrelli utente (se presenti nel DB)
+        if ("cartItem" in tx) {
+          await (tx as any).cartItem.deleteMany({
+            where: { variantId: { in: variantIds } },
+          });
+        }
+
+        // 4. Elimina le varianti
+        await tx.variant.deleteMany({
+          where: { productId: id },
+        });
+      }
+
+      // 5. Elimina le recensioni del prodotto
+      await tx.review.deleteMany({
+        where: { productId: id },
+      });
+
+      // 6. Elimina definitivamente il prodotto
+      await tx.product.delete({
+        where: { id },
+      });
+    });
+
+    // Invalida la cache di Next.js
     revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("Errore eliminazione prodotto:", err);
-    return NextResponse.json({ error: "Errore eliminazione" }, { status: 500 });
+  } catch (err: any) {
+    console.error("Errore eliminazione definitiva prodotto:", err);
+    return NextResponse.json(
+      { error: err.message || "Errore durante l'eliminazione" },
+      { status: 500 }
+    );
   }
 }
