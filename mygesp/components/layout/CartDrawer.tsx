@@ -33,7 +33,7 @@ export default function CartDrawer() {
     }
     return () => {
       document.body.style.overflow = "unset";
-    }
+    };
   }, [isOpen]);
 
   if (!mounted) return null;
@@ -47,10 +47,7 @@ export default function CartDrawer() {
         isOpen ? "pointer-events-auto visible" : "pointer-events-none invisible"
       }`}
     >
-      {/* 
-        OVERLAY: Rimosso il backdrop-blur per eliminare il lag su mobile. 
-        Utilizziamo solo un cambio di opacità GPU-friendly.
-      */}
+      {/* OVERLAY: Animazione opacità GPU-friendly (no blur) */}
       <div
         onClick={closeCart}
         className={`absolute inset-0 bg-ink/60 transition-opacity duration-400 ease-out ${
@@ -58,9 +55,7 @@ export default function CartDrawer() {
         }`}
       />
 
-      {/* 
-        DRAWER: Animazione ottimizzata con will-change e cubic-bezier per la massima fluidità 
-      */}
+      {/* DRAWER: Animazione ottimizzata */}
       <div className="absolute inset-y-0 right-0 flex max-w-full">
         <aside
           className={`w-[90vw] max-w-md h-[100dvh] bg-paper shadow-2xl rounded-l-2xl flex flex-col justify-between transform-gpu will-change-transform transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) ${
@@ -98,7 +93,9 @@ export default function CartDrawer() {
                     </>
                   ) : (
                     <span className="text-grass-deep flex items-center gap-1.5 w-full justify-center">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
                       Spedizione gratuita sbloccata!
                     </span>
                   )}
@@ -137,10 +134,16 @@ export default function CartDrawer() {
               <div className="space-y-5">
                 {items.map((item) => (
                   <div key={item.variantId} className="flex gap-4 group">
-                    {/* Immagine Prodotto */}
+                    {/* Immagine Prodotto (Ottimizzata) */}
                     <div className="w-24 h-28 bg-paper-warm border border-line/40 relative flex-shrink-0 overflow-hidden rounded-xl group-hover:border-grass-deep/30 transition-colors">
                       {item.image ? (
-                        <Image src={item.image} alt={item.productName} fill sizes="96px" className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                        <Image 
+                          src={item.image} 
+                          alt={item.productName} 
+                          fill 
+                          sizes="96px" 
+                          className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
+                        />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[10px] text-ink-soft/50 font-mono">No img</div>
                       )}
@@ -162,7 +165,9 @@ export default function CartDrawer() {
                             className="text-ink-soft/60 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-colors -mt-1 -mr-1"
                             title="Rimuovi"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                           </button>
                         </div>
                         <p className="text-[11px] text-ink-soft mt-1.5 uppercase tracking-wide">
@@ -177,7 +182,9 @@ export default function CartDrawer() {
                             onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
                             className="w-7 h-7 flex items-center justify-center text-ink hover:bg-white rounded-md transition-colors shadow-sm"
                           >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" /></svg>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                            </svg>
                           </button>
                           <span className="w-8 text-center text-[13px] font-bold text-ink">
                             {item.quantity}
@@ -186,7 +193,9 @@ export default function CartDrawer() {
                             onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
                             className="w-7 h-7 flex items-center justify-center text-ink hover:bg-white rounded-md transition-colors shadow-sm"
                           >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                            </svg>
                           </button>
                         </div>
                         <span className="font-black text-sm text-ink font-mono bg-paper-warm px-2 py-1 rounded-md">
@@ -219,7 +228,6 @@ export default function CartDrawer() {
                 >
                   Vedi Carrello
                 </Link>
-
                 <Link
                   href="/checkout"
                   onClick={closeCart}

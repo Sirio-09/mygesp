@@ -1,4 +1,3 @@
-// Navbar.tsx
 import Link from "next/link";
 import CartIcon from "./CartIcon";
 import AccountMenu from "./AccountMenu";
