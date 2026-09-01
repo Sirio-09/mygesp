@@ -24,12 +24,6 @@ export default function NotFound() {
           >
             Torna alla Home
           </Link>
-          <Link
-            href="/admin"
-            className="inline-flex items-center justify-center px-5 py-3 text-xs font-bold uppercase tracking-wider text-ink border border-line bg-paper-warm hover:bg-white transition-colors"
-          >
-            Pannello Admin
-          </Link>
         </div>
       </div>
     </main>

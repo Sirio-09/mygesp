@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 
 type Product = {
@@ -69,18 +68,23 @@ export default function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim().length < 2) return;
-    setOpen(false);
-    setMobileExpanded(false);
-    // Reindirizza alla pagina del catalogo con i filtri attivi
-    router.push(`/prodotti?q=${encodeURIComponent(query.trim())}`);
-  };
-
   const closeMobileSearch = () => {
     setOpen(false);
     setMobileExpanded(false);
+  };
+
+  // Navigazione alla scheda prodotto singola (/prodotto/[slug])
+  const handleProductSelect = (slug: string) => {
+    closeMobileSearch();
+    router.push(`/prodotto/${slug}`);
+  };
+
+  // Invio ricerca per vedere tutti i risultati (/prodotti?q=...)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim().length < 2) return;
+    closeMobileSearch();
+    router.push(`/prodotti?q=${encodeURIComponent(query.trim())}`);
   };
 
   return (
@@ -155,11 +159,11 @@ export default function SearchBar() {
 
           <div className="divide-y divide-line">
             {results.map((product) => (
-              <Link
+              <button
                 key={product.id}
-                href={`/prodotti/${product.slug}`}
-                onClick={closeMobileSearch}
-                className="flex items-center gap-3 px-3.5 py-2.5 hover:bg-paper-warm transition-colors group"
+                type="button"
+                onClick={() => handleProductSelect(product.slug)}
+                className="w-full text-left flex items-center gap-3 px-3.5 py-2.5 hover:bg-paper-warm transition-colors group cursor-pointer"
               >
                 <div className="w-10 h-10 bg-paper-warm border border-line relative flex-shrink-0 overflow-hidden">
                   {product.images && product.images[0] ? (
@@ -178,7 +182,7 @@ export default function SearchBar() {
                 <span className="text-xs font-semibold text-ink group-hover:text-grass-deep truncate transition-colors">
                   {product.name}
                 </span>
-              </Link>
+              </button>
             ))}
           </div>
 
