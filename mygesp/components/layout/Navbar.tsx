@@ -6,7 +6,10 @@ import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   return (
+    // IL SEGRETO E' QUI: z-40 la mantiene sopra ai contenuti normali della pagina, 
+    // ma la fa "schiacciare" dal z-[999999] della galleria immagini quando la ingrandisci.
     <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur-md border-b border-line/40 transition-colors duration-300">
+      
       {/* Barra Annunci */}
       <div className="bg-ink text-white text-[9px] sm:text-[10px] text-center py-2.5 px-4 font-semibold uppercase tracking-[0.2em]">
         Spedizione gratuita sopra i 99€ · <span className="hidden sm:inline">consegna in tutta Italia e in Europa</span>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { createPortal } from "react-dom";
 
 export default function ProductGallery({
   images,
@@ -11,17 +12,23 @@ export default function ProductGallery({
 }) {
   const [current, setCurrent] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const hasImages = images && images.length > 0;
+  const isSingleImage = images?.length === 1;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const next = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setCurrent((c) => (c + 1) % images.length);
+    if (!isSingleImage) setCurrent((c) => (c + 1) % images.length);
   };
 
   const prev = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setCurrent((c) => (c - 1 + images.length) % images.length);
+    if (!isSingleImage) setCurrent((c) => (c - 1 + images.length) % images.length);
   };
 
   useEffect(() => {
@@ -36,154 +43,135 @@ export default function ProductGallery({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
-      if (e.key === "ArrowLeft") setCurrent((c) => (c - 1 + images.length) % images.length);
-      if (e.key === "ArrowRight") setCurrent((c) => (c + 1) % images.length);
+      if (isOpen && e.key === "Escape") setIsOpen(false);
+      if (!isSingleImage) {
+        if (e.key === "ArrowLeft") prev();
+        if (e.key === "ArrowRight") next();
+      }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, images.length]);
+  }, [isOpen, isSingleImage, images.length]);
+
+  if (!hasImages) {
+    return (
+      <div className="w-full aspect-[3/4] flex items-center justify-center bg-stone-50 text-[10px] font-mono uppercase tracking-widest text-black/40">
+        Nessuna immagine
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      {/* Immagine Principale */}
-      <div
-        onClick={() => hasImages && setIsOpen(true)}
-        className="aspect-square w-full bg-transparent relative overflow-hidden cursor-pointer group border border-line/40"
-      >
-        {hasImages ? (
-          <>
-            <Image
-              src={images[current]}
-              alt={productName}
-              fill
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-            
-            {/* Badge Ingrandisci */}
-            <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm text-ink border border-line/40 px-4 py-2 text-[9px] font-semibold uppercase tracking-widest opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-10 flex items-center gap-2">
-              <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-              </svg>
-              Espandi
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[10px] font-mono uppercase tracking-widest text-ink-soft text-center p-8">
-            Nessuna immagine
-          </div>
-        )}
+    <div className="w-full">
+      {/* --- 1. ZONA IMMAGINE IN PAGINA --- */}
+      <div className="relative w-full aspect-[3/4] md:aspect-[4/5] bg-stone-50 group overflow-hidden">
+        
+        <div onClick={() => setIsOpen(true)} className="absolute inset-0 cursor-zoom-in">
+          <Image
+            src={images[current]}
+            alt={`${productName} - Vista ${current + 1}`}
+            fill
+            className="object-cover transition-opacity duration-300"
+            priority
+          />
+        </div>
 
-        {/* Frecce Navigazione In Pagina (visibili solo in hover sul contenitore) */}
-        {hasImages && images.length > 1 && (
+        {!isSingleImage && (
           <>
             <button
               onClick={prev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-ink hover:text-grass w-10 h-10 flex items-center justify-center z-10 border border-line/40 opacity-0 group-hover:opacity-100 transition-all duration-300"
-              aria-label="Foto precedente"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-black shadow-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 z-10"
+              aria-label="Precedente"
             >
-              <svg className="w-4 h-4 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg className="w-6 h-6 stroke-current stroke-[1.5] -translate-x-[1px]" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
+
             <button
               onClick={next}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm text-ink hover:text-grass w-10 h-10 flex items-center justify-center z-10 border border-line/40 opacity-0 group-hover:opacity-100 transition-all duration-300"
-              aria-label="Foto successiva"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-black shadow-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 z-10"
+              aria-label="Successiva"
             >
-              <svg className="w-4 h-4 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg className="w-6 h-6 stroke-current stroke-[1.5] translate-x-[1px]" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-1.5 text-[10px] font-mono tracking-widest pointer-events-none rounded-full shadow-sm text-black">
+              {current + 1} / {images.length}
+            </div>
           </>
         )}
       </div>
 
-      {/* Selettore Miniature */}
-      {hasImages && images.length > 1 && (
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={`w-20 h-20 relative flex-shrink-0 transition-all duration-300 border ${
-                current === i
-                  ? "border-grass opacity-100"
-                  : "border-line/40 opacity-50 hover:opacity-100 hover:border-ink/40"
-              }`}
-            >
-              <Image src={img} alt={`${productName} anteprima ${i + 1}`} fill className="object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* MODALE LIGHTBOX ESTESA */}
-      {isOpen && hasImages && (
+      {/* --- 2. LIGHTBOX FULLSCREEN (PORTAL) --- */}
+      {mounted && isOpen && createPortal(
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-[9999] bg-ink/95 backdrop-blur-md select-none flex flex-col items-center justify-center"
+          className="fixed inset-0 z-[999999] bg-white flex flex-col items-center justify-center cursor-zoom-out animate-in fade-in duration-200"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
-          {/* Header Modale */}
-          <div className="absolute top-0 inset-x-0 p-6 flex justify-between items-center pointer-events-none">
-            <div className="text-[10px] font-mono text-white/50 tracking-widest uppercase">
-              {current + 1} / {images.length} — {productName}
-            </div>
-            
-            <button
-              onClick={() => setIsOpen(false)}
-              className="pointer-events-auto text-white/70 hover:text-white flex items-center gap-3 text-[10px] font-semibold uppercase tracking-widest transition-colors group"
-              aria-label="Chiudi"
-            >
-              <span>Chiudi</span>
-              <span className="w-8 h-8 flex items-center justify-center border border-white/20 group-hover:border-white/60 transition-colors">
-                ✕
-              </span>
-            </button>
-          </div>
-
-          {/* Area Centrale Immagine */}
+          {/* Immagine Centrale */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-6xl h-[75vh] flex items-center justify-center"
+            className="relative w-full h-[100dvh] flex items-center justify-center p-0 md:p-16 cursor-default"
           >
             <Image
               src={images[current]}
-              alt={`${productName} ingrandito`}
+              alt={`${productName} vista ingrandita`}
               fill
-              className="object-contain"
+              className="object-contain animate-in zoom-in-[0.98] duration-300 ease-out"
+              quality={100}
               priority
             />
 
-            {/* Frecce Modale Minimali */}
-            {images.length > 1 && (
+            {/* Frecce Navigazione Laterali GIGANTI - z-[100000] */}
+            {!isSingleImage && (
               <>
                 <button
                   onClick={prev}
-                  className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 text-white/50 hover:text-white w-12 h-12 flex items-center justify-center transition-colors z-[10000]"
-                  aria-label="Precedente"
+                  className="absolute left-0 top-0 bottom-0 w-[25%] md:w-32 flex items-center justify-start p-4 md:p-8 text-black/30 hover:text-black/90 transition-colors z-[100000] cursor-pointer group outline-none"
                 >
-                  <svg className="w-8 h-8 stroke-current stroke-[1]" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg className="w-12 h-12 md:w-16 md:h-16 stroke-current stroke-[1] group-hover:-translate-x-2 transition-transform duration-300 drop-shadow-md" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
                 <button
                   onClick={next}
-                  className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 text-white/50 hover:text-white w-12 h-12 flex items-center justify-center transition-colors z-[10000]"
-                  aria-label="Successiva"
+                  className="absolute right-0 top-0 bottom-0 w-[25%] md:w-32 flex items-center justify-end p-4 md:p-8 text-black/30 hover:text-black/90 transition-colors z-[100000] cursor-pointer group outline-none"
                 >
-                  <svg className="w-8 h-8 stroke-current stroke-[1]" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg className="w-12 h-12 md:w-16 md:h-16 stroke-current stroke-[1] group-hover:translate-x-2 transition-transform duration-300 drop-shadow-md" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
+                
+                {/* Contatore in basso */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[12px] font-mono text-black/60 tracking-[0.2em] pointer-events-none bg-white/80 px-4 py-2 rounded-full shadow-sm md:bg-transparent md:shadow-none">
+                  {current + 1} / {images.length}
+                </div>
               </>
             )}
           </div>
-        </div>
+
+          {/* Header Lightbox: X (Ora posizionata alla fine e con z-index SUPERIORE alle frecce: z-[100010]) */}
+          <div className="absolute top-0 right-0 p-4 md:p-8 z-[100010] pointer-events-none">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+              }}
+              className="pointer-events-auto p-4 flex items-center justify-center text-black/50 hover:text-black hover:rotate-90 transition-all duration-300 cursor-pointer bg-white/50 backdrop-blur-md rounded-full md:bg-transparent"
+              aria-label="Chiudi"
+            >
+              <svg className="w-8 h-8 md:w-10 md:h-10 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none">
+                <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
