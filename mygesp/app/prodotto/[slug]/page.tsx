@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import AddToCartButton from "@/components/product/AddToCartButton";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductReviews from "@/components/product/ProductReviews";
+import BackButton from "@/components/product/BackButton";
 
 type DescriptionBlock = {
   title: string;
@@ -92,15 +93,9 @@ export default async function ProductPage({
   return (
     <main className="bg-paper min-h-screen pb-20 sm:pb-28">
       {/* Header / Breadcrumb Minimalista */}
-      <div className="bg-paper-warm/40 border-b border-line py-4">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink-soft hover:text-grass-deep transition-colors group"
-          >
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            <span>Torna al catalogo</span>
-          </Link>
+      <div className="bg-paper-warm/40 border-b border-line py-3.5">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 flex items-center justify-between">
+          <BackButton />
         </div>
       </div>
 
