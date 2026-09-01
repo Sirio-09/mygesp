@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 
 type OrderItem = {
@@ -34,6 +34,11 @@ export default function AdminOrdiniPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Filtri e Ricerca
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Modal Tracking
   const [selectedOrderForShipping, setSelectedOrderForShipping] = useState<string | null>(null);
   const [trackingCode, setTrackingCode] = useState("");
   const [carrier, setCarrier] = useState("BRT");
@@ -100,6 +105,23 @@ export default function AdminOrdiniPage() {
     }
   };
 
+  // Filtraggio ordini in base alla ricerca e allo stato selezionato
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const matchesStatus =
+        statusFilter === "all" ? true : order.status === statusFilter;
+
+      const query = searchTerm.toLowerCase().trim();
+      const matchesSearch =
+        query === "" ||
+        order.id.toLowerCase().includes(query) ||
+        order.customerEmail.toLowerCase().includes(query) ||
+        (order.shippingName && order.shippingName.toLowerCase().includes(query));
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [orders, statusFilter, searchTerm]);
+
   if (loading) {
     return (
       <div className="p-12 text-center text-xs font-mono uppercase text-ink-soft tracking-wider">
@@ -110,7 +132,7 @@ export default function AdminOrdiniPage() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6 text-ink">
-      {/* Header Dashboard con stile identico alla pagina Staff */}
+      {/* Header Dashboard */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-6">
         <div>
           <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
@@ -131,13 +153,49 @@ export default function AdminOrdiniPage() {
         </Link>
       </div>
 
-      {orders.length === 0 ? (
+      {/* Controlli di Filtro e Ricerca */}
+      <div className="bg-white border border-line p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+          {/* Barra di ricerca */}
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Cerca per ID, Email o Nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full border border-line bg-paper-warm px-3 py-2 text-xs text-ink focus:outline-none placeholder:text-ink-soft font-mono"
+            />
+          </div>
+
+          {/* Filtro per Stato */}
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+              Stato:
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-line bg-white text-ink text-xs font-bold uppercase tracking-wider px-3 py-2 focus:outline-none"
+            >
+              <option value="all">Tutti ({orders.length})</option>
+              <option value="paid">Pagati</option>
+              <option value="processing">In Lavorazione</option>
+              <option value="shipped">Spediti</option>
+              <option value="delivered">Consegnati</option>
+              <option value="canceled">Annullati</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista Ordini */}
+      {filteredOrders.length === 0 ? (
         <div className="bg-white border border-line p-12 text-center text-xs uppercase tracking-wider text-ink-soft">
-          Nessun ordine presente a sistema.
+          Nessun ordine trovato con i filtri selezionati.
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <div
               key={order.id}
               className="bg-white border border-line p-5 space-y-5"
