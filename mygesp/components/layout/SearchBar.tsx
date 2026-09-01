@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -11,7 +11,7 @@ type Product = {
   images: string[];
 };
 
-export default function SearchBar() {
+function SearchBarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
@@ -73,13 +73,11 @@ export default function SearchBar() {
     setMobileExpanded(false);
   };
 
-  // Navigazione alla scheda prodotto singola (/prodotto/[slug])
   const handleProductSelect = (slug: string) => {
     closeMobileSearch();
     router.push(`/prodotto/${slug}`);
   };
 
-  // Invio ricerca per vedere tutti i risultati (/prodotti?q=...)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim().length < 2) return;
@@ -199,5 +197,24 @@ export default function SearchBar() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchBar() {
+  return (
+    <Suspense
+      fallback={
+        <div className="relative w-full lg:w-72">
+          <input
+            type="text"
+            placeholder="Cerca prodotti..."
+            readOnly
+            className="bg-white text-ink placeholder:text-ink-soft/60 text-sm px-3.5 py-2 border border-line outline-none w-full"
+          />
+        </div>
+      }
+    >
+      <SearchBarContent />
+    </Suspense>
   );
 }
