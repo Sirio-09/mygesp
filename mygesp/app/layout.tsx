@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import CartDrawer from "@/components/layout/CartDrawer";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -47,6 +48,9 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Footer />
+          
+          {/* Carrello a comparsa globale */}
+          <CartDrawer />
         </Providers>
 
         {/* Sistema di notifiche Toast Minimale */}

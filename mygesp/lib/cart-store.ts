@@ -13,6 +13,9 @@ export type CartItem = {
 
 type CartStore = {
   items: CartItem[];
+  isOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
   addItem: (item: CartItem) => void;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
@@ -25,6 +28,10 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      isOpen: false,
+
+      openCart: () => set({ isOpen: true }),
+      closeCart: () => set({ isOpen: false }),
 
       addItem: (item) => {
         const existing = get().items.find((i) => i.variantId === item.variantId);
@@ -35,9 +42,13 @@ export const useCartStore = create<CartStore>()(
                 ? { ...i, quantity: i.quantity + item.quantity }
                 : i
             ),
+            isOpen: true,
           });
         } else {
-          set({ items: [...get().items, item] });
+          set({
+            items: [...get().items, item],
+            isOpen: true,
+          });
         }
       },
 
@@ -46,6 +57,10 @@ export const useCartStore = create<CartStore>()(
       },
 
       updateQuantity: (variantId, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(variantId);
+          return;
+        }
         set({
           items: get().items.map((i) =>
             i.variantId === variantId ? { ...i, quantity } : i
@@ -55,10 +70,15 @@ export const useCartStore = create<CartStore>()(
 
       clear: () => set({ items: [] }),
 
-      totalCents: () => get().items.reduce((sum, i) => sum + i.priceCents * i.quantity, 0),
+      totalCents: () =>
+        get().items.reduce((sum, i) => sum + i.priceCents * i.quantity, 0),
 
-      totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
+      totalItems: () =>
+        get().items.reduce((sum, i) => sum + i.quantity, 0),
     }),
-    { name: "mygesp-cart" }
+    {
+      name: "mygesp-cart",
+      partialize: (state) => ({ items: state.items }),
+    }
   )
 );

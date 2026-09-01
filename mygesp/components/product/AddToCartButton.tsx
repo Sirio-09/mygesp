@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useCartStore } from "@/lib/cart-store";
 
 type Variant = {
@@ -15,27 +14,27 @@ export default function AddToCartButton({
   productSlug,
   productName,
   discountPercent,
-  productImage, // Aggiunto!
+  productImage,
 }: {
   variants: Variant[];
   productSlug: string;
   productName: string;
   discountPercent?: number | null;
-  productImage?: string | null; // Aggiunto!
+  productImage?: string | null;
 }) {
-  const router = useRouter();
   const [selectedSize, setSelectedSize] = useState(variants[0]?.size ?? "");
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
 
   const selectedVariant = variants.find((v) => v.size === selectedSize);
-  const finalPriceCents = selectedVariant && discountPercent
-    ? Math.round(selectedVariant.priceCents * (1 - discountPercent / 100))
-    : selectedVariant?.priceCents;
+  const finalPriceCents =
+    selectedVariant && discountPercent
+      ? Math.round(selectedVariant.priceCents * (1 - discountPercent / 100))
+      : selectedVariant?.priceCents;
 
   const handleAdd = () => {
     if (!selectedVariant) return;
-    
+
     addItem({
       variantId: selectedVariant.id,
       productSlug,
@@ -43,10 +42,8 @@ export default function AddToCartButton({
       size: selectedVariant.size,
       priceCents: finalPriceCents ?? selectedVariant.priceCents,
       quantity,
-      image: productImage, // Ora l'immagine viene finalmente inviata allo store del carrello!
+      image: productImage,
     });
-    
-    router.push("/carrello");
   };
 
   return (
@@ -61,7 +58,7 @@ export default function AddToCartButton({
               disabled={v.stock === 0}
               className={`border px-4 py-2 text-sm transition-colors ${
                 selectedSize === v.size
-                  ? "border-grass-deep text-grass-deep"
+                  ? "border-grass-deep text-grass-deep font-bold"
                   : "border-line hover:border-grass-deep hover:text-grass-deep"
               } ${v.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
             >
@@ -82,10 +79,14 @@ export default function AddToCartButton({
           >
             −
           </button>
-          <span className="w-10 text-center text-sm font-medium">{quantity}</span>
+          <span className="w-10 text-center text-sm font-mono font-bold">
+            {quantity}
+          </span>
           <button
             type="button"
-            onClick={() => setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))}
+            onClick={() =>
+              setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))
+            }
             className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
           >
             +
@@ -97,15 +98,15 @@ export default function AddToCartButton({
         <div className="flex items-baseline gap-3 mb-6">
           {discountPercent ? (
             <>
-              <span className="text-line line-through text-base">
+              <span className="text-line line-through text-base font-mono">
                 €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
               </span>
-              <span className="text-soil-deep text-2xl font-bold">
+              <span className="text-grass-deep text-2xl font-bold font-mono">
                 €{(((finalPriceCents ?? 0) * quantity) / 100).toFixed(2)}
               </span>
             </>
           ) : (
-            <span className="text-soil-deep text-2xl font-bold">
+            <span className="text-grass-deep text-2xl font-bold font-mono">
               €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
             </span>
           )}
@@ -115,7 +116,7 @@ export default function AddToCartButton({
       <button
         onClick={handleAdd}
         disabled={!selectedVariant || selectedVariant.stock === 0}
-        className="bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base uppercase tracking-wide py-4 px-8 w-full md:w-auto disabled:opacity-40 transition-colors"
+        className="bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base uppercase tracking-wide py-4 px-8 w-full md:w-auto disabled:opacity-40 transition-colors shadow-sm"
       >
         Aggiungi al carrello
       </button>
