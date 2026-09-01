@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const limitParam = searchParams.get("limit");
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
 
-    // 1. Cerca i prodotti (in evidenza se richiesto)
+    // 1. Cerca i prodotti (filtrando per featured se richiesto)
     let products = await prisma.product.findMany({
       where: isFeatured ? { featured: true } : {},
       include: {
@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // 2. Fallback: Se vengono chiesti quelli in evidenza ma non ce n'è nessuno, prendi gli ultimi prodotti inseriti
+    // 2. Fallback: Se si chiedono quelli in evidenza ma non ce n'è nessuno nel DB,
+    // prende gli ultimi inseriti per evitare di mostrare un blocco vuoto
     if (isFeatured && products.length === 0) {
       products = await prisma.product.findMany({
         include: {
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/prodotti
+// POST /api/prodotti (Riservato agli admin)
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session || (session.user as { role?: string })?.role !== "admin") {
@@ -95,6 +96,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(product);
   } catch (err: any) {
     console.error("Errore salvataggio prodotto:", err);
-    return NextResponse.json({ error: err.message || "Errore salvataggio" }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || "Errore salvataggio" },
+      { status: 500 }
+    );
   }
 }

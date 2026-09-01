@@ -1,13 +1,15 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -28,11 +30,13 @@ export async function PUT(
       return NextResponse.json({ error: "Prodotto non trovato" }, { status: 404 });
     }
 
-    const oldMinPrice = existingProduct.variants.length > 0
-      ? Math.min(...existingProduct.variants.map((v) => v.priceCents))
-      : null;
+    const oldMinPrice =
+      existingProduct.variants.length > 0
+        ? Math.min(...existingProduct.variants.map((v) => v.priceCents))
+        : null;
 
-    // 1. Aggiornamento dei dati principali del prodotto
+    const isFeatured = body.featured === true || body.featured === "true";
+
     await prisma.product.update({
       where: { id },
       data: {
@@ -46,20 +50,18 @@ export async function PUT(
         images: body.images ?? [],
         waterColumn: body.waterColumn ? parseInt(body.waterColumn) : null,
         minTemp: body.minTemp ? parseInt(body.minTemp) : null,
-        featured: Boolean(body.featured),
+        featured: isFeatured,
         discountPercent: body.discountPercent ? parseInt(body.discountPercent) : 0,
         discountUntil: body.discountUntil ? new Date(body.discountUntil) : null,
       },
     });
 
-    // 2. Gestione sicura ed elegante delle varianti
     const existingVariants = existingProduct.variants;
     const incomingVariants = body.variants || [];
 
     const incomingIds = incomingVariants.map((v: { id?: string }) => v.id).filter(Boolean);
     const incomingSkus = incomingVariants.map((v: { sku: string }) => v.sku).filter(Boolean);
 
-    // Identifica le varianti eliminate dal form
     const variantsToDelete = existingVariants.filter(
       (v) => !incomingIds.includes(v.id) && !incomingSkus.includes(v.sku)
     );
@@ -70,7 +72,6 @@ export async function PUT(
       });
 
       if (orderCount === 0) {
-        // Pulisce i carrelli degli utenti prima di eliminare la variante dal DB
         if ("cartItem" in prisma) {
           await (prisma as any).cartItem.deleteMany({
             where: { variantId: variant.id },
@@ -78,7 +79,6 @@ export async function PUT(
         }
         await prisma.variant.delete({ where: { id: variant.id } });
       } else {
-        // Se ha ordini collegati, ne azzera lo stock per preservare lo storico fatture
         await prisma.variant.update({
           where: { id: variant.id },
           data: { stock: 0 },
@@ -86,7 +86,6 @@ export async function PUT(
       }
     }
 
-    // Aggiorna o crea le nuove varianti evitando duplicati di SKU
     for (const v of incomingVariants) {
       const priceCents = parseInt(v.priceCents || "0");
       const stock = parseInt(v.stock || "0");
@@ -121,13 +120,12 @@ export async function PUT(
       }
     }
 
-    // 3. Invalida la cache di Next.js per aggiornare subito il sito pubblico
     revalidatePath("/", "layout");
 
-    // 4. Invio Newsletter se il prezzo si è abbassato
-    const newMinPrice = incomingVariants.length > 0
-      ? Math.min(...incomingVariants.map((v: { priceCents: string }) => parseInt(v.priceCents)))
-      : 0;
+    const newMinPrice =
+      incomingVariants.length > 0
+        ? Math.min(...incomingVariants.map((v: { priceCents: string }) => parseInt(v.priceCents)))
+        : 0;
 
     if (oldMinPrice !== null && newMinPrice < oldMinPrice && process.env.RESEND_API_KEY) {
       const subscribers = await prisma.newsletter.findMany();
@@ -157,7 +155,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -168,9 +166,7 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    // Transazione per eliminare prima tutte le dipendenze in cascata e poi il prodotto
     await prisma.$transaction(async (tx) => {
-      // 1. Individua tutte le varianti collegate al prodotto
       const variants = await tx.variant.findMany({
         where: { productId: id },
         select: { id: true },
@@ -178,36 +174,30 @@ export async function DELETE(
       const variantIds = variants.map((v) => v.id);
 
       if (variantIds.length > 0) {
-        // 2. Elimina le righe negli ordini di test (OrderItem)
         await tx.orderItem.deleteMany({
           where: { variantId: { in: variantIds } },
         });
 
-        // 3. Elimina gli articoli nei carrelli utente (se presenti nel DB)
         if ("cartItem" in tx) {
           await (tx as any).cartItem.deleteMany({
             where: { variantId: { in: variantIds } },
           });
         }
 
-        // 4. Elimina le varianti
         await tx.variant.deleteMany({
           where: { productId: id },
         });
       }
 
-      // 5. Elimina le recensioni del prodotto
       await tx.review.deleteMany({
         where: { productId: id },
       });
 
-      // 6. Elimina definitivamente il prodotto
       await tx.product.delete({
         where: { id },
       });
     });
 
-    // Invalida la cache di Next.js
     revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true });
