@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
@@ -16,18 +16,28 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const { data: session, status } = useSession();
   const isLoadingSession = status === "loading";
 
+  // Verifica se l'utente è loggato ed è un CLIENTE (non admin)
+  const isCustomer = Boolean(
+    session?.user && (session.user as { role?: string })?.role === "customer"
+  );
+
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  
+
+  // Stato verifica acquisto e recensione esistente
   const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
   const [hasReviewed, setHasReviewed] = useState<boolean | null>(null);
-  
+
+  // Stato form
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Stato ordinamento: "recent" (più recenti) | "highest" (voti più alti)
+  const [sortBy, setSortBy] = useState<"recent" | "highest">("recent");
 
   const loadReviews = useCallback(async () => {
     try {
@@ -44,7 +54,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
   }, [productId]);
 
   const checkPurchaseStatus = useCallback(async () => {
-    if (!session) return;
+    if (!isCustomer) return;
     try {
       const res = await fetch(`/api/recensioni/check-acquisto?productId=${productId}`);
       if (res.ok) {
@@ -59,17 +69,17 @@ export default function ProductReviews({ productId }: { productId: string }) {
       setHasPurchased(false);
       setHasReviewed(false);
     }
-  }, [session, productId]);
+  }, [isCustomer, productId]);
 
   useEffect(() => {
     loadReviews();
   }, [loadReviews]);
 
   useEffect(() => {
-    if (session) {
+    if (isCustomer) {
       checkPurchaseStatus();
     }
-  }, [session, checkPurchaseStatus]);
+  }, [isCustomer, checkPurchaseStatus]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,71 +110,138 @@ export default function ProductReviews({ productId }: { productId: string }) {
     }
   };
 
-  const average = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
+  // Calcolo statistiche e media voti
+  const totalReviews = reviews.length;
+  const average =
+    totalReviews > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
+      : null;
+
+  const ratingCounts = useMemo(() => {
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach((r) => {
+      if (r.rating >= 1 && r.rating <= 5) {
+        counts[r.rating as keyof typeof counts]++;
+      }
+    });
+    return counts;
+  }, [reviews]);
+
+  // Ordinamento dinamico della lista
+  const sortedReviews = useMemo(() => {
+    return [...reviews].sort((a, b) => {
+      if (sortBy === "highest") {
+        if (b.rating !== a.rating) return b.rating - a.rating;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [reviews, sortBy]);
 
   if (loading) return null;
 
   return (
     <section className="mt-14 sm:mt-16 border-t border-line pt-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      {/* HEADER RECENSIONI E AZIONI UTENTE */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
         <div>
           <h2 className="text-ink font-extrabold text-xl sm:text-2xl">
-            Recensioni dei clienti
+            Recensioni
           </h2>
+
           {average ? (
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-soil font-bold text-sm">★ {average} / 5</span>
-              <span className="text-ink-soft text-sm">
-                ({reviews.length} recension{reviews.length === 1 ? "e" : "i"})
-              </span>
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-extrabold font-mono text-ink">
+                  {average}
+                </span>
+                <div>
+                  <div className="text-soil text-sm">
+                    {"★".repeat(Math.round(Number(average)))}
+                    {"☆".repeat(5 - Math.round(Number(average)))}
+                  </div>
+                  <p className="text-xs text-ink-soft">
+                    Basato su {totalReviews} recension{totalReviews === 1 ? "e" : "i"}
+                  </p>
+                </div>
+              </div>
+
+              {/* BARRE DISTRIBUZIONE VOTI */}
+              <div className="w-64 space-y-1 pt-2">
+                {[5, 4, 3, 2, 1].map((stars) => {
+                  const count = ratingCounts[stars as keyof typeof ratingCounts];
+                  const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+                  return (
+                    <div key={stars} className="flex items-center text-xs text-ink-soft gap-2">
+                      <span className="w-4 font-mono font-bold text-right">{stars}★</span>
+                      <div className="flex-1 h-2 bg-paper-warm border border-line overflow-hidden">
+                        <div
+                          className="h-full bg-soil transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <span className="w-6 font-mono text-right">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-ink-soft mt-1">Ancora nessuna valutazione</p>
+            <p className="text-sm text-ink-soft mt-1">Ancora nessuna valutazione.</p>
           )}
         </div>
 
-        {/* LOGICA STATO UTENTE */}
+        {/* LOGICA DIRITTI RECENSIONE */}
         {!isLoadingSession && !showForm && (
-          <div className="w-fit">
-            {!session ? (
-              <Link 
-                href="/account/login"
-                className="text-grass-deep hover:underline text-xs font-bold uppercase tracking-wider border border-line px-4 py-2 bg-paper-warm"
-              >
-                Accedi per recensire
-              </Link>
+          <div className="bg-paper-warm border border-line p-4 md:max-w-xs w-full h-fit">
+            {!isCustomer ? (
+              <div className="space-y-2 text-center md:text-center">
+                <p className="text-xs text-ink-soft">
+                  {session
+                    ? "Accedi per recensire."
+                    : "Vuoi valutare questo prodotto?"}
+                </p>
+                <Link
+                  href="/account/login"
+                  className="block w-full text-center bg-white border border-line hover:bg-paper text-ink text-xs font-bold uppercase tracking-wider py-2.5 transition-colors"
+                >
+                  Accedi
+                </Link>
+              </div>
             ) : hasReviewed ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-grass-deep bg-grass/10 px-3 py-1.5 rounded-full">
-                ✓ Hai già recensito questo prodotto
-              </span>
+              <div className="text-xs font-bold text-grass-deep flex items-center gap-2">
+                <span>✓</span>
+                <span>Hai già inviato una recensione per questo prodotto.</span>
+              </div>
             ) : hasPurchased ? (
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5 transition-colors shadow-sm"
+                className="w-full bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider py-2.5 transition-colors shadow-sm"
               >
                 Scrivi una recensione
               </button>
             ) : (
-              <span className="text-ink-soft text-xs italic">
-                *Riservato a chi ha acquistato l&apos;articolo.
-              </span>
+              <p className="text-xs text-ink-soft italic leading-relaxed">
+                * Solo chi ha acquistato questo prodotto può lasciare una recensione.
+              </p>
             )}
           </div>
         )}
       </div>
 
-      {/* FORM INSERIMENTO */}
+      {/* FORM SCRITTURA RECENSIONE */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-paper-warm border border-line p-5 sm:p-6 mb-8 rounded-sm">
-          <h3 className="text-sm font-bold text-ink uppercase tracking-wider mb-4">
-            La tua valutazione
+        <form
+          onSubmit={handleSubmit}
+          className="bg-paper-warm border border-line p-5 sm:p-6 mb-8"
+        >
+          <h3 className="text-xs font-bold text-ink uppercase tracking-wider mb-4">
+            Valuta il prodotto
           </h3>
-          
+
           <div className="mb-4">
-            <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">
-              Voto
+            <label className="block text-[11px] font-bold text-ink-soft uppercase tracking-wide mb-1.5">
+              Il tuo voto
             </label>
             <div className="flex gap-1" onMouseLeave={() => setHoverRating(0)}>
               {[1, 2, 3, 4, 5].map((n) => (
@@ -175,7 +252,11 @@ export default function ProductReviews({ productId }: { productId: string }) {
                   onMouseEnter={() => setHoverRating(n)}
                   className="text-2xl transition-transform hover:scale-110 focus:outline-none"
                 >
-                  <span className={(hoverRating || rating) >= n ? "text-soil" : "text-line"}>
+                  <span
+                    className={
+                      (hoverRating || rating) >= n ? "text-soil" : "text-line"
+                    }
+                  >
                     ★
                   </span>
                 </button>
@@ -184,7 +265,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
           </div>
 
           <div className="mb-4">
-            <label className="block text-xs font-semibold text-ink-soft uppercase tracking-wide mb-2">
+            <label className="block text-[11px] font-bold text-ink-soft uppercase tracking-wide mb-1.5">
               Recensione
             </label>
             <textarea
@@ -192,8 +273,8 @@ export default function ProductReviews({ productId }: { productId: string }) {
               onChange={(e) => setComment(e.target.value)}
               required
               rows={4}
-              placeholder="Condividi la tua esperienza con questo prodotto..."
-              className="w-full border border-line p-3 text-sm focus:border-grass-deep outline-none bg-white font-sans placeholder:text-ink-soft/50"
+              placeholder="Come si comporta sul campo? Qualità, vestibilità, resistenza..."
+              className="w-full border border-line p-3 text-sm focus:border-grass-deep outline-none bg-white font-sans placeholder:text-ink-soft/40"
             />
           </div>
 
@@ -203,7 +284,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               disabled={submitting}
               className="bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 disabled:opacity-50 transition-colors"
             >
-              {submitting ? "Invio in corso..." : "Pubblica recensione"}
+              {submitting ? "Invio in corso..." : "Pubblica Recensione"}
             </button>
             <button
               type="button"
@@ -214,34 +295,64 @@ export default function ProductReviews({ productId }: { productId: string }) {
             </button>
           </div>
 
-          {error && <p className="text-red-600 text-xs mt-3 font-semibold">{error}</p>}
+          {error && (
+            <p className="text-red-600 text-xs mt-3 font-bold">{error}</p>
+          )}
         </form>
       )}
 
+      {/* SELETTORE ORDINAMENTO E LISTA RECENSIONI */}
+      {reviews.length > 0 && (
+        <div className="flex items-center justify-between pb-4 border-b border-line mb-4">
+          <span className="text-xs font-bold uppercase text-ink tracking-wider">
+            {totalReviews} Recension{totalReviews === 1 ? "e" : "i"}
+          </span>
+
+          {/* Filtro Ordinamento */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort-reviews" className="text-xs text-ink-soft">
+              Ordina per:
+            </label>
+            <select
+              id="sort-reviews"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "recent" | "highest")}
+              className="bg-white border border-line text-xs font-bold text-ink px-2.5 py-1.5 focus:outline-none focus:border-grass-deep"
+            >
+              <option value="recent">Più recenti</option>
+              <option value="highest">Voti più alti</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {/* LISTA RECENSIONI */}
-      {reviews.length === 0 ? (
-        <div className="text-center py-10 bg-paper-warm border border-line">
-          <p className="text-ink-soft text-sm">Nessuna recensione ancora presente.</p>
+      {sortedReviews.length === 0 ? (
+        <div className="text-center py-10 bg-paper-warm/50 border border-line">
+          <p className="text-ink-soft text-sm">
+            Nessuna recensione pubblicata al momento.
+          </p>
         </div>
       ) : (
         <div className="divide-y divide-line">
-          {reviews.map((review) => (
+          {sortedReviews.map((review) => (
             <div key={review.id} className="py-5 first:pt-0 last:pb-0">
               <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex text-soil text-sm">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <span key={i}>{i < review.rating ? "★" : "☆"}</span>
-                    ))}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex text-soil text-xs">
+                    {"★".repeat(review.rating)}
+                    {"☆".repeat(5 - review.rating)}
                   </div>
                   <span className="text-xs font-bold text-ink">
-                    {review.customer?.name || review.customer?.email?.split("@")[0] || "Utente"}
+                    {review.customer?.name ||
+                      review.customer?.email?.split("@")[0] ||
+                      "Cliente MyGesp"}
                   </span>
-                  <span className="inline-flex items-center text-[10px] font-bold text-grass-deep bg-grass/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-grass-deep bg-grass/10 px-2 py-0.5 rounded-full border border-grass/20">
                     Acquisto Verificato
                   </span>
                 </div>
-                <span className="text-xs text-ink-soft font-mono">
+                <span className="text-[11px] text-ink-soft font-mono">
                   {new Date(review.createdAt).toLocaleDateString("it-IT", {
                     day: "numeric",
                     month: "short",
@@ -249,7 +360,9 @@ export default function ProductReviews({ productId }: { productId: string }) {
                   })}
                 </span>
               </div>
-              <p className="text-sm text-ink-soft leading-relaxed">{review.comment}</p>
+              <p className="text-sm text-ink-soft leading-relaxed">
+                {review.comment}
+              </p>
             </div>
           ))}
         </div>
