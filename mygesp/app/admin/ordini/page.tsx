@@ -2,6 +2,37 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+
+function OrdersSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-white border border-line p-5 space-y-5">
+          <div className="flex justify-between items-center border-b border-line pb-4">
+            <div className="space-y-2">
+              <div className="h-3 w-32 bg-paper-warm"></div>
+              <div className="h-2 w-24 bg-paper-warm"></div>
+            </div>
+            <div className="h-7 w-28 bg-paper-warm"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="h-2 w-16 bg-paper-warm"></div>
+              <div className="h-3 w-48 bg-paper-warm"></div>
+              <div className="h-3 w-40 bg-paper-warm"></div>
+            </div>
+            <div className="md:text-right space-y-2">
+              <div className="h-2 w-12 bg-paper-warm md:ml-auto"></div>
+              <div className="h-6 w-20 bg-paper-warm md:ml-auto"></div>
+            </div>
+          </div>
+          <div className="h-16 bg-paper-warm"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type OrderItem = {
   id: string;
@@ -53,9 +84,12 @@ export default function AdminOrdiniPage() {
       if (res.ok) {
         const data = await res.json();
         setOrders(data);
+      } else {
+        toast.error("Impossibile caricare gli ordini");
       }
     } catch (err) {
       console.error("Errore caricamento ordini:", err);
+      toast.error("Errore di connessione al server");
     } finally {
       setLoading(false);
     }
@@ -83,9 +117,13 @@ export default function AdminOrdiniPage() {
         setOrders((prev) =>
           prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
         );
+        toast.success(`Ordine #${orderId.slice(-6)} aggiornato`);
+      } else {
+        toast.error("Errore durante l'aggiornamento dell'ordine");
       }
     } catch (err) {
       console.error("Errore aggiornamento stato:", err);
+      toast.error("Impossibile contattare il server");
     }
   };
 
@@ -124,9 +162,28 @@ export default function AdminOrdiniPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-xs font-mono uppercase text-ink-soft tracking-wider">
-        Caricamento ordini...
-      </div>
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6 text-ink">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-6">
+          <div>
+            <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+              GESTIONE OPERATIVA
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
+              Ordini Ricevuti
+            </h1>
+            <p className="text-xs text-ink-soft mt-1">
+              Monitora gli acquisti, aggiorna lo stato e gestisci i dati di spedizione.
+            </p>
+          </div>
+          <Link
+            href="/admin"
+            className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-ink border border-line bg-white hover:bg-paper-warm transition-colors shrink-0"
+          >
+            ← TORNA AL CATALOGO
+          </Link>
+        </div>
+        <OrdersSkeleton />
+      </main>
     );
   }
 

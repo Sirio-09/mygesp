@@ -1,6 +1,7 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -13,11 +14,17 @@ type Product = {
 
 export default function SearchBar() {
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [results, setResults] = useState<Product[]>([]);
   const [open, setOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sincronizza il valore dell'input se cambia il parametro URL "q"
+  useEffect(() => {
+    setQuery(searchParams.get("q") ?? "");
+  }, [searchParams]);
 
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -50,7 +57,10 @@ export default function SearchBar() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
         setMobileExpanded(false);
       }
@@ -64,7 +74,8 @@ export default function SearchBar() {
     if (query.trim().length < 2) return;
     setOpen(false);
     setMobileExpanded(false);
-    router.push(`/cerca?q=${encodeURIComponent(query)}`);
+    // Reindirizza alla pagina del catalogo con i filtri attivi
+    router.push(`/prodotti?q=${encodeURIComponent(query.trim())}`);
   };
 
   const closeMobileSearch = () => {
@@ -74,7 +85,7 @@ export default function SearchBar() {
 
   return (
     <div ref={containerRef} className="relative w-full lg:w-72">
-      {/* Overlay scuro per Mobile */}
+      {/* Overlay mobile */}
       {mobileExpanded && (
         <div
           onClick={closeMobileSearch}
@@ -82,7 +93,7 @@ export default function SearchBar() {
         />
       )}
 
-      {/* Pulsante Icona Cerca per Mobile */}
+      {/* Pulsante ricerca mobile */}
       {!mobileExpanded && (
         <button
           onClick={() => setMobileExpanded(true)}
@@ -93,7 +104,7 @@ export default function SearchBar() {
         </button>
       )}
 
-      {/* Form di Ricerca */}
+      {/* Form di ricerca */}
       <form
         onSubmit={handleSubmit}
         className={
@@ -112,7 +123,6 @@ export default function SearchBar() {
           className="bg-white text-ink placeholder:text-ink-soft/60 text-sm px-3.5 py-2 border border-line focus:border-grass-deep outline-none w-full transition-all"
         />
 
-        {/* Pulsante Chiusura per Mobile */}
         {mobileExpanded && (
           <button
             type="button"
@@ -125,7 +135,7 @@ export default function SearchBar() {
         )}
       </form>
 
-      {/* Dropdown Risultati con la stessa larghezza dell'input */}
+      {/* Dropdown dei suggerimenti */}
       {open && results.length > 0 && (
         <div
           className={`bg-white border border-line z-50 shadow-xl overflow-hidden ${
@@ -134,7 +144,6 @@ export default function SearchBar() {
               : "absolute top-full left-0 right-0 w-full mt-1.5"
           }`}
         >
-          {/* Header del dropdown */}
           <div className="bg-paper-warm px-3.5 py-2 border-b border-line flex items-center justify-between sticky top-0 z-10">
             <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
               Suggerimenti
@@ -144,12 +153,11 @@ export default function SearchBar() {
             </span>
           </div>
 
-          {/* Lista Prodotti */}
           <div className="divide-y divide-line">
             {results.map((product) => (
               <Link
                 key={product.id}
-                href={`/prodotto/${product.slug}`}
+                href={`/prodotti/${product.slug}`}
                 onClick={closeMobileSearch}
                 className="flex items-center gap-3 px-3.5 py-2.5 hover:bg-paper-warm transition-colors group"
               >
@@ -174,14 +182,15 @@ export default function SearchBar() {
             ))}
           </div>
 
-          {/* Footer del Dropdown */}
           <button
             type="button"
             onClick={handleSubmit}
-            className="w-full bg-paper-warm hover:bg-grass hover:text-white text-ink text-xs font-bold py-2.5 px-3.5 border-t border-line text-center transition-colors flex items-center justify-between group sticky bottom-0"
+            className="w-full bg-paper-warm hover:bg-grass hover:text-white text-ink text-xs font-bold py-2.5 px-3.5 border-t border-line text-center transition-colors flex items-center justify-between group sticky bottom-0 cursor-pointer"
           >
             <span className="truncate">Vedi tutti i risultati</span>
-            <span className="group-hover:translate-x-1 transition-transform flex-shrink-0">→</span>
+            <span className="group-hover:translate-x-1 transition-transform flex-shrink-0">
+              →
+            </span>
           </button>
         </div>
       )}
