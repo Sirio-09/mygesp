@@ -11,16 +11,20 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
-// Fallback sicuro per evitare crash in fase di build static/prerender
+// Fallback ultra-sicuro con try/catch per impedire qualsiasi crash di new URL()
 const getSafeMetadataBase = (): URL => {
-  const envUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXTAUTH_URL ||
-    "http://localhost:3000";
-  const cleanUrl = envUrl.replace(/^(https?:\/\/)+/i, "").replace(/\/+$/, "");
-  return new URL(
-    cleanUrl.startsWith("localhost") ? `http://${cleanUrl}` : `https://${cleanUrl}`
-  );
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (envUrl) {
+    try {
+      const formatted = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+      return new URL(formatted);
+    } catch {
+      // Se l'URL nel DB/Env è malformato, evita il crash della build
+    }
+  }
+
+  return new URL("http://localhost:3000");
 };
 
 export const metadata: Metadata = {
