@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function SicurezzaPage() {
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -29,124 +30,131 @@ export default function SicurezzaPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="border-b border-line pb-6">
-        <Link
-          href="/admin"
-          className="text-xs uppercase tracking-wider font-semibold text-ink-soft hover:text-grass-deep transition-colors inline-block mb-4"
-        >
-          ← Torna al pannello
-        </Link>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
-          Autenticazione a Due Fattori (2FA)
-        </h1>
-        <p className="text-xs sm:text-sm text-ink-soft mt-1">
-          Proteggi l&apos;accesso al pannello amministrativo configurando un&apos;app di autenticazione.
-        </p>
-      </div>
+    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
+      <div className="max-w-xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-line/40 pb-8 mb-10">
+          <div>
+            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-2 block">
+              Impostazioni Account
+            </span>
+            <h1 className="text-3xl font-light text-ink tracking-tight mb-2">
+              Sicurezza 2FA
+            </h1>
+            <p className="text-sm text-ink-soft font-light">
+              Proteggi l'accesso al pannello configurando un'app di autenticazione.
+            </p>
+          </div>
+          <Link
+            href="/admin"
+            className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors mb-1"
+          >
+            &larr; Indietro
+          </Link>
+        </div>
 
-      {/* Main Card */}
-      <div className="bg-white border border-line p-6 sm:p-8">
-        {status === "done" ? (
-          <div className="p-6 bg-paper-warm border border-grass-deep text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-grass-deep/10 text-grass-deep flex items-center justify-center mx-auto text-2xl font-bold">
-              ✓
+        {/* Main Card */}
+        <div className="bg-transparent border border-line/40 p-8 sm:p-12">
+          {status === "done" ? (
+            <div className="text-center space-y-6">
+              <div className="w-16 h-16 border border-grass text-grass flex items-center justify-center mx-auto text-2xl font-light rounded-full bg-grass/5">
+                ✓
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-light text-ink">Autenticazione Attivata</h2>
+                <p className="text-sm text-ink-soft font-light leading-relaxed max-w-sm mx-auto">
+                  La sicurezza del tuo account è stata aggiornata. Da questo momento ti verrà richiesto il codice monouso generato dall'app ad ogni accesso.
+                </p>
+              </div>
+              <div className="pt-6">
+                <Link
+                  href="/admin"
+                  className="inline-block bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors"
+                >
+                  Torna alla Dashboard
+                </Link>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h2 className="text-lg font-bold text-ink">2FA Attivata con Successo</h2>
-              <p className="text-xs sm:text-sm text-ink-soft max-w-md mx-auto leading-relaxed">
-                La sicurezza del tuo account è stata aggiornata. Da questo momento ti verrà richiesto il codice monouso generato dalla tua app ad ogni accesso.
-              </p>
-            </div>
-            <div className="pt-2">
-              <Link
-                href="/admin"
-                className="inline-block bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider py-3 px-6 transition-colors"
+          ) : !qrCode ? (
+            <div className="space-y-10 text-center">
+              <div className="space-y-4">
+                <p className="text-sm text-ink-soft font-light leading-relaxed">
+                  Usa un'applicazione di autenticazione come <strong className="font-medium text-ink">Google Authenticator</strong>, <strong className="font-medium text-ink">1Password</strong> o <strong className="font-medium text-ink">Authy</strong> per generare codici di verifica temporanei e proteggere l'ambiente amministrativo.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={startSetup}
+                className="w-full bg-ink hover:bg-grass text-white font-medium text-[10px] uppercase tracking-widest py-4 transition-colors"
               >
-                Torna alla Dashboard
-              </Link>
+                Inizia Configurazione
+              </button>
             </div>
-          </div>
-        ) : !qrCode ? (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-grass-deep uppercase tracking-wider">
-                Configurazione Sicurezza
-              </span>
-              <p className="text-sm text-ink-soft leading-relaxed">
-                Usa un&apos;applicazione di autenticazione come Google Authenticator, 1Password o Authy per generare codici di verifica temporanei.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={startSetup}
-              className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-3.5 transition-colors"
-            >
-              Configura e Attiva 2FA
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="space-y-1">
-              <span className="text-xs font-bold text-grass-deep uppercase tracking-wider">
-                Passaggio 1 di 2
-              </span>
-              <h2 className="text-base font-bold text-ink">Scansiona il codice QR</h2>
-              <p className="text-xs text-ink-soft">
-                Inquadra il codice QR con la tua app di autenticazione per aggiungere l&apos;account.
-              </p>
-            </div>
-
-            <div className="flex justify-center p-6 bg-paper-warm border border-line">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrCode}
-                alt="QR code per la configurazione 2FA"
-                className="w-48 h-48 border border-line bg-white p-2"
-              />
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-grass-deep uppercase tracking-wider">
-                  Passaggio 2 di 2
-                </span>
-                <h3 className="text-sm font-bold text-ink">Verifica Codice</h3>
+          ) : (
+            <div className="space-y-10">
+              {/* Step 1 */}
+              <div className="space-y-6 text-center border-b border-line/40 pb-10">
+                <div>
+                  <span className="text-[10px] font-semibold text-grass uppercase tracking-widest mb-2 block">
+                    Passaggio 1 di 2
+                  </span>
+                  <h2 className="text-lg font-light text-ink mb-1">Scansiona il codice QR</h2>
+                  <p className="text-xs text-ink-soft font-light">
+                    Inquadra il codice QR con l'app di autenticazione per aggiungere l'account.
+                  </p>
+                </div>
+                <div className="inline-block p-4 border border-line/40 bg-white">
+                  <Image
+                    src={qrCode}
+                    alt="QR code per la configurazione 2FA"
+                    width={192}
+                    height={192}
+                    className="w-48 h-48"
+                    unoptimized
+                  />
+                </div>
               </div>
 
-              <form onSubmit={verifyCode} className="space-y-4">
+              {/* Step 2 */}
+              <div className="space-y-6 text-center pt-2">
                 <div>
+                  <span className="text-[10px] font-semibold text-grass uppercase tracking-widest mb-2 block">
+                    Passaggio 2 di 2
+                  </span>
+                  <h3 className="text-lg font-light text-ink">Verifica Codice</h3>
+                </div>
+
+                <form onSubmit={verifyCode} className="space-y-6 max-w-xs mx-auto">
                   <input
                     type="text"
                     maxLength={6}
                     value={code}
                     onChange={(e) => setCode(e.target.value.trim())}
-                    placeholder="123456"
+                    placeholder="000000"
                     required
-                    className="w-full border border-line px-4 py-3 text-center text-xl font-mono tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors uppercase"
+                    className="w-full bg-transparent border-b border-line/40 pb-3 text-center text-3xl font-light tracking-[0.5em] text-ink focus:border-grass outline-none transition-colors"
                   />
-                </div>
 
-                <button
-                  type="submit"
-                  disabled={status === "verifying" || code.length < 6}
-                  className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-3.5 transition-colors disabled:opacity-50"
-                >
-                  {status === "verifying" ? "Verifica in corso..." : "Conferma e Attiva"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={status === "verifying" || code.length < 6}
+                    className="w-full bg-ink hover:bg-grass text-white font-medium text-[10px] uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    {status === "verifying" ? "Verifica..." : "Attiva 2FA"}
+                  </button>
 
-                {status === "error" && (
-                  <p className="text-xs text-soil-deep font-bold text-center pt-1">
-                    Codice non valido o scaduto. Riprova.
-                  </p>
-                )}
-              </form>
+                  {status === "error" && (
+                    <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-center">
+                      Codice errato o scaduto.
+                    </p>
+                  )}
+                </form>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

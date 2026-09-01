@@ -9,6 +9,7 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
+  
   if (!session || (session.user as { role?: string })?.role !== "admin") {
     redirect("/admin/login");
   }
@@ -24,7 +25,7 @@ export default async function EditProductPage({
   }
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-paper-warm py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
       <div className="max-w-4xl mx-auto">
         <EditProductForm product={product} />
       </div>

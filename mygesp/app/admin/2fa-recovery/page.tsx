@@ -90,44 +90,43 @@ export default function RecoveryOtpPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-paper-warm flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white border border-line p-8 space-y-6">
-        
+    <main className="min-h-screen bg-paper flex items-center justify-center px-4 py-12 selection:bg-grass selection:text-white">
+      <div className="w-full max-w-md bg-paper border border-line/40 p-8 sm:p-12">
         {step === 1 && (
           <>
-            <div className="text-center space-y-2">
-              <span className="text-xs uppercase tracking-widest font-semibold text-soil-deep">
+            <div className="text-center mb-10">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-3 block">
                 Accesso d&apos;Emergenza
               </span>
-              <h1 className="text-2xl font-extrabold text-ink">
+              <h1 className="text-3xl font-light text-ink mb-3 tracking-tight">
                 Codice di Recupero
               </h1>
-              <p className="text-xs text-ink-soft leading-relaxed">
+              <p className="text-sm text-ink-soft font-light leading-relaxed">
                 Inserisci uno dei tuoi codici d&apos;emergenza per rigenerare il tuo QR Code.
               </p>
             </div>
 
             {error && (
               <div
-                className={`p-4 text-xs font-semibold rounded text-center transition-colors ${
+                className={`mb-6 p-4 text-xs font-medium text-center border ${
                   isLocked
-                    ? "bg-red-100 text-red-800 border border-red-300"
-                    : "bg-amber-50 text-amber-900 border border-amber-200"
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-line/5 text-ink border-line/40"
                 }`}
               >
                 {isLocked && (
-                  <span className="block font-bold uppercase tracking-wider mb-1">
-                    🔒 Account Bloccato
+                  <span className="block font-semibold uppercase tracking-widest mb-1 text-[10px]">
+                    Account Bloccato
                   </span>
                 )}
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleVerifyRecovery} className="space-y-4">
+            <form onSubmit={handleVerifyRecovery} className="space-y-6">
               <div>
-                <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
-                  Codice di Recupero
+                <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3 text-center">
+                  Inserisci il codice
                 </label>
                 <input
                   type="text"
@@ -137,24 +136,24 @@ export default function RecoveryOtpPage() {
                   onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
                   placeholder="XXXX-XXXX"
                   autoFocus
-                  className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.2em] text-ink focus:border-grass-deep outline-none transition-colors uppercase disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full bg-transparent border border-line/40 px-4 py-4 text-center text-xl font-mono tracking-[0.3em] text-ink focus:border-grass outline-none transition-colors uppercase disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-line placeholder:font-light"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading || recoveryCode.trim().length < 6 || isLocked}
-                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {loading ? "Verifica in corso..." : "Continua al nuovo QR Code"}
+                {loading ? "Verifica in corso..." : "Rigenera QR Code"}
               </button>
 
-              <div className="text-center pt-2 border-t border-line">
+              <div className="text-center pt-6 border-t border-line/40 mt-6">
                 <Link
                   href="/admin/2fa-verify"
-                  className="text-xs font-medium text-ink-soft hover:text-grass-deep underline transition-colors"
+                  className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors"
                 >
-                  Torna alla verifica standard (6 cifre)
+                  &larr; Torna alla verifica standard
                 </Link>
               </div>
             </form>
@@ -163,68 +162,68 @@ export default function RecoveryOtpPage() {
 
         {step === 2 && (
           <>
-            <div className="text-center space-y-2">
-              <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+            <div className="text-center mb-10">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-3 block">
                 Nuova Configurazione
               </span>
-              <h1 className="text-2xl font-extrabold text-ink">
-                Nuovo QR Code 2FA
+              <h1 className="text-3xl font-light text-ink mb-3 tracking-tight">
+                Nuovo QR Code
               </h1>
-              <p className="text-xs text-ink-soft leading-relaxed">
-                Scansiona questo nuovo QR Code con la tua app Authenticator per associare il dispositivo.
+              <p className="text-sm text-ink-soft font-light leading-relaxed">
+                Scansiona questo QR Code con la tua app per associare il dispositivo.
               </p>
             </div>
 
             {error && (
               <div
-                className={`p-4 text-xs font-semibold rounded text-center transition-colors ${
+                className={`mb-6 p-4 text-xs font-medium text-center border ${
                   isLocked
-                    ? "bg-red-100 text-red-800 border border-red-300"
-                    : "bg-amber-50 text-amber-900 border border-amber-200"
+                    ? "bg-red-50 text-red-700 border-red-200"
+                    : "bg-line/5 text-ink border-line/40"
                 }`}
               >
                 {isLocked && (
-                  <span className="block font-bold uppercase tracking-wider mb-1">
-                    🔒 Account Bloccato
+                  <span className="block font-semibold uppercase tracking-widest mb-1 text-[10px]">
+                    Account Bloccato
                   </span>
                 )}
                 {error}
               </div>
             )}
 
-            <div className="flex flex-col items-center py-2 space-y-4">
+            <div className="flex flex-col items-center mb-10">
               {qrCode && (
-                <div className="p-3 bg-paper-warm border border-line">
+                <div className="p-4 bg-white border border-line/40 mb-6">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={qrCode} alt="Nuovo QR Code 2FA" className="w-48 h-48 object-contain" />
+                  <img src={qrCode} alt="Nuovo QR Code 2FA" className="w-40 h-40 object-contain" />
                 </div>
               )}
 
               {secret && (
-                <div className="w-full pt-2 text-center space-y-2">
-                  <p className="text-[11px] font-bold text-ink uppercase tracking-wider">
-                    Oppure inserisci la chiave manualmente:
+                <div className="w-full text-center">
+                  <p className="text-[10px] font-semibold text-ink-soft uppercase tracking-widest mb-3">
+                    Oppure inserisci la chiave
                   </p>
-                  <div className="flex items-center justify-center gap-2">
-                    <code className="bg-paper-warm px-3 py-1.5 text-xs font-mono border border-line tracking-widest text-soil-deep font-bold">
+                  <div className="flex items-center justify-center gap-0">
+                    <code className="bg-line/5 px-4 py-2 text-xs font-mono border-y border-l border-line/40 tracking-[0.1em] text-ink">
                       {secret}
                     </code>
                     <button
                       type="button"
                       onClick={handleCopySecret}
-                      className="bg-line hover:bg-ink-soft text-ink hover:text-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                      className="bg-ink hover:bg-grass text-white px-4 py-2 border-y border-r border-transparent text-[10px] font-medium uppercase tracking-widest transition-colors"
                     >
-                      {copiedSecret ? "Copiato!" : "Copia"}
+                      {copiedSecret ? "Copiato" : "Copia"}
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            <form onSubmit={handleConfirmNewQr} className="space-y-4 pt-2 border-t border-line">
+            <form onSubmit={handleConfirmNewQr} className="space-y-6 pt-8 border-t border-line/40">
               <div>
-                <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
-                  Inserisci le 6 cifre dall&apos;app per attivare
+                <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3 text-center">
+                  Verifica (6 cifre)
                 </label>
                 <input
                   type="text"
@@ -233,21 +232,20 @@ export default function RecoveryOtpPage() {
                   value={confirmCode}
                   onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="000000"
-                  className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full bg-transparent border border-line/40 px-4 py-4 text-center text-2xl font-mono tracking-[0.4em] text-ink focus:border-grass outline-none transition-colors disabled:opacity-50 placeholder:text-line placeholder:font-light"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading || confirmCode.length !== 6 || isLocked}
-                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {loading ? "Attivazione in corso..." : "Associa e Accedi"}
               </button>
             </form>
           </>
         )}
-
       </div>
     </main>
   );

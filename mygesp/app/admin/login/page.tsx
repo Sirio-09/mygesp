@@ -31,24 +31,25 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-paper-warm flex items-center justify-center px-4 py-12">
+    <main className="min-h-screen bg-paper flex flex-col items-center justify-center px-4 py-12 selection:bg-grass selection:text-white">
       <div className="w-full max-w-md space-y-6">
-        <div className="bg-white border border-line p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+        
+        <div className="bg-paper border border-line/40 p-8 sm:p-12">
+          <div className="text-center mb-10">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-3 block">
               Accesso Riservato
             </span>
-            <h1 className="text-2xl font-extrabold text-ink">
+            <h1 className="text-3xl font-light text-ink mb-3 tracking-tight">
               Area Tecnica
             </h1>
-            <p className="text-xs text-ink-soft">
+            <p className="text-sm text-ink-soft font-light leading-relaxed">
               Inserisci le tue credenziali per accedere al pannello di amministrazione.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
+              <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
                 Nome utente
               </label>
               <input
@@ -56,13 +57,13 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                placeholder="Inserisci il tuo nome utente"
-                className="w-full border border-line px-3 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+                placeholder="Admin username"
+                className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1.5">
+              <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
                 Password
               </label>
               <input
@@ -71,32 +72,35 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
-                className="w-full border border-line px-3 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+                className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light tracking-widest"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 mt-2"
+              className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              {loading ? "Verifica in corso..." : "Accedi al Pannello"}
+              {loading ? "Verifica in corso..." : "Accedi"}
             </button>
 
             {error && (
-              <p className="text-xs text-soil-deep text-center font-semibold pt-2 border-t border-line">
+              <p className="text-[10px] text-red-600 uppercase tracking-widest text-center font-medium pt-6 border-t border-line/40">
                 {error}
               </p>
             )}
           </form>
         </div>
 
-        <p className="text-center text-xs text-ink-soft">
-          Non sei un membro dello staff?{" "}
-          <Link href="/" className="text-grass-deep font-semibold hover:underline">
-            Torna al sito pubblicamente
+        <div className="text-center">
+          <Link 
+            href="/" 
+            className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors"
+          >
+            &larr; Torna al sito pubblico
           </Link>
-        </p>
+        </div>
+
       </div>
     </main>
   );

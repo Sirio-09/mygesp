@@ -134,48 +134,49 @@ export default function UtentiAdminPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-paper-warm py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
+      <div className="max-w-4xl mx-auto space-y-10">
+        
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-line/40 pb-8">
           <div>
-            <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-2 block">
               Sicurezza & Accessi
             </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">
-              Gestione Utenti Staff
+            <h1 className="text-3xl font-light text-ink tracking-tight mb-2">
+              Gestione Staff
             </h1>
-            <p className="text-xs sm:text-sm text-ink-soft mt-1">
+            <p className="text-sm text-ink-soft font-light">
               Amministra gli accessi e le credenziali del personale abilitato al pannello.
             </p>
           </div>
           <Link
             href="/admin"
-            className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink border border-line bg-white hover:bg-paper-warm transition-colors w-fit"
+            className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors mb-1"
           >
-            ← Torna al catalogo
+            &larr; Torna alla Dashboard
           </Link>
         </div>
 
         {/* Box Password Temporanea Generata */}
         {tempPasswordData && (
-          <div className="bg-amber-50 border border-amber-300 p-5 rounded-none space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
+          <div className="bg-transparent border border-line/40 p-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-line/40 pb-4">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-ink">
                 Password Temporanea Generata
               </span>
               <button
                 onClick={() => setTempPasswordData(null)}
-                className="text-xs text-amber-800 hover:underline font-mono"
+                className="text-[10px] uppercase tracking-widest font-semibold text-ink-soft hover:text-ink transition-colors"
               >
-                [Chiudi]
+                Chiudi ✕
               </button>
             </div>
-            <p className="text-xs text-amber-800">
-              Comunica questa password a <strong>{tempPasswordData.username}</strong>. Al suo prossimo accesso gli verrà richiesto il cambio obbligatorio.
+            <p className="text-sm font-light text-ink-soft leading-relaxed">
+              Comunica questa password a <strong className="font-medium text-ink">{tempPasswordData.username}</strong>. Al suo prossimo accesso gli verrà richiesto il cambio obbligatorio.
             </p>
-            <div className="flex items-center gap-3 pt-1">
-              <code className="bg-white border border-amber-300 px-4 py-2 font-mono text-base font-bold text-amber-900 select-all">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+              <code className="bg-transparent border border-line/40 px-6 py-4 font-mono text-lg font-light text-ink select-all flex-1 text-center sm:text-left">
                 {tempPasswordData.tempPassword}
               </code>
               <button
@@ -183,7 +184,7 @@ export default function UtentiAdminPage() {
                   navigator.clipboard.writeText(tempPasswordData.tempPassword);
                   alert("Password temporanea copiata negli appunti!");
                 }}
-                className="bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-bold uppercase tracking-wider px-4 py-2 transition-colors"
+                className="bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors"
               >
                 Copia
               </button>
@@ -192,87 +193,80 @@ export default function UtentiAdminPage() {
         )}
 
         {/* Lista Staff */}
-        <div className="bg-white border border-line p-6 sm:p-8 space-y-4">
+        <div className="bg-transparent border border-line/40 p-8 space-y-8">
           <div className="flex items-center justify-between">
-            <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
+            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
               Membri Staff Attuali
             </span>
-            <span className="text-xs text-ink-soft font-mono">
-              {admins.length} {admins.length === 1 ? "utente" : "utenti"}
+            <span className="text-[10px] uppercase tracking-widest text-ink-soft font-mono">
+              {admins.length} {admins.length === 1 ? "Utente" : "Utenti"}
             </span>
           </div>
 
           {loadingAdmins ? (
-            <div className="py-8 text-center text-xs text-ink-soft font-mono">
+            <div className="py-12 text-center text-sm font-light text-ink-soft animate-pulse">
               Caricamento utenti in corso...
             </div>
           ) : admins.length === 0 ? (
-            <div className="py-8 text-center text-xs text-ink-soft border border-dashed border-line">
+            <div className="py-12 text-center text-sm font-light text-ink-soft border border-line/40">
               Nessun utente staff trovato.
             </div>
           ) : (
-            <div className="divide-y divide-line border-t border-b border-line">
+            <div className="divide-y divide-line/40 border-t border-b border-line/40">
               {admins.map((admin) => (
-                <div key={admin.id} className="py-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-bold text-ink">{admin.username}</span>
-                      <span className="text-xs text-ink-soft font-mono">({admin.email})</span>
-
+                <div key={admin.id} className="py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <span className="text-base font-light text-ink">{admin.username}</span>
                       {admin.isManager && (
-                        <span className="text-[10px] font-mono font-bold bg-ink text-white px-2 py-0.5 uppercase tracking-wider">
+                        <span className="text-[9px] font-semibold border border-line/40 text-ink px-2 py-0.5 uppercase tracking-widest">
                           Manager
                         </span>
                       )}
-
-                      {admin.mustChangePassword && (
-                        <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 uppercase tracking-wider">
-                          Password Temporanea
-                        </span>
-                      )}
-
                       {admin.id === currentUserId && (
-                        <span className="text-[10px] font-mono font-bold bg-grass-deep/10 text-grass-deep border border-grass-deep/30 px-2 py-0.5 uppercase tracking-wider">
+                        <span className="text-[9px] font-semibold border border-grass/40 text-grass px-2 py-0.5 uppercase tracking-widest">
                           Tu
                         </span>
                       )}
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`text-xs font-mono font-semibold px-2 py-0.5 border ${
-                          admin.totpEnabled
-                            ? "border-grass-deep/30 bg-grass-deep/10 text-grass-deep"
-                            : "border-line bg-paper-warm text-ink-soft"
-                        }`}
-                      >
-                        {admin.totpEnabled ? "2FA Attivo" : "2FA Disattivo"}
+                    <div className="flex items-center gap-3 text-xs font-light text-ink-soft">
+                      <span>{admin.email}</span>
+                      <span className="text-line/40">|</span>
+                      <span className={admin.totpEnabled ? "text-grass" : ""}>
+                        2FA {admin.totpEnabled ? "Attivo" : "Disattivo"}
                       </span>
-
-                      {isManager && (
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            disabled={resettingId === admin.id}
-                            onClick={() => handleResetPassword(admin.id, admin.username)}
-                            className="text-xs font-semibold text-ink-soft hover:text-grass-deep underline transition-colors disabled:opacity-50"
-                          >
-                            {resettingId === admin.id ? "Generazione..." : "Reset Password"}
-                          </button>
-
-                          {admin.id !== currentUserId && (
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(admin.id, admin.username)}
-                              className="text-xs font-semibold text-soil-deep hover:underline transition-colors"
-                            >
-                              Elimina
-                            </button>
-                          )}
-                        </div>
+                      {admin.mustChangePassword && (
+                        <>
+                          <span className="text-line/40">|</span>
+                          <span className="text-ink">Psw Temporanea</span>
+                        </>
                       )}
                     </div>
                   </div>
+
+                  {isManager && (
+                    <div className="flex items-center gap-4 pt-2 sm:pt-0">
+                      <button
+                        type="button"
+                        disabled={resettingId === admin.id}
+                        onClick={() => handleResetPassword(admin.id, admin.username)}
+                        className="text-[10px] font-semibold text-ink-soft hover:text-ink uppercase tracking-widest transition-colors disabled:opacity-30"
+                      >
+                        {resettingId === admin.id ? "Generazione..." : "Reset Psw"}
+                      </button>
+
+                      {admin.id !== currentUserId && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(admin.id, admin.username)}
+                          className="text-[10px] font-semibold text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors"
+                        >
+                          Elimina
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -281,18 +275,18 @@ export default function UtentiAdminPage() {
 
         {/* Creazione Nuovo Utente (Solo per Manager) */}
         {isManager ? (
-          <div className="bg-white border border-line p-6 sm:p-8 space-y-6">
-            <div className="space-y-1">
-              <span className="block text-xs font-bold text-grass-deep uppercase tracking-wider">
+          <div className="bg-transparent border border-line/40 p-8 space-y-8">
+            <div className="border-b border-line/40 pb-6">
+              <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block mb-2">
                 Nuova Utenza
               </span>
-              <h2 className="text-lg font-bold text-ink">Aggiungi membro dello staff</h2>
+              <h2 className="text-xl font-light text-ink">Aggiungi membro dello staff</h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2">
                     Nome Utente *
                   </label>
                   <input
@@ -301,12 +295,12 @@ export default function UtentiAdminPage() {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+                    className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-1">
+                  <label className="block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2">
                     Indirizzo Email *
                   </label>
                   <input
@@ -315,30 +309,33 @@ export default function UtentiAdminPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full border border-line px-3.5 py-2.5 text-sm text-ink focus:border-grass-deep outline-none transition-colors"
+                    className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
                   />
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-3.5 transition-colors disabled:opacity-50"
-              >
-                {loading ? "Generazione in corso..." : "Crea Utente Staff"}
-              </button>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <p className="text-xs text-ink-soft font-light leading-relaxed flex-1">
+                  Verrà generata automaticamente una password temporanea. Al primo accesso l'utente sarà obbligato a impostare una propria password personale prima di configurare il token 2FA.
+                </p>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors disabled:opacity-30 shrink-0"
+                >
+                  {loading ? "Generazione..." : "Crea Utente"}
+                </button>
+              </div>
 
               {error && (
-                <p className="text-xs text-soil-deep font-bold text-center pt-1">{error}</p>
+                <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-center pt-2">
+                  {error}
+                </p>
               )}
             </form>
-
-            <p className="text-xs text-ink-soft leading-relaxed border-t border-line pt-4">
-              Verrà generata automaticamente una password temporanea. Al primo accesso l'utente sarà obbligato a impostare una propria password personale prima di configurare il token 2FA.
-            </p>
           </div>
         ) : (
-          <div className="p-4 bg-paper-warm border border-line text-xs text-ink-soft">
+          <div className="p-8 bg-transparent border border-line/40 text-sm font-light text-ink-soft text-center">
             Nota: Soltanto i profili con privilegi di Manager possono aggiungere o modificare gli account dello staff.
           </div>
         )}

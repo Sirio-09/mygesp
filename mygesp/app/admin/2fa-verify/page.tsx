@@ -43,40 +43,41 @@ export default function VerifyOtpPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-paper-warm flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white border border-line p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <span className="text-xs uppercase tracking-widest font-semibold text-grass-deep">
+    <main className="min-h-screen bg-paper flex items-center justify-center px-4 py-12 selection:bg-grass selection:text-white">
+      <div className="w-full max-w-md bg-paper border border-line/40 p-8 sm:p-12">
+        
+        <div className="text-center mb-10">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-3 block">
             Autenticazione Sicura
           </span>
-          <h1 className="text-2xl font-extrabold text-ink">
+          <h1 className="text-3xl font-light text-ink mb-3 tracking-tight">
             Verifica 2FA
           </h1>
-          <p className="text-xs text-ink-soft leading-relaxed">
+          <p className="text-sm text-ink-soft font-light leading-relaxed">
             Inserisci il codice a 6 cifre generato dalla tua app Authenticator.
           </p>
         </div>
 
         {error && (
           <div
-            className={`p-4 text-xs font-semibold rounded text-center transition-colors ${
+            className={`mb-6 p-4 text-xs font-medium text-center border ${
               isLocked
-                ? "bg-red-100 text-red-800 border border-red-300"
-                : "bg-amber-50 text-amber-900 border border-amber-200"
+                ? "bg-red-50 text-red-700 border-red-200"
+                : "bg-line/5 text-ink border-line/40"
             }`}
           >
             {isLocked && (
-              <span className="block font-bold uppercase tracking-wider mb-1">
-                🔒 Account Bloccato
+              <span className="block font-semibold uppercase tracking-widest mb-1 text-[10px]">
+                Account Bloccato
               </span>
             )}
             {error}
           </div>
         )}
 
-        <form onSubmit={handleVerify} className="space-y-4">
+        <form onSubmit={handleVerify} className="space-y-6">
           <div>
-            <label className="block text-xs font-semibold text-ink uppercase tracking-wider mb-2 text-center">
+            <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3 text-center">
               Codice TOTP
             </label>
             <input
@@ -87,27 +88,28 @@ export default function VerifyOtpPage() {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               placeholder="000000"
               autoFocus
-              className="w-full border border-line px-4 py-3 text-center text-lg font-mono font-bold tracking-[0.3em] text-ink focus:border-grass-deep outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full bg-transparent border border-line/40 px-4 py-4 text-center text-2xl font-mono tracking-[0.4em] text-ink focus:border-grass outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-line placeholder:font-light"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading || code.length !== 6 || isLocked}
-            className="w-full bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {loading ? "Verifica in corso..." : "Verifica e Accedi"}
           </button>
 
-          <div className="text-center pt-2 border-t border-line">
+          <div className="text-center pt-6 border-t border-line/40 mt-6">
             <Link
               href="/admin/2fa-recovery"
-              className="text-xs font-medium text-ink-soft hover:text-grass-deep underline transition-colors"
+              className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors"
             >
-              Usa un codice di recupero d&apos;emergenza
+              Usa un codice di emergenza &rarr;
             </Link>
           </div>
         </form>
+
       </div>
     </main>
   );
