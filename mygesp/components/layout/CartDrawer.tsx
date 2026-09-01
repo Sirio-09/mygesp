@@ -42,7 +42,7 @@ export default function CartDrawer() {
         isOpen ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
-      {/* Overlay Sfondo (Rimosso backdrop-blur-sm, usata transition-opacity diretta) */}
+      {/* Overlay Sfondo */}
       <div
         onClick={closeCart}
         className={`fixed inset-0 bg-black/50 transition-opacity duration-300 ease-in-out ${
@@ -50,19 +50,19 @@ export default function CartDrawer() {
         }`}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        {/* Pannello Drawer (Aggiunto transform-gpu e will-change-transform per accelerazione hardware) */}
+      <div className="fixed inset-y-0 right-0 flex max-w-full">
+        {/* Pannello Drawer: Stessa larghezza e altezza dinamica del menu mobile (w-[85vw] max-w-xs h-[100dvh]) */}
         <div
-          className={`w-screen max-w-md bg-white border-l border-line shadow-2xl flex flex-col justify-between transform-gpu will-change-transform transition-transform duration-300 ease-in-out ${
+          className={`w-[85vw] max-w-xs h-[100dvh] bg-white border-l border-line shadow-2xl flex flex-col justify-between transform-gpu will-change-transform transition-transform duration-300 ease-in-out ${
             isOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
           {/* Header Drawer */}
-          <div className="p-5 border-b border-line flex items-center justify-between bg-paper-warm">
+          <div className="p-4 border-b border-line flex items-center justify-between bg-paper-warm shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🛒</span>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-ink">
-                Il tuo Carrello ({itemCount})
+              <span className="text-base">🛒</span>
+              <h2 className="text-xs font-extrabold uppercase tracking-widest text-ink">
+                Carrello ({itemCount})
               </h2>
             </div>
             <button
@@ -75,7 +75,7 @@ export default function CartDrawer() {
           </div>
 
           {/* Lista Prodotti */}
-          <div className="flex-1 overflow-y-auto p-5 divide-y divide-line">
+          <div className="flex-1 overflow-y-auto p-4 divide-y divide-line min-h-0">
             {items.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-ink-soft text-sm font-medium mb-4">
@@ -90,14 +90,14 @@ export default function CartDrawer() {
               </div>
             ) : (
               items.map((item) => (
-                <div key={item.variantId} className="py-4 flex gap-4 first:pt-0">
-                  <div className="w-16 h-16 bg-paper-warm border border-line relative flex-shrink-0 overflow-hidden">
+                <div key={item.variantId} className="py-3 flex gap-3 first:pt-0">
+                  <div className="w-14 h-14 bg-paper-warm border border-line relative flex-shrink-0 overflow-hidden rounded-sm">
                     {item.image ? (
                       <Image
                         src={item.image}
                         alt={item.productName}
                         fill
-                        sizes="64px"
+                        sizes="56px"
                         className="object-cover"
                       />
                     ) : (
@@ -109,7 +109,7 @@ export default function CartDrawer() {
 
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                      <div className="flex justify-between items-start gap-2">
+                      <div className="flex justify-between items-start gap-1">
                         <Link
                           href={`/prodotto/${item.productSlug}`}
                           onClick={closeCart}
@@ -119,13 +119,13 @@ export default function CartDrawer() {
                         </Link>
                         <button
                           onClick={() => removeItem(item.variantId)}
-                          className="text-ink-soft/60 hover:text-red-600 text-xs transition-colors"
+                          className="text-ink-soft/60 hover:text-red-600 text-xs transition-colors p-0.5"
                           title="Rimuovi"
                         >
                           ✕
                         </button>
                       </div>
-                      <p className="text-[11px] text-ink-soft font-mono mt-0.5">
+                      <p className="text-[10px] text-ink-soft font-mono mt-0.5">
                         Taglia: <span className="font-bold text-ink">{item.size}</span>
                       </p>
                     </div>
@@ -134,16 +134,16 @@ export default function CartDrawer() {
                       <div className="flex items-center border border-line bg-white">
                         <button
                           onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                          className="w-6 h-6 flex items-center justify-center text-xs text-ink hover:bg-paper-warm"
+                          className="w-5 h-5 flex items-center justify-center text-xs text-ink hover:bg-paper-warm"
                         >
                           −
                         </button>
-                        <span className="w-6 text-center text-xs font-mono font-bold">
+                        <span className="w-5 text-center text-xs font-mono font-bold">
                           {item.quantity}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                          className="w-6 h-6 flex items-center justify-center text-xs text-ink hover:bg-paper-warm"
+                          className="w-5 h-5 flex items-center justify-center text-xs text-ink hover:bg-paper-warm"
                         >
                           +
                         </button>
@@ -161,19 +161,19 @@ export default function CartDrawer() {
 
           {/* Footer Drawer */}
           {items.length > 0 && (
-            <div className="p-5 border-t border-line bg-paper-warm space-y-4">
-              <div className="flex justify-between items-center text-sm font-bold text-ink">
+            <div className="p-4 border-t border-line bg-paper-warm space-y-3 shrink-0">
+              <div className="flex justify-between items-center text-xs font-bold text-ink">
                 <span>Totale Provvisorio</span>
-                <span className="font-mono text-base text-grass-deep">
+                <span className="font-mono text-sm text-grass-deep">
                   €{totalFormatted}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/carrello"
                   onClick={closeCart}
-                  className="block text-center border border-line bg-white hover:bg-paper text-ink font-bold text-xs uppercase tracking-wider py-3 transition-colors"
+                  className="block text-center border border-line bg-white hover:bg-paper text-ink font-bold text-[11px] uppercase tracking-wider py-2.5 transition-colors"
                 >
                   Vedi Carrello
                 </Link>
@@ -181,7 +181,7 @@ export default function CartDrawer() {
                 <Link
                   href="/checkout"
                   onClick={closeCart}
-                  className="block text-center bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3 transition-colors shadow-sm"
+                  className="block text-center bg-grass hover:bg-grass-deep text-white font-bold text-[11px] uppercase tracking-wider py-2.5 transition-colors shadow-sm"
                 >
                   Checkout
                 </Link>
