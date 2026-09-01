@@ -1,3 +1,4 @@
+// LoginClientePage.tsx
 "use client";
 
 import { useState, Suspense } from "react";
@@ -42,50 +43,54 @@ function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {isVerifiedParam && (
-        <div className="bg-grass/10 border border-grass/30 p-3 rounded-sm mb-2">
-          <p className="text-grass-deep text-xs font-bold">
+        <div className="border border-ink p-4 bg-paper">
+          <p className="text-ink text-[11px] uppercase tracking-[0.1em] font-semibold">
             Email verificata con successo! Ora puoi accedere.
           </p>
         </div>
       )}
 
       {errorParam === "token-scaduto" && (
-        <div className="bg-soil-deep/10 border border-soil-deep/30 p-3 rounded-sm mb-2">
-          <p className="text-soil-deep text-xs font-bold">
+        <div className="border border-red-500/30 p-4 bg-red-50">
+          <p className="text-red-600 text-[11px] uppercase tracking-[0.1em] font-semibold">
             Il link di verifica non è valido o è scaduto.
           </p>
         </div>
       )}
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none rounded-sm transition-colors"
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none rounded-sm transition-colors"
-      />
+      <div className="space-y-4">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+        />
+      </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3 disabled:opacity-50 transition-colors rounded-sm cursor-pointer"
+        className="w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-6 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300"
       >
         {loading ? "Verifica in corso..." : "Accedi"}
       </button>
 
       {error && (
-        <p className="text-soil-deep text-xs font-semibold mt-1">{error}</p>
+        <p className="text-red-500 text-[11px] uppercase tracking-[0.1em] font-semibold text-center mt-2">
+          {error}
+        </p>
       )}
     </form>
   );
@@ -93,25 +98,26 @@ function LoginForm() {
 
 export default function LoginClientePage() {
   return (
-    <main className="max-w-[400px] mx-auto px-4 sm:px-8 py-16">
-      <h1 className="text-ink font-extrabold text-2xl mb-6">Accedi</h1>
+    <main className="max-w-[440px] mx-auto px-4 sm:px-8 py-20 lg:py-32">
+      <h1 className="text-ink font-light text-3xl sm:text-4xl tracking-tight text-center mb-10">
+        Accedi
+      </h1>
 
-      <Suspense fallback={<div className="text-sm text-ink-soft">Caricamento...</div>}>
+      <Suspense fallback={<div className="text-[10px] uppercase tracking-[0.2em] text-ink-soft text-center">Caricamento...</div>}>
         <LoginForm />
       </Suspense>
 
-      <div className="mt-6 flex flex-col gap-2 text-sm text-ink-soft">
-        <p>
-          <Link href="/account/password-dimenticata" className="text-grass-deep hover:underline">
-            Password dimenticata?
-          </Link>
-        </p>
-        <p>
+      <div className="mt-10 flex flex-col gap-4 text-center">
+        <Link href="/account/password-dimenticata" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft hover:text-ink transition-colors duration-300">
+          Password dimenticata?
+        </Link>
+        <span className="block w-8 h-[1px] bg-line/40 mx-auto my-2"></span>
+        <div className="text-sm font-light text-ink-soft">
           Non hai un account?{" "}
-          <Link href="/account/registrati" className="text-grass-deep hover:underline font-semibold">
+          <Link href="/account/registrati" className="text-ink font-medium hover:text-grass transition-colors duration-300 ml-1">
             Registrati
           </Link>
-        </p>
+        </div>
       </div>
     </main>
   );

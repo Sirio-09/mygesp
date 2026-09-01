@@ -91,48 +91,49 @@ export default async function ProductPage({
   );
 
   return (
-    <main className="bg-paper min-h-screen pb-20 sm:pb-28">
-      {/* Contenitore Principale */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6">
-        {/* Pulsante Indietro posizionato vicino all'immagine */}
-        <div className="mb-4 sm:mb-5">
-          <BackButton />
-        </div>
+    <main className="bg-paper min-h-screen pb-24 sm:pb-32 text-ink selection:bg-grass selection:text-white">
+      {/* HEADER SPAZIOSO CON BACK BUTTON */}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 mb-8">
+        <BackButton />
+      </div>
 
-        <div className="space-y-16">
-          {/* Grid Principale Prodotto */}
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="space-y-24 sm:space-y-32">
+          
+          {/* SEZIONE PRINCIPALE PRODOTTO */}
+          <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+            
             {/* Galleria Immagini */}
-            <div className="lg:col-span-7 lg:sticky lg:top-20">
+            <div className="lg:col-span-7 lg:sticky lg:top-24">
               <ProductGallery images={product.images} productName={product.name} />
             </div>
 
             {/* Informazioni e Acquisto */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="flex items-center justify-between gap-3 pb-3 border-b border-line">
-                <span className="text-grass-deep text-xs font-bold uppercase tracking-widest">
+            <div className="lg:col-span-5 flex flex-col">
+              <div className="flex items-center gap-4 mb-5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
                   {product.brand}
                 </span>
                 {isDiscountActive && (
-                  <span className="bg-grass-deep text-white text-xs font-extrabold px-3 py-1 rounded shadow-md tracking-wide">
-                    -{product.discountPercent}% SCONTO
+                  <span className="bg-grass text-white text-[10px] font-medium px-2 py-1 uppercase tracking-widest">
+                    -{product.discountPercent}%
                   </span>
                 )}
               </div>
 
-              <h1 className="text-ink font-extrabold text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-tight">
+              <h1 className="text-ink font-light text-3xl sm:text-4xl lg:text-5xl tracking-tight mb-8 leading-[1.1]">
                 {product.name}
               </h1>
 
               {(product.shortTitle || product.shortDescription) && (
-                <div className="p-4 bg-white border border-line space-y-1.5">
+                <div className="mb-10">
                   {product.shortTitle && (
-                    <p className="text-ink font-bold text-xs uppercase tracking-wider">
+                    <h2 className="text-ink font-medium text-sm uppercase tracking-wider mb-3">
                       {product.shortTitle}
-                    </p>
+                    </h2>
                   )}
                   {product.shortDescription && (
-                    <p className="text-ink-soft text-sm leading-relaxed">
+                    <p className="text-ink-soft text-base font-light leading-relaxed">
                       {product.shortDescription}
                     </p>
                   )}
@@ -140,23 +141,23 @@ export default async function ProductPage({
               )}
 
               {(product.waterColumn || product.minTemp) && (
-                <div className="grid grid-cols-2 gap-3 p-4 bg-paper-warm/40 border border-line">
+                <div className="flex flex-wrap gap-10 py-6 border-y border-line/40 mb-10">
                   {product.waterColumn && (
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                    <div>
+                      <div className="text-[10px] font-medium uppercase tracking-widest text-ink-soft mb-1">
                         Colonna d&apos;acqua
                       </div>
-                      <div className="text-lg font-mono font-bold text-ink">
+                      <div className="text-lg font-light text-ink">
                         {product.waterColumn} MM
                       </div>
                     </div>
                   )}
                   {product.minTemp && (
-                    <div className="space-y-1">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                        Temperatura minima
+                    <div>
+                      <div className="text-[10px] font-medium uppercase tracking-widest text-ink-soft mb-1">
+                        Temp. minima
                       </div>
-                      <div className="text-lg font-mono font-bold text-ink">
+                      <div className="text-lg font-light text-ink">
                         {product.minTemp}°C
                       </div>
                     </div>
@@ -164,7 +165,7 @@ export default async function ProductPage({
                 </div>
               )}
 
-              <div className="pt-2">
+              <div className="mb-12">
                 <AddToCartButton
                   variants={product.variants}
                   productSlug={product.slug}
@@ -174,62 +175,85 @@ export default async function ProductPage({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-line">
-                <div className="bg-paper-warm/40 p-3.5 border border-line">
-                  <p className="text-ink font-bold text-xs mb-0.5">Testato in Stalla</p>
-                  <p className="text-ink-soft text-[11px]">Resistenza professionale sul campo</p>
+              {/* Trust Badges - Minimalisti */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-line/40">
+                <div>
+                  <p className="text-ink font-medium text-[11px] mb-1.5 uppercase tracking-widest">
+                    Testato in Stalla
+                  </p>
+                  <p className="text-ink-soft text-xs font-light leading-relaxed">
+                    Resistenza professionale per il campo.
+                  </p>
                 </div>
-                <div className="bg-paper-warm/40 p-3.5 border border-line">
-                  <p className="text-ink font-bold text-xs mb-0.5">Reso Facile</p>
-                  <p className="text-ink-soft text-[11px]">30 giorni di tempo per il reso</p>
+                <div>
+                  <p className="text-ink font-medium text-[11px] mb-1.5 uppercase tracking-widest">
+                    Reso Facile
+                  </p>
+                  <p className="text-ink-soft text-xs font-light leading-relaxed">
+                    30 giorni per cambi o restituzioni.
+                  </p>
                 </div>
-                <div className="bg-paper-warm/40 p-3.5 border border-line">
-                  <p className="text-ink font-bold text-xs mb-0.5">Spedizione Rapida</p>
-                  <p className="text-ink-soft text-[11px]">Gratuita per ordini sopra i 99€</p>
+                <div>
+                  <p className="text-ink font-medium text-[11px] mb-1.5 uppercase tracking-widest">
+                    Spedizione
+                  </p>
+                  <p className="text-ink-soft text-xs font-light leading-relaxed">
+                    Gratuita per ordini superiori a 99€.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Descrizioni Estese */}
+          {/* DETTAGLI TECNICI */}
           {descriptionBlocks && descriptionBlocks.length > 0 && (
-            <section className="pt-12 border-t border-line space-y-6">
-              <div className="max-w-2xl">
-                <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-1">
-                  Specifiche di dettaglio
+            <section className="pt-24 border-t border-line/40">
+              <div className="mb-12 md:mb-16">
+                <p className="text-ink-soft text-[10px] font-semibold uppercase tracking-[0.2em] mb-4">
+                  Specifiche
                 </p>
-                <h2 className="text-ink font-extrabold text-2xl tracking-tight uppercase">
-                  Descrizione Prodotto
+                <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
+                  Dettagli tecnici
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
                 {descriptionBlocks.map((block, i) => (
-                  <div key={i} className="p-5 bg-white border border-line space-y-2">
+                  <div key={i}>
                     {block.title && (
-                      <h3 className="text-ink font-bold text-xs uppercase tracking-wider">
+                      <h3 className="text-ink font-medium text-sm uppercase tracking-wider mb-4">
                         {block.title}
                       </h3>
                     )}
-                    <p className="text-ink-soft text-sm leading-relaxed">{block.text}</p>
+                    <p className="text-ink-soft text-sm font-light leading-relaxed">
+                      {block.text}
+                    </p>
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Prodotti Correlati */}
+          {/* PRODOTTI CORRELATI - Stile coerente con CategoryPage */}
           {relatedProducts.length > 0 && (
-            <section className="pt-12 border-t border-line space-y-6">
-              <div className="max-w-2xl">
-                <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-1">
-                  Completa l&apos;equipaggiamento
-                </p>
-                <h2 className="text-ink font-extrabold text-2xl tracking-tight uppercase">
-                  Prodotti Correlati
-                </h2>
+            <section className="pt-24 border-t border-line/40">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div>
+                  <p className="text-ink-soft text-[10px] font-semibold uppercase tracking-[0.2em] mb-4">
+                    Esplora
+                  </p>
+                  <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
+                    Completa l&apos;equipaggiamento
+                  </h2>
+                </div>
+                <Link
+                  href={`/categoria/${product.category}`}
+                  className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink hover:text-grass transition-colors"
+                >
+                  Vedi categoria &rarr;
+                </Link>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-16">
                 {relatedProducts.map((relProduct) => {
                   const minPriceCents =
                     relProduct.variants && relProduct.variants.length > 0
@@ -243,56 +267,71 @@ export default async function ProductPage({
                         new Date(relProduct.discountUntil) > new Date())
                   );
 
-                  const finalMinPriceCents =
-                    isRelDiscountActive && relProduct.discountPercent
-                      ? Math.round(minPriceCents * (1 - relProduct.discountPercent / 100))
-                      : minPriceCents;
+                  const discountedPriceCents = isRelDiscountActive
+                    ? Math.round(
+                        (minPriceCents * (100 - relProduct.discountPercent!)) / 100
+                      )
+                    : minPriceCents;
+
+                  const formattedPrice = (discountedPriceCents / 100).toFixed(2);
+                  const formattedFullPrice = (minPriceCents / 100).toFixed(2);
 
                   return (
                     <Link
                       key={relProduct.id}
                       href={`/prodotto/${relProduct.slug}`}
-                      className="bg-white block relative group border border-line hover:border-grass-deep transition-colors duration-200"
+                      className="group flex flex-col"
                     >
-                      <div className="aspect-square bg-paper-warm/30 relative w-full overflow-hidden border-b border-line/60">
+                      <div className="aspect-[4/5] bg-paper relative w-full overflow-hidden mb-5">
                         {relProduct.images[0] ? (
                           <Image
                             src={relProduct.images[0]}
                             alt={relProduct.name}
                             fill
-                            className="object-cover object-top group-hover:scale-105 transition-transform duration-200"
+                            className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-in-out"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs text-center p-3 font-mono">
-                            [nessuna foto]
+                          <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs uppercase tracking-widest font-light bg-line/10">
+                            Nessuna immagine
                           </div>
                         )}
 
                         {isRelDiscountActive && (
-                          <span className="absolute top-2 right-2 bg-grass-deep text-white text-[10px] font-extrabold px-2 py-0.5 shadow-md">
+                          <span className="absolute top-4 left-4 bg-grass text-white text-[10px] sm:text-xs font-medium px-3 py-1.5 uppercase tracking-widest">
                             -{relProduct.discountPercent}%
+                          </span>
+                        )}
+                        
+                        {relProduct.waterColumn && (
+                          <span className="absolute top-4 right-4 bg-ink/90 text-white text-[10px] font-medium px-2 py-1 uppercase tracking-widest backdrop-blur-sm">
+                            {relProduct.waterColumn}MM
                           </span>
                         )}
                       </div>
 
-                      <div className="p-4 bg-white">
-                        <p className="text-[10px] font-bold uppercase text-grass-deep tracking-wider mb-1">
-                          {relProduct.brand}
-                        </p>
-                        <h3 className="text-xs font-bold text-ink mb-2 line-clamp-2 group-hover:text-grass-deep transition-colors">
+                      <div className="flex flex-col flex-grow">
+                        <h3 className="text-sm font-medium text-ink mb-2 leading-snug group-hover:text-grass transition-colors">
                           {relProduct.name}
                         </h3>
 
-                        <div className="flex items-baseline gap-2">
-                          <p className="font-mono font-bold text-sm text-grass-deep">
-                            €{(finalMinPriceCents / 100).toFixed(2)}
-                          </p>
-                          {isRelDiscountActive && (
-                            <p className="font-mono text-xs text-ink-soft line-through">
-                              €{(minPriceCents / 100).toFixed(2)}
-                            </p>
-                          )}
-                        </div>
+                        {relProduct.variants.length > 0 && (
+                          <div className="mt-auto pt-2 flex items-baseline gap-3">
+                            {isRelDiscountActive ? (
+                              <>
+                                <span className="font-medium text-sm text-grass">
+                                  €{formattedPrice}
+                                </span>
+                                <span className="text-xs text-ink-soft line-through">
+                                  €{formattedFullPrice}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="font-medium text-sm text-ink-soft">
+                                €{formattedPrice}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </Link>
                   );
@@ -301,10 +340,11 @@ export default async function ProductPage({
             </section>
           )}
 
-          {/* Recensioni */}
-          <div className="border-line">
+          {/* RECENSIONI */}
+          <section className="pt-24 border-t border-line/40">
             <ProductReviews productId={product.id} />
-          </div>
+          </section>
+          
         </div>
       </div>
     </main>

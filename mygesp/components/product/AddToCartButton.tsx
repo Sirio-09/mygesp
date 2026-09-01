@@ -1,3 +1,4 @@
+// AddToCartButton.tsx
 "use client";
 import { useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
@@ -47,79 +48,89 @@ export default function AddToCartButton({
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <div className="text-sm font-semibold text-ink mb-2">Taglia</div>
-        <div className="flex gap-2">
-          {variants.map((v) => (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-10">
+        {/* Selettore Taglia */}
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft mb-4">
+            Seleziona Taglia
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {variants.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => setSelectedSize(v.size)}
+                disabled={v.stock === 0}
+                className={`border px-5 py-2.5 text-[11px] font-medium uppercase tracking-widest transition-colors duration-200 ${
+                  selectedSize === v.size
+                    ? "border-ink text-ink"
+                    : "border-line/60 text-ink-soft hover:border-ink/40 hover:text-ink"
+                } ${v.stock === 0 ? "opacity-30 cursor-not-allowed" : ""}`}
+              >
+                {v.size}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Selettore Quantità */}
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft mb-4">
+            Quantità
+          </div>
+          <div className="flex items-center border border-line/60 w-fit">
             <button
-              key={v.id}
-              onClick={() => setSelectedSize(v.size)}
-              disabled={v.stock === 0}
-              className={`border px-4 py-2 text-sm transition-colors ${
-                selectedSize === v.size
-                  ? "border-grass-deep text-grass-deep font-bold"
-                  : "border-line hover:border-grass-deep hover:text-grass-deep"
-              } ${v.stock === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
+              type="button"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              className="w-10 h-10 flex items-center justify-center text-ink-soft hover:text-ink hover:bg-line/10 transition-colors"
             >
-              {v.size}
-              {v.stock === 0 && " (esaurito)"}
+              &minus;
             </button>
-          ))}
+            <span className="w-10 text-center text-sm font-medium text-ink">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))
+              }
+              className="w-10 h-10 flex items-center justify-center text-ink-soft hover:text-ink hover:bg-line/10 transition-colors"
+            >
+              &#43;
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="text-sm font-semibold text-ink mb-2">Quantità</div>
-        <div className="flex items-center border border-line w-fit">
-          <button
-            type="button"
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
-          >
-            −
-          </button>
-          <span className="w-10 text-center text-sm font-mono font-bold">
-            {quantity}
-          </span>
-          <button
-            type="button"
-            onClick={() =>
-              setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1))
-            }
-            className="w-9 h-9 flex items-center justify-center text-ink hover:bg-paper-warm"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      {selectedVariant && (
-        <div className="flex items-baseline gap-3 mb-6">
-          {discountPercent ? (
-            <>
-              <span className="text-line line-through text-base font-mono">
+      {/* Prezzo e Pulsante Acquisto */}
+      <div className="pt-8 border-t border-line/40">
+        {selectedVariant && (
+          <div className="flex items-baseline gap-4 mb-6">
+            {discountPercent ? (
+              <>
+                <span className="text-3xl font-light text-ink">
+                  €{(((finalPriceCents ?? 0) * quantity) / 100).toFixed(2)}
+                </span>
+                <span className="text-sm font-light text-ink-soft line-through">
+                  €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
+                </span>
+              </>
+            ) : (
+              <span className="text-3xl font-light text-ink">
                 €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
               </span>
-              <span className="text-grass-deep text-2xl font-bold font-mono">
-                €{(((finalPriceCents ?? 0) * quantity) / 100).toFixed(2)}
-              </span>
-            </>
-          ) : (
-            <span className="text-grass-deep text-2xl font-bold font-mono">
-              €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
-            </span>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
 
-      <button
-        onClick={handleAdd}
-        disabled={!selectedVariant || selectedVariant.stock === 0}
-        className="bg-grass hover:bg-grass-deep text-white font-bold text-sm sm:text-base uppercase tracking-wide py-4 px-8 w-full md:w-auto disabled:opacity-40 transition-colors shadow-sm"
-      >
-        Aggiungi al carrello
-      </button>
+        <button
+          onClick={handleAdd}
+          disabled={!selectedVariant || selectedVariant.stock === 0}
+          className="w-full sm:w-auto bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-12 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300"
+        >
+          {selectedVariant?.stock === 0 ? "Esaurito" : "Aggiungi al carrello"}
+        </button>
+      </div>
     </div>
   );
 }

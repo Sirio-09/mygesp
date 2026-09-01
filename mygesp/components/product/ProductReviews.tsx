@@ -16,7 +16,6 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const { data: session, status } = useSession();
   const isLoadingSession = status === "loading";
 
-  // Verifica se l'utente è loggato ed è un CLIENTE (non admin)
   const isCustomer = Boolean(
     session?.user && (session.user as { role?: string })?.role === "customer"
   );
@@ -25,18 +24,15 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
-  // Stato verifica acquisto e recensione esistente
   const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
   const [hasReviewed, setHasReviewed] = useState<boolean | null>(null);
 
-  // Stato form
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Stato ordinamento: "recent" (più recenti) | "highest" (voti più alti)
   const [sortBy, setSortBy] = useState<"recent" | "highest">("recent");
 
   const loadReviews = useCallback(async () => {
@@ -110,7 +106,6 @@ export default function ProductReviews({ productId }: { productId: string }) {
     }
   };
 
-  // Calcolo statistiche e media voti
   const totalReviews = reviews.length;
   const average =
     totalReviews > 0
@@ -127,7 +122,6 @@ export default function ProductReviews({ productId }: { productId: string }) {
     return counts;
   }, [reviews]);
 
-  // Ordinamento dinamico della lista
   const sortedReviews = useMemo(() => {
     return [...reviews].sort((a, b) => {
       if (sortBy === "highest") {
@@ -141,230 +135,253 @@ export default function ProductReviews({ productId }: { productId: string }) {
   if (loading) return null;
 
   return (
-    <section className="mt-14 sm:mt-16 border-t border-line pt-10">
-      {/* HEADER RECENSIONI E AZIONI UTENTE */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
-        <div>
-          <h2 className="text-ink font-extrabold text-xl sm:text-2xl">
-            Recensioni
-          </h2>
+    <section>
+      {/* HEADER SEZIONE */}
+      <div className="mb-12 md:mb-16">
+        <p className="text-ink-soft text-[10px] font-semibold uppercase tracking-[0.2em] mb-4">
+          Cosa ne pensano
+        </p>
+        <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
+          Recensioni
+        </h2>
+      </div>
 
+      <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start mb-16">
+        {/* COLONNA SINISTRA: STATISTICHE */}
+        <div className="lg:col-span-7">
           {average ? (
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-3xl font-extrabold font-mono text-ink">
+            <div>
+              <div className="flex items-center gap-6 mb-8">
+                <span className="text-6xl sm:text-7xl font-light tracking-tighter text-ink leading-none">
                   {average}
                 </span>
-                <div>
-                  <div className="text-soil text-sm">
+                <div className="flex flex-col gap-2">
+                  <div className="text-ink text-lg tracking-widest flex">
                     {"★".repeat(Math.round(Number(average)))}
-                    {"☆".repeat(5 - Math.round(Number(average)))}
+                    <span className="text-line/40">
+                      {"★".repeat(5 - Math.round(Number(average)))}
+                    </span>
                   </div>
-                  <p className="text-xs text-ink-soft">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
                     Basato su {totalReviews} recension{totalReviews === 1 ? "e" : "i"}
                   </p>
                 </div>
               </div>
 
               {/* BARRE DISTRIBUZIONE VOTI */}
-              <div className="w-64 space-y-1 pt-2">
+              <div className="max-w-sm space-y-3">
                 {[5, 4, 3, 2, 1].map((stars) => {
                   const count = ratingCounts[stars as keyof typeof ratingCounts];
                   const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                   return (
-                    <div key={stars} className="flex items-center text-xs text-ink-soft gap-2">
-                      <span className="w-4 font-mono font-bold text-right">{stars}★</span>
-                      <div className="flex-1 h-2 bg-paper-warm border border-line overflow-hidden">
+                    <div key={stars} className="flex items-center gap-4">
+                      <span className="w-4 text-[11px] font-medium text-ink-soft text-right">
+                        {stars}
+                      </span>
+                      <span className="text-[10px] text-ink-soft">★</span>
+                      <div className="flex-1 h-1 bg-line/20 overflow-hidden">
                         <div
-                          className="h-full bg-soil transition-all duration-300"
+                          className="h-full bg-ink transition-all duration-700 ease-out"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <span className="w-6 font-mono text-right">{count}</span>
+                      <span className="w-6 text-[10px] font-medium text-ink-soft text-right">
+                        {count}
+                      </span>
                     </div>
                   );
                 })}
               </div>
             </div>
           ) : (
-            <p className="text-sm text-ink-soft mt-1">Ancora nessuna valutazione.</p>
+            <p className="text-ink-soft text-sm font-light">
+              Questo prodotto non ha ancora ricevuto recensioni.
+            </p>
           )}
         </div>
 
-        {/* LOGICA DIRITTI RECENSIONE */}
-        {!isLoadingSession && !showForm && (
-          <div className="bg-paper-warm border border-line p-4 md:max-w-xs w-full h-fit">
-            {!isCustomer ? (
-              <div className="space-y-2 text-center md:text-center">
-                <p className="text-xs text-ink-soft">
-                  {session
-                    ? "Accedi per recensire."
-                    : "Vuoi valutare questo prodotto?"}
-                </p>
-                <Link
-                  href="/account/login"
-                  className="block w-full text-center bg-white border border-line hover:bg-paper text-ink text-xs font-bold uppercase tracking-wider py-2.5 transition-colors"
-                >
-                  Accedi
-                </Link>
-              </div>
-            ) : hasReviewed ? (
-              <div className="text-xs font-bold text-grass-deep flex items-center gap-2">
-                <span>✓</span>
-                <span>Hai già inviato una recensione per questo prodotto.</span>
-              </div>
-            ) : hasPurchased ? (
-              <button
-                onClick={() => setShowForm(true)}
-                className="w-full bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider py-2.5 transition-colors shadow-sm"
-              >
-                Scrivi una recensione
-              </button>
+        {/* COLONNA DESTRA: AZIONI / FORM */}
+        <div className="lg:col-span-5">
+          <div className="border border-line/40 p-6 sm:p-8 bg-paper">
+            {showForm ? (
+              <form onSubmit={handleSubmit}>
+                <h3 className="text-[11px] font-semibold text-ink uppercase tracking-[0.2em] mb-6">
+                  Scrivi una recensione
+                </h3>
+
+                <div className="mb-6">
+                  <label className="block text-[10px] font-semibold text-ink-soft uppercase tracking-[0.2em] mb-3">
+                    Valutazione
+                  </label>
+                  <div className="flex gap-1" onMouseLeave={() => setHoverRating(0)}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setRating(n)}
+                        onMouseEnter={() => setHoverRating(n)}
+                        className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+                      >
+                        <span
+                          className={
+                            (hoverRating || rating) >= n ? "text-ink" : "text-line/40"
+                          }
+                        >
+                          ★
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mb-8">
+                  <label className="block text-[10px] font-semibold text-ink-soft uppercase tracking-[0.2em] mb-3">
+                    Il tuo commento
+                  </label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                    rows={4}
+                    placeholder="Racconta la tua esperienza con il prodotto..."
+                    className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/40 resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-3 px-6 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300"
+                  >
+                    {submitting ? "Invio..." : "Pubblica"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForm(false)}
+                    className="flex-1 border border-line/60 text-ink hover:border-ink text-[11px] font-medium uppercase tracking-[0.2em] py-3 px-6 transition-colors duration-300"
+                  >
+                    Annulla
+                  </button>
+                </div>
+
+                {error && (
+                  <p className="text-red-500 text-xs mt-4 font-medium">{error}</p>
+                )}
+              </form>
             ) : (
-              <p className="text-xs text-ink-soft italic leading-relaxed">
-                * Solo chi ha acquistato questo prodotto può lasciare una recensione.
-              </p>
+              <div className="flex flex-col items-start gap-4">
+                <h3 className="text-[11px] font-semibold text-ink uppercase tracking-[0.2em] mb-2">
+                  La tua opinione
+                </h3>
+                
+                {!isLoadingSession && (
+                  <>
+                    {!isCustomer ? (
+                      <div className="w-full space-y-4">
+                        <p className="text-sm font-light text-ink-soft">
+                          Devi aver effettuato l&apos;accesso per poter recensire i nostri prodotti.
+                        </p>
+                        <Link
+                          href="/account/login"
+                          className="block text-center w-full border border-ink text-ink hover:bg-ink hover:text-white text-[11px] font-medium uppercase tracking-[0.2em] py-3 px-6 transition-colors duration-300"
+                        >
+                          Accedi al tuo account
+                        </Link>
+                      </div>
+                    ) : hasReviewed ? (
+                      <p className="text-sm font-light text-ink-soft">
+                        Hai già condiviso la tua opinione su questo prodotto. Ti ringraziamo!
+                      </p>
+                    ) : hasPurchased ? (
+                      <button
+                        onClick={() => setShowForm(true)}
+                        className="w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-3 px-6 transition-colors duration-300"
+                      >
+                        Scrivi recensione
+                      </button>
+                    ) : (
+                      <p className="text-sm font-light text-ink-soft italic">
+                        Solo chi ha completato l&apos;acquisto di questo articolo può lasciare una recensione.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* FORM SCRITTURA RECENSIONE */}
-      {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="bg-paper-warm border border-line p-5 sm:p-6 mb-8"
-        >
-          <h3 className="text-xs font-bold text-ink uppercase tracking-wider mb-4">
-            Valuta il prodotto
-          </h3>
-
-          <div className="mb-4">
-            <label className="block text-[11px] font-bold text-ink-soft uppercase tracking-wide mb-1.5">
-              Il tuo voto
-            </label>
-            <div className="flex gap-1" onMouseLeave={() => setHoverRating(0)}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setRating(n)}
-                  onMouseEnter={() => setHoverRating(n)}
-                  className="text-2xl transition-transform hover:scale-110 focus:outline-none"
-                >
-                  <span
-                    className={
-                      (hoverRating || rating) >= n ? "text-soil" : "text-line"
-                    }
-                  >
-                    ★
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-[11px] font-bold text-ink-soft uppercase tracking-wide mb-1.5">
-              Recensione
-            </label>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              required
-              rows={4}
-              placeholder="Come si comporta sul campo? Qualità, vestibilità, resistenza..."
-              className="w-full border border-line p-3 text-sm focus:border-grass-deep outline-none bg-white font-sans placeholder:text-ink-soft/40"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-grass hover:bg-grass-deep text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 disabled:opacity-50 transition-colors"
-            >
-              {submitting ? "Invio in corso..." : "Pubblica Recensione"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="text-ink-soft hover:text-ink text-xs font-bold uppercase tracking-wider px-3 py-2.5"
-            >
-              Annulla
-            </button>
-          </div>
-
-          {error && (
-            <p className="text-red-600 text-xs mt-3 font-bold">{error}</p>
-          )}
-        </form>
-      )}
-
-      {/* SELETTORE ORDINAMENTO E LISTA RECENSIONI */}
+      {/* SEZIONE LISTA RECENSIONI */}
       {reviews.length > 0 && (
-        <div className="flex items-center justify-between pb-4 border-b border-line mb-4">
-          <span className="text-xs font-bold uppercase text-ink tracking-wider">
-            {totalReviews} Recension{totalReviews === 1 ? "e" : "i"}
-          </span>
+        <div>
+          {/* BARRA ORDINAMENTO */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line/40 mb-8">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+              {totalReviews} Recension{totalReviews === 1 ? "e" : "i"}
+            </span>
 
-          {/* Filtro Ordinamento */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="sort-reviews" className="text-xs text-ink-soft">
-              Ordina per:
-            </label>
-            <select
-              id="sort-reviews"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "recent" | "highest")}
-              className="bg-white border border-line text-xs font-bold text-ink px-2.5 py-1.5 focus:outline-none focus:border-grass-deep"
-            >
-              <option value="recent">Più recenti</option>
-              <option value="highest">Voti più alti</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      {/* LISTA RECENSIONI */}
-      {sortedReviews.length === 0 ? (
-        <div className="text-center py-10 bg-paper-warm/50 border border-line">
-          <p className="text-ink-soft text-sm">
-            Nessuna recensione pubblicata al momento.
-          </p>
-        </div>
-      ) : (
-        <div className="divide-y divide-line">
-          {sortedReviews.map((review) => (
-            <div key={review.id} className="py-5 first:pt-0 last:pb-0">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex text-soil text-xs">
-                    {"★".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
-                  </div>
-                  <span className="text-xs font-bold text-ink">
-                    {review.customer?.name ||
-                      review.customer?.email?.split("@")[0] ||
-                      "Cliente MyGesp"}
-                  </span>
-                  <span className="text-[10px] font-bold text-grass-deep bg-grass/10 px-2 py-0.5 rounded-full border border-grass/20">
-                    Acquisto Verificato
-                  </span>
-                </div>
-                <span className="text-[11px] text-ink-soft font-mono">
-                  {new Date(review.createdAt).toLocaleDateString("it-IT", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
+            <div className="flex items-center gap-3">
+              <label htmlFor="sort-reviews" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                Ordina per
+              </label>
+              <div className="relative">
+                <select
+                  id="sort-reviews"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "recent" | "highest")}
+                  className="appearance-none bg-transparent text-[11px] font-medium uppercase tracking-[0.1em] text-ink border-b border-line/60 focus:border-ink outline-none cursor-pointer pr-6 pb-1 transition-colors"
+                >
+                  <option value="recent">Più recenti</option>
+                  <option value="highest">Voti più alti</option>
+                </select>
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[8px] text-ink pointer-events-none">
+                  ▼
                 </span>
               </div>
-              <p className="text-sm text-ink-soft leading-relaxed">
-                {review.comment}
-              </p>
             </div>
-          ))}
+          </div>
+
+          {/* LISTA */}
+          <div className="divide-y divide-line/40">
+            {sortedReviews.map((review) => (
+              <div key={review.id} className="py-8 first:pt-0">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-ink tracking-widest">
+                        {"★".repeat(review.rating)}
+                        <span className="text-line/40">
+                          {"★".repeat(5 - review.rating)}
+                        </span>
+                      </span>
+                      <span className="border border-line/60 px-2.5 py-1 text-[9px] uppercase tracking-[0.2em] font-medium text-ink-soft">
+                        Acquisto Verificato
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-semibold uppercase tracking-widest text-ink">
+                      {review.customer?.name ||
+                        review.customer?.email?.split("@")[0] ||
+                        "Cliente"}
+                    </span>
+                  </div>
+                  
+                  <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink-soft">
+                    {new Date(review.createdAt).toLocaleDateString("it-IT", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                
+                <p className="text-sm font-light text-ink leading-relaxed max-w-4xl">
+                  {review.comment}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </section>

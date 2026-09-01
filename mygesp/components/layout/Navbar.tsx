@@ -1,3 +1,4 @@
+// Navbar.tsx
 import Link from "next/link";
 import CartIcon from "./CartIcon";
 import AccountMenu from "./AccountMenu";
@@ -6,32 +7,34 @@ import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   return (
-    <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur-md border-b border-line shadow-sm">
+    <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur-md border-b border-line/40 transition-colors duration-300">
       {/* Barra Annunci */}
-      <div className="bg-grass-deep text-white text-[11px] sm:text-xs text-center py-2 px-4 font-medium tracking-wide">
+      <div className="bg-ink text-white text-[9px] sm:text-[10px] text-center py-2.5 px-4 font-semibold uppercase tracking-[0.2em]">
         Spedizione gratuita sopra i 99€ · <span className="hidden sm:inline">consegna in tutta Italia e in Europa</span>
       </div>
 
       {/* Contenitore Principale Navigazione */}
       <div className="max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-10">
         <nav className="h-16 sm:h-20 flex items-center justify-between gap-4">
-          {/* Logo, Menu Mobile e Link Categorie attaccati */}
-          <div className="flex items-center gap-4 lg:gap-8">
+          
+          <div className="flex items-center gap-4 lg:gap-10">
             <MobileMenu />
             
+            {/* Logo */}
             <Link 
               href="/" 
-              className="text-ink text-xl sm:text-2xl font-extrabold tracking-tight hover:opacity-90 transition-opacity shrink-0"
+              className="text-ink text-xl sm:text-2xl tracking-[0.1em] shrink-0 uppercase flex items-center"
             >
-              MY<span className="text-grass-deep">GESP</span>
+              <span className="font-light">MY</span>
+              <span className="font-medium">GESP</span>
             </Link>
 
             {/* Categorie affiancate al logo */}
-            <ul className="hidden lg:flex items-center gap-6 ml-2">
+            <ul className="hidden lg:flex items-center gap-8 ml-4">
               <li>
                 <Link 
                   href="/categoria/abbigliamento" 
-                  className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
+                  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft hover:text-ink transition-colors duration-300"
                 >
                   Abbigliamento
                 </Link>
@@ -39,7 +42,7 @@ export default function Navbar() {
               <li>
                 <Link 
                   href="/categoria/stivali" 
-                  className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
+                  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft hover:text-ink transition-colors duration-300"
                 >
                   Stivali
                 </Link>
@@ -47,7 +50,7 @@ export default function Navbar() {
               <li>
                 <Link 
                   href="/categoria/attrezzature" 
-                  className="relative py-1 text-ink-soft text-sm font-semibold hover:text-grass-deep transition-colors after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-grass-deep hover:after:w-full after:transition-all after:duration-200"
+                  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft hover:text-ink transition-colors duration-300"
                 >
                   Attrezzature
                 </Link>
@@ -56,7 +59,7 @@ export default function Navbar() {
           </div>
 
           {/* Icone Azioni */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-4 sm:gap-6">
             <SearchBar />
             <AccountMenu />
             <CartIcon />

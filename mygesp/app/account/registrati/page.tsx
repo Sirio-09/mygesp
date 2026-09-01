@@ -1,3 +1,4 @@
+// RegistratiPage.tsx
 "use client";
 
 import { useState } from "react";
@@ -25,7 +26,7 @@ export default function RegistratiPage() {
     }
 
     if (!form.acceptTerms) {
-      setError("Devi accettare i Termini e Condizioni e la Privacy Policy per registrarti.");
+      setError("Devi accettare i Termini e Condizioni e la Privacy Policy.");
       return;
     }
 
@@ -55,16 +56,18 @@ export default function RegistratiPage() {
 
   if (success) {
     return (
-      <main className="max-w-[400px] mx-auto px-4 sm:px-8 py-16">
-        <h1 className="text-ink font-extrabold text-2xl mb-4">Controlla la tua email</h1>
-        <div className="bg-grass/10 border border-grass/30 p-4 rounded-sm mb-6">
-          <p className="text-ink text-sm">
-            Abbiamo inviato un link di conferma a <strong className="font-bold">{form.email}</strong>. Clicca sul link nell&apos;email per attivare il tuo account prima di accedere.
+      <main className="max-w-[440px] mx-auto px-4 sm:px-8 py-20 lg:py-32">
+        <h1 className="text-ink font-light text-3xl sm:text-4xl tracking-tight text-center mb-10">
+          Controlla la tua email
+        </h1>
+        <div className="border border-ink p-8 bg-paper text-center mb-8">
+          <p className="text-sm font-light text-ink leading-relaxed">
+            Abbiamo inviato un link di conferma a <span className="font-medium">{form.email}</span>. Clicca sul link nell&apos;email per attivare il tuo account prima di accedere.
           </p>
         </div>
         <Link
           href="/account/login"
-          className="bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3 px-6 block text-center rounded-sm transition-colors"
+          className="block w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-6 text-center transition-colors duration-300"
         >
           Vai al Login
         </Link>
@@ -73,67 +76,77 @@ export default function RegistratiPage() {
   }
 
   return (
-    <main className="max-w-[400px] mx-auto px-4 sm:px-8 py-16">
-      <h1 className="text-ink font-extrabold text-2xl mb-6">Crea un account</h1>
+    <main className="max-w-[440px] mx-auto px-4 sm:px-8 py-16 lg:py-24">
+      <h1 className="text-ink font-light text-3xl sm:text-4xl tracking-tight text-center mb-10">
+        Crea Account
+      </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <input
-          type="text"
-          placeholder="Nome"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none rounded-sm transition-colors"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none rounded-sm transition-colors"
-        />
-        <input
-          type="password"
-          placeholder="Password (minimo 6 caratteri)"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-          minLength={6}
-          className="border border-line px-3 py-2.5 text-sm focus:border-grass-deep outline-none rounded-sm transition-colors"
-        />
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Nome completo"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+          />
+          <input
+            type="password"
+            placeholder="Password (min. 6 caratteri)"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            minLength={6}
+            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+          />
+        </div>
 
         {/* Checkbox Termini e Newsletter */}
-        <div className="flex flex-col gap-2.5 my-1">
-          <label className="flex items-start gap-2 cursor-pointer text-xs text-ink-soft select-none">
-            <input
-              type="checkbox"
-              checked={form.acceptTerms}
-              onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })}
-              required
-              className="mt-0.5 accent-grass cursor-pointer"
-            />
-            <span>
-              Accetto i{" "}
-              <Link href="/termini" className="text-grass-deep underline hover:text-grass">
-                Termini e Condizioni
-              </Link>{" "}
-              e la{" "}
-              <Link href="/privacy" className="text-grass-deep underline hover:text-grass">
-                Privacy Policy
-              </Link>
-              . *
+        <div className="flex flex-col gap-4 mt-2">
+          <label className="flex items-start gap-4 cursor-pointer group">
+            <div className="relative flex items-center justify-center mt-0.5">
+              <input
+                type="checkbox"
+                checked={form.acceptTerms}
+                onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })}
+                required
+                className="appearance-none w-4 h-4 border border-line/60 checked:bg-ink checked:border-ink transition-colors cursor-pointer"
+              />
+              {form.acceptTerms && (
+                <svg className="absolute w-3 h-3 text-white pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span className="text-xs font-light text-ink-soft leading-relaxed select-none">
+              Accetto i <Link href="/termini" className="text-ink font-medium hover:text-grass transition-colors">Termini e Condizioni</Link> e la <Link href="/privacy" className="text-ink font-medium hover:text-grass transition-colors">Privacy Policy</Link>. *
             </span>
           </label>
 
-          <label className="flex items-start gap-2 cursor-pointer text-xs text-ink-soft select-none">
-            <input
-              type="checkbox"
-              checked={form.subscribeNewsletter}
-              onChange={(e) => setForm({ ...form, subscribeNewsletter: e.target.checked })}
-              className="mt-0.5 accent-grass cursor-pointer"
-            />
-            <span>
-              Desidero ricevere aggiornamenti, promozioni e informazioni commerciali tramite newsletter.
+          <label className="flex items-start gap-4 cursor-pointer group">
+            <div className="relative flex items-center justify-center mt-0.5">
+              <input
+                type="checkbox"
+                checked={form.subscribeNewsletter}
+                onChange={(e) => setForm({ ...form, subscribeNewsletter: e.target.checked })}
+                className="appearance-none w-4 h-4 border border-line/60 checked:bg-ink checked:border-ink transition-colors cursor-pointer"
+              />
+              {form.subscribeNewsletter && (
+                <svg className="absolute w-3 h-3 text-white pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span className="text-xs font-light text-ink-soft leading-relaxed select-none">
+              Desidero ricevere aggiornamenti e promozioni esclusive tramite newsletter.
             </span>
           </label>
         </div>
@@ -141,25 +154,24 @@ export default function RegistratiPage() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-grass hover:bg-grass-deep text-white font-bold text-sm py-3 disabled:opacity-50 transition-colors rounded-sm cursor-pointer mt-1"
+          className="w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-6 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300 mt-4"
         >
           {loading ? "Registrazione in corso..." : "Registrati"}
         </button>
 
         {error && (
-          <p className="text-soil-deep text-xs font-semibold mt-1">{error}</p>
+          <p className="text-red-500 text-[11px] uppercase tracking-[0.1em] font-semibold text-center mt-2">
+            {error}
+          </p>
         )}
       </form>
 
-      <p className="text-sm text-ink-soft mt-6">
+      <div className="mt-12 text-center text-sm font-light text-ink-soft">
         Hai già un account?{" "}
-        <Link
-          href="/account/login"
-          className="text-grass-deep hover:underline font-semibold"
-        >
+        <Link href="/account/login" className="text-ink font-medium hover:text-grass transition-colors duration-300 ml-1">
           Accedi
         </Link>
-      </p>
+      </div>
     </main>
   );
 }
