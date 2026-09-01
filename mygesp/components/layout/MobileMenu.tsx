@@ -39,11 +39,9 @@ export default function MobileMenu() {
     };
   }, [open]);
 
-  // Carica i prodotti consigliati quando il menu viene aperto
   useEffect(() => {
     if (open) {
       setLoading(true);
-      // Puoi aumentare il parametro limit (es. limit=6) per far scorrere più prodotti
       fetch("/api/prodotti?featured=true&limit=6", { cache: "no-store" })
         .then(async (res) => {
           if (!res.ok) {
@@ -97,13 +95,14 @@ export default function MobileMenu() {
               }`}
             />
 
+            {/* Usiamo h-[100dvh] per adattarci perfettamente alle barre dei browser mobile (Safari/Chrome) */}
             <aside
-              className={`fixed top-0 left-0 bottom-0 h-screen w-[85%] max-w-xs bg-paper z-[999] shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out ${
+              className={`fixed top-0 left-0 h-[100dvh] w-[85%] max-w-xs bg-paper z-[999] shadow-2xl flex flex-col justify-between transition-transform duration-300 ease-in-out ${
                 open ? "translate-x-0" : "-translate-x-full"
               }`}
             >
-              {/* HEADER DEL MENU */}
-              <div className="flex items-center justify-between p-5 border-b border-line bg-paper-warm shrink-0">
+              {/* 1. HEADER (Fisso in alto) */}
+              <div className="flex items-center justify-between p-4 border-b border-line bg-paper-warm shrink-0">
                 <span className="font-extrabold text-ink text-sm tracking-widest uppercase">
                   Menu
                 </span>
@@ -116,20 +115,20 @@ export default function MobileMenu() {
                 </button>
               </div>
 
-              {/* NAVIGAZIONE PRINCIPALE */}
-              <div className="flex-1 overflow-y-auto p-5">
+              {/* 2. NAVIGAZIONE (L'unica parte che scorre se ci sono tanti link) */}
+              <div className="flex-1 overflow-y-auto p-4 min-h-0">
                 <nav className="flex flex-col space-y-1">
                   <Link
                     href="/categoria/abbigliamento"
                     onClick={() => setOpen(false)}
-                    className="px-3 py-3 text-ink font-semibold text-sm hover:text-grass-deep border-b border-line/50 transition-colors uppercase tracking-wide"
+                    className="px-3 py-2.5 text-ink font-semibold text-sm hover:text-grass-deep border-b border-line/50 transition-colors uppercase tracking-wide"
                   >
                     Abbigliamento
                   </Link>
                   <Link
                     href="/categoria/stivali"
                     onClick={() => setOpen(false)}
-                    className="px-3 py-3 text-ink font-semibold text-sm hover:text-grass-deep border-b border-line/50 transition-colors uppercase tracking-wide"
+                    className="px-3 py-2.5 text-ink font-semibold text-sm hover:text-grass-deep border-b border-line/50 transition-colors uppercase tracking-wide"
                   >
                     Stivali
                   </Link>
@@ -143,10 +142,10 @@ export default function MobileMenu() {
                 </nav>
               </div>
 
-              {/* FOOTER DEL MENU: PRODOTTI CONSIGLIATI SCORREVOLI */}
-              <div className="p-4 border-t border-line bg-paper-warm shrink-0">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] font-bold uppercase text-ink-soft tracking-wider">
+              {/* 3. CONSIGLIATI (Fisso e ben visibile sul fondo dello schermo) */}
+              <div className="p-3 border-t border-line bg-paper-warm shrink-0">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold uppercase text-ink-soft tracking-wider">
                     Consigliati per te
                   </p>
                   <span className="text-[10px] text-grass-deep font-bold">
@@ -155,13 +154,12 @@ export default function MobileMenu() {
                 </div>
 
                 {loading ? (
-                  <div className="flex gap-3 overflow-hidden">
-                    <div className="w-28 h-36 bg-line/30 rounded animate-pulse shrink-0" />
-                    <div className="w-28 h-36 bg-line/30 rounded animate-pulse shrink-0" />
+                  <div className="flex gap-2 overflow-hidden">
+                    <div className="w-24 h-28 bg-line/30 rounded animate-pulse shrink-0" />
+                    <div className="w-24 h-28 bg-line/30 rounded animate-pulse shrink-0" />
                   </div>
                 ) : recommended.length > 0 ? (
-                  /* Contenitore con scroll orizzontale */
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-line snap-x snap-mandatory">
+                  <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none snap-x snap-mandatory">
                     {recommended.map((item) => {
                       const imageSrc =
                         item.images && item.images.length > 0 ? item.images[0] : null;
@@ -176,10 +174,9 @@ export default function MobileMenu() {
                           key={item.id}
                           href={`/prodotto/${item.slug}`}
                           onClick={() => setOpen(false)}
-                          className="flex flex-col w-28 shrink-0 bg-white border border-line hover:border-grass-deep transition-colors p-2 snap-start group"
+                          className="flex flex-col w-24 shrink-0 bg-white border border-line hover:border-grass-deep transition-colors p-1.5 snap-start group"
                         >
-                          {/* Immagine del prodotto */}
-                          <div className="w-full h-24 relative bg-paper border border-line overflow-hidden mb-2">
+                          <div className="w-full h-16 relative bg-paper border border-line overflow-hidden mb-1.5">
                             {imageSrc ? (
                               <Image
                                 src={imageSrc}
@@ -188,18 +185,17 @@ export default function MobileMenu() {
                                 className="object-cover group-hover:scale-105 transition-transform"
                               />
                             ) : (
-                              <div className="w-full h-full bg-line/20 flex items-center justify-center text-[9px] text-ink-soft">
+                              <div className="w-full h-full bg-line/20 flex items-center justify-center text-[8px] text-ink-soft">
                                 No img
                               </div>
                             )}
                           </div>
 
-                          {/* Dettagli disposti verticalmente */}
                           <div className="flex flex-col justify-between flex-1">
-                            <p className="text-[11px] font-semibold text-ink line-clamp-2 leading-tight group-hover:text-grass-deep transition-colors mb-1">
+                            <p className="text-[10px] font-semibold text-ink line-clamp-1 leading-tight group-hover:text-grass-deep transition-colors mb-0.5">
                               {item.name}
                             </p>
-                            <p className="text-[11px] text-grass-deep font-mono font-bold">
+                            <p className="text-[10px] text-grass-deep font-mono font-bold">
                               €{formattedPrice}
                             </p>
                           </div>
@@ -208,7 +204,7 @@ export default function MobileMenu() {
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-ink-soft italic">
+                  <p className="text-[10px] text-ink-soft italic">
                     Nessun prodotto disponibile.
                   </p>
                 )}
