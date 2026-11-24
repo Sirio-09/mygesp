@@ -64,25 +64,30 @@ function LoginForm() {
         <input
           type="email"
           placeholder="Email"
+          aria-label="Email"
+          autoComplete="email"
+          inputMode="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+          className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
         />
         <input
           type="password"
           placeholder="Password"
+          aria-label="Password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+          className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-6 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300"
+        className="w-full bg-ink px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink"
       >
         {loading ? "Verifica in corso..." : "Accedi"}
       </button>

@@ -56,16 +56,19 @@ export default function ForgotPasswordPage() {
           <input
             type="email"
             placeholder="Email"
+            aria-label="Email"
+            autoComplete="email"
+            inputMode="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+            className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
           />
-          
+
           <button
             type="submit"
             disabled={status === "loading"}
-            className="w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-6 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300"
+            className="w-full bg-ink px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink"
           >
             {status === "loading" ? "Invio in corso..." : "Invia link di reset"}
           </button>
@@ -79,8 +82,11 @@ export default function ForgotPasswordPage() {
       )}
 
       <div className="mt-10 text-center">
-        <Link href="/account/login" className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft hover:text-ink transition-colors duration-300 flex items-center justify-center gap-2">
-          <span>&larr;</span> Torna al login
+        <Link href="/account/login" className="group inline-flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft transition-colors duration-300 ease-out-expo hover:text-ink">
+          <svg className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5M11 6l-6 6 6 6" />
+          </svg>
+          Torna al login
         </Link>
       </div>
     </main>

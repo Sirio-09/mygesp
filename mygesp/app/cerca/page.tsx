@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import Image from "next/image";
+import ProductCard from "@/components/product/ProductCard";
+import Reveal from "@/components/motion/Reveal";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -28,78 +29,79 @@ export default async function CercaPage({ searchParams }: PageProps) {
       : [];
 
   return (
-    <main className="min-h-[70vh] bg-paper-warm/20">
-      <div className="bg-white border-b border-line">
-        <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
-          <p className="text-xs font-bold text-grass-deep uppercase tracking-widest mb-2">Ricerca Catalogo</p>
-          <h1 className="text-3xl sm:text-4xl font-black text-ink tracking-tight">
-            Risultati per: <span className="italic font-normal text-ink-soft">&quot;{query}&quot;</span>
+    <main className="min-h-[70vh] bg-paper text-ink">
+      <header className="border-b border-line/50 pb-10 pt-16 sm:pb-14 sm:pt-20">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+            Ricerca Catalogo
+          </p>
+          <h1 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
+            Risultati per: <span className="italic text-ink-soft">&quot;{query}&quot;</span>
           </h1>
-          <p className="text-sm text-ink-soft mt-2">{products.length} {products.length === 1 ? 'prodotto trovato' : 'prodotti trovati'}</p>
+          <p className="mt-4 text-sm font-light text-ink-soft">
+            {products.length} {products.length === 1 ? "prodotto trovato" : "prodotti trovati"}
+          </p>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
+      <div className="mx-auto max-w-[1280px] px-4 py-14 sm:px-6 sm:py-20 lg:px-10">
         {products.length === 0 ? (
-          <div className="text-center py-16 px-4 border border-dashed border-line bg-white rounded-xl max-w-2xl mx-auto">
-            <div className="w-16 h-16 bg-paper-warm rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-              🔍
+          <div className="mx-auto max-w-xl border border-dashed border-line px-6 py-16 text-center">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center border border-line text-ink-soft/60">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+              </svg>
             </div>
-            <h3 className="text-xl font-bold text-ink mb-2">Nessun risultato trovato</h3>
-            <p className="text-ink-soft text-sm mb-6 max-w-md mx-auto">
-              Non siamo riusciti a trovare nulla che corrisponda a "{query}". Prova a controllare l'ortografia o usa termini più generici.
+            <h2 className="mb-3 text-xl font-light tracking-tight text-ink">Nessun risultato trovato</h2>
+            <p className="mx-auto mb-8 max-w-md text-sm font-light leading-relaxed text-ink-soft">
+              Non siamo riusciti a trovare nulla che corrisponda a &quot;{query}&quot;. Prova a controllare l&apos;ortografia o usa termini più generici.
             </p>
-            <div className="flex justify-center gap-4">
-              <Link href="/prodotti" className="bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3 px-6 rounded-md transition-colors">
+            <div className="flex justify-center">
+              <Link
+                href="/prodotti"
+                className="group inline-flex items-center gap-3 bg-ink px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass"
+              >
                 Esplora lo Shop
+                <svg className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
               </Link>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
-            {products.map((product) => {
-              const mainImage = product.images?.[0] ?? null;
-              // Calcolo prezzo (se disponibile nelle varianti)
-              const price = product.variants?.[0]?.priceCents 
-                ? `€${(product.variants[0].priceCents / 100).toFixed(2)}` 
-                : null;
+          <div className="grid grid-cols-2 gap-x-5 gap-y-12 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((product, index) => {
+              const minPriceCents =
+                product.variants?.length > 0
+                  ? Math.min(...product.variants.map((v) => v.priceCents))
+                  : 0;
+
+              const isDiscountActive = Boolean(
+                product.discountPercent &&
+                  product.discountPercent > 0 &&
+                  (!product.discountUntil || new Date(product.discountUntil) > new Date())
+              );
 
               return (
-                <Link
+                <Reveal
                   key={product.id}
-                  href={`/prodotto/${product.slug}`}
-                  className="group bg-white border border-line rounded-xl overflow-hidden hover:border-grass hover:shadow-lg transition-all duration-300 flex flex-col"
+                  delay={Math.min(index % 4, 3) * 70}
+                  className="h-full"
                 >
-                  <div className="w-full aspect-[4/5] bg-paper-warm relative overflow-hidden">
-                    {mainImage ? (
-                      <Image
-                        src={mainImage}
-                        alt={product.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-ink-soft font-medium">
-                        Nessuna immagine
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-5 flex flex-col flex-1 justify-between gap-3">
-                    <div>
-                      <span className="text-[10px] uppercase font-black text-grass-deep tracking-widest block mb-1">
-                        {product.brand}
-                      </span>
-                      <h2 className="text-sm font-bold text-ink leading-snug group-hover:text-grass transition-colors line-clamp-2">
-                        {product.name}
-                      </h2>
-                    </div>
-                    {price && (
-                      <div className="text-sm font-black text-ink pt-3 border-t border-line/50">
-                        {price}
-                      </div>
-                    )}
-                  </div>
-                </Link>
+                  <ProductCard
+                    name={product.name}
+                    slug={product.slug}
+                    image={product.images?.[0]}
+                    priceCents={minPriceCents}
+                    discountPercent={product.discountPercent}
+                    isDiscountActive={isDiscountActive}
+                    waterColumn={product.waterColumn}
+                    brand={product.brand}
+                    priority={index < 4}
+                    headingLevel="h2"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  />
+                </Reveal>
               );
             })}
           </div>

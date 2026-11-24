@@ -2,6 +2,13 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
+import Reveal from "@/components/motion/Reveal";
+
+const statusStyles: Record<string, string> = {
+  paid: "border-grass-deep/40 text-grass-deep",
+  pending: "border-soil/50 text-soil-deep",
+  canceled: "border-line text-ink-soft",
+};
 
 export default async function OrdiniPage() {
   const session = await auth();
@@ -32,7 +39,7 @@ export default async function OrdiniPage() {
           <p className="text-sm font-light text-ink-soft">Non hai ancora effettuato ordini.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <Reveal variant="fade" className="space-y-6">
           {orders.map((order) => (
             <div key={order.id} className="border border-line/40 p-6 sm:p-8 bg-paper transition-colors hover:border-line/60">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -52,13 +59,17 @@ export default async function OrdiniPage() {
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
                     Stato
                   </span>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-ink">
+                  <span
+                    className={`inline-block border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                      statusStyles[order.status] ?? "border-line text-ink-soft"
+                    }`}
+                  >
                     {order.status}
                   </span>
                 </div>
               </div>
 
-              <div className="text-2xl font-light tracking-tight text-ink mb-6">
+              <div className="mb-6 border-t border-line/50 pt-6 text-2xl font-light tabular-nums tracking-tight text-ink">
                 €{(order.totalCents / 100).toFixed(2)}
               </div>
 
@@ -77,7 +88,7 @@ export default async function OrdiniPage() {
               )}
             </div>
           ))}
-        </div>
+        </Reveal>
       )}
     </main>
   );

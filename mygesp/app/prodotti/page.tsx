@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import Image from "next/image";
+import ProductCard from "@/components/product/ProductCard";
+import Reveal from "@/components/motion/Reveal";
 
 interface ProductsPageProps {
   searchParams: Promise<{ q?: string }>;
@@ -27,85 +28,75 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   });
 
   return (
-    <main className="min-h-screen bg-paper-warm/20">
-      <div className="bg-white border-b border-line">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-          <p className="text-grass-deep text-xs font-bold uppercase tracking-widest mb-2">
+    <main className="min-h-screen bg-paper text-ink">
+      <header className="border-b border-line/50 pb-12 pt-16 sm:pb-16 sm:pt-24">
+        <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
             {query ? "Risultati di ricerca" : "La nostra selezione"}
           </p>
-          <h1 className="text-3xl sm:text-5xl font-black text-ink tracking-tight">
+          <h1 className="text-3xl font-light tracking-tight text-ink sm:text-5xl">
             {query ? `Ricerca per "${query}"` : "Catalogo Prodotti"}
           </h1>
-          <p className="text-sm text-ink-soft mt-3 font-medium">
-            {products.length} {products.length === 1 ? 'prodotto disponibile' : 'prodotti disponibili'}
+          <p className="mt-4 text-sm font-light text-ink-soft">
+            {products.length} {products.length === 1 ? "prodotto disponibile" : "prodotti disponibili"}
           </p>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10">
         {products.length === 0 ? (
-          <div className="text-center py-16 px-4 bg-white border border-dashed border-line rounded-xl max-w-2xl mx-auto shadow-sm">
-            <div className="w-16 h-16 bg-paper-warm text-ink-soft rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-              🍃
+          <div className="mx-auto max-w-xl border border-dashed border-line px-6 py-16 text-center">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center border border-line text-ink-soft/60">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+              </svg>
             </div>
-            <h3 className="text-xl font-bold text-ink mb-2">Nessun prodotto trovato</h3>
-            <p className="text-ink-soft text-sm mb-6">
+            <h2 className="mb-3 text-xl font-light tracking-tight text-ink">Nessun prodotto trovato</h2>
+            <p className="mb-8 text-sm font-light leading-relaxed text-ink-soft">
               Non abbiamo trovato nulla per la tua ricerca. Esplora le altre categorie.
             </p>
             <Link
               href="/prodotti"
-              className="inline-block bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-md transition-colors"
+              className="group inline-flex items-center gap-3 bg-ink px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass"
             >
               Mostra tutto il catalogo
+              <svg className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {products.map((product) => {
+          <div className="grid grid-cols-2 gap-x-5 gap-y-12 sm:gap-x-6 lg:grid-cols-4">
+            {products.map((product, index) => {
               const minPriceCents = product.variants?.length > 0
                 ? Math.min(...product.variants.map((v) => v.priceCents))
                 : 0;
 
-              return (
-                <Link
-                  key={product.id}
-                  href={`/prodotto/${product.slug}`}
-                  className="group bg-white border border-line rounded-xl overflow-hidden hover:border-grass hover:shadow-lg transition-all duration-300 flex flex-col"
-                >
-                  <div className="w-full aspect-[4/5] bg-paper-warm relative overflow-hidden">
-                    {product.images[0] ? (
-                      <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-ink-soft font-medium uppercase tracking-widest">
-                        Nessuna foto
-                      </div>
-                    )}
-                  </div>
+              const isDiscountActive = Boolean(
+                product.discountPercent &&
+                  product.discountPercent > 0 &&
+                  (!product.discountUntil || new Date(product.discountUntil) > new Date())
+              );
 
-                  <div className="p-5 flex flex-col flex-1 justify-between gap-3">
-                    <div>
-                      {product.brand && (
-                        <span className="text-[10px] uppercase font-black text-grass-deep tracking-widest block mb-1">
-                          {product.brand}
-                        </span>
-                      )}
-                      <h3 className="text-sm font-bold text-ink leading-snug group-hover:text-grass transition-colors line-clamp-2">
-                        {product.name}
-                      </h3>
-                    </div>
-                    {minPriceCents > 0 && (
-                      <div className="text-sm font-black text-ink pt-3 border-t border-line/50">
-                        €{(minPriceCents / 100).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
-                </Link>
+              return (
+                <Reveal
+                  key={product.id}
+                  delay={Math.min(index % 4, 3) * 70}
+                  className="h-full"
+                >
+                  <ProductCard
+                    name={product.name}
+                    slug={product.slug}
+                    image={product.images[0]}
+                    priceCents={minPriceCents}
+                    discountPercent={product.discountPercent}
+                    isDiscountActive={isDiscountActive}
+                    waterColumn={product.waterColumn}
+                    brand={product.brand}
+                    priority={index < 4}
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
+                  />
+                </Reveal>
               );
             })}
           </div>

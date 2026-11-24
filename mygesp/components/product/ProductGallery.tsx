@@ -56,7 +56,7 @@ export default function ProductGallery({
 
   if (!hasImages) {
     return (
-      <div className="w-full aspect-[3/4] flex items-center justify-center bg-stone-50 text-[10px] font-mono uppercase tracking-widest text-black/40">
+      <div className="flex aspect-[3/4] w-full items-center justify-center bg-paper-warm text-[10px] font-medium uppercase tracking-[0.2em] text-ink-soft">
         Nessuna immagine
       </div>
     );
@@ -65,52 +65,97 @@ export default function ProductGallery({
   return (
     <div className="w-full">
       {/* --- 1. ZONA IMMAGINE IN PAGINA --- */}
-      <div className="relative w-full aspect-[3/4] md:aspect-[4/5] bg-stone-50 group overflow-hidden">
-        
+      <div className="group relative aspect-[3/4] w-full overflow-hidden bg-paper-warm md:aspect-[4/5] lg:aspect-auto lg:h-[calc(100svh-11rem)]">
         <div onClick={() => setIsOpen(true)} className="absolute inset-0 cursor-zoom-in">
-          <Image
-            src={images[current]}
-            alt={`${productName} - Vista ${current + 1}`}
-            fill
-            className="object-cover transition-opacity duration-300"
-            priority
-          />
+          {images.map((image, index) => (
+            <Image
+              key={`${image}-${index}`}
+              src={image}
+              alt={`${productName} - Vista ${index + 1}`}
+              fill
+              sizes="(max-width: 1024px) 100vw, 700px"
+              priority={index === 0}
+              aria-hidden={index !== current}
+              className={`object-cover transition-opacity duration-500 ease-out-expo ${
+                index === current ? "opacity-100" : "opacity-0"
+              }`}
+            />
+          ))}
         </div>
 
         {!isSingleImage && (
           <>
             <button
               onClick={prev}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-black shadow-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 z-10"
+              className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-line bg-paper/95 text-ink transition-all duration-300 ease-out-expo hover:border-ink hover:bg-paper md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
               aria-label="Precedente"
             >
-              <svg className="w-6 h-6 stroke-current stroke-[1.5] -translate-x-[1px]" viewBox="0 0 24 24" fill="none">
+              <svg className="h-5 w-5 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
             <button
               onClick={next}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-black shadow-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 z-10"
+              className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-line bg-paper/95 text-ink transition-all duration-300 ease-out-expo hover:border-ink hover:bg-paper md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
               aria-label="Successiva"
             >
-              <svg className="w-6 h-6 stroke-current stroke-[1.5] translate-x-[1px]" viewBox="0 0 24 24" fill="none">
+              <svg className="h-5 w-5 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-1.5 text-[10px] font-mono tracking-widest pointer-events-none rounded-full shadow-sm text-black">
-              {current + 1} / {images.length}
+            <div className="pointer-events-none absolute bottom-3 right-3 bg-paper/90 px-2.5 py-1 text-[10px] font-semibold tabular-nums tracking-[0.2em] text-ink">
+              {String(current + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
             </div>
           </>
         )}
       </div>
 
+      {/* --- 1b. MINIATURE --- */}
+      {!isSingleImage && (
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {images.map((image, index) => (
+            <button
+              key={`${image}-${index}`}
+              type="button"
+              onClick={() => setCurrent(index)}
+              aria-label={`Mostra immagine ${index + 1}`}
+              aria-current={index === current}
+              className={`relative aspect-[4/5] overflow-hidden border transition-colors duration-200 ease-out-expo ${
+                index === current
+                  ? "border-line"
+                  : "border-transparent hover:border-line"
+              }`}
+            >
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="120px"
+                className={`object-cover transition-opacity duration-300 ease-out-expo ${
+                  index === current ? "opacity-100" : "opacity-60 hover:opacity-100"
+                }`}
+              />
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-0 bottom-0 h-0.5 origin-left bg-ink transition-transform duration-500 ease-out-expo ${
+                  index === current ? "scale-x-100" : "scale-x-0"
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* --- 2. LIGHTBOX FULLSCREEN (PORTAL) --- */}
       {mounted && isOpen && createPortal(
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-[999999] bg-white flex flex-col items-center justify-center cursor-zoom-out animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Galleria immagini"
+          className="fixed inset-0 z-[999999] flex animate-fade-in cursor-zoom-out flex-col items-center justify-center bg-paper"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           {/* Immagine Centrale */}
@@ -122,8 +167,9 @@ export default function ProductGallery({
               src={images[current]}
               alt={`${productName} vista ingrandita`}
               fill
-              className="object-contain animate-in zoom-in-[0.98] duration-300 ease-out"
+              className="animate-scale-in object-contain"
               quality={100}
+              sizes="100vw"
               priority
             />
 
@@ -132,24 +178,26 @@ export default function ProductGallery({
               <>
                 <button
                   onClick={prev}
-                  className="absolute left-0 top-0 bottom-0 w-[25%] md:w-32 flex items-center justify-start p-4 md:p-8 text-black/30 hover:text-black/90 transition-colors z-[100000] cursor-pointer group outline-none"
+                  aria-label="Precedente"
+                  className="group absolute left-0 top-0 bottom-0 flex w-[25%] cursor-pointer items-center justify-start p-4 text-ink/25 transition-colors duration-300 hover:text-ink focus-visible:text-ink md:w-32 md:p-8"
                 >
-                  <svg className="w-12 h-12 md:w-16 md:h-16 stroke-current stroke-[1] group-hover:-translate-x-2 transition-transform duration-300 drop-shadow-md" viewBox="0 0 24 24" fill="none">
+                  <svg className="h-10 w-10 stroke-current stroke-[1] transition-transform duration-300 ease-out-expo group-hover:-translate-x-1.5 md:h-14 md:w-14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
                 <button
                   onClick={next}
-                  className="absolute right-0 top-0 bottom-0 w-[25%] md:w-32 flex items-center justify-end p-4 md:p-8 text-black/30 hover:text-black/90 transition-colors z-[100000] cursor-pointer group outline-none"
+                  aria-label="Successiva"
+                  className="group absolute right-0 top-0 bottom-0 flex w-[25%] cursor-pointer items-center justify-end p-4 text-ink/25 transition-colors duration-300 hover:text-ink focus-visible:text-ink md:w-32 md:p-8"
                 >
-                  <svg className="w-12 h-12 md:w-16 md:h-16 stroke-current stroke-[1] group-hover:translate-x-2 transition-transform duration-300 drop-shadow-md" viewBox="0 0 24 24" fill="none">
+                  <svg className="h-10 w-10 stroke-current stroke-[1] transition-transform duration-300 ease-out-expo group-hover:translate-x-1.5 md:h-14 md:w-14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
                 
                 {/* Contatore in basso */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[12px] font-mono text-black/60 tracking-[0.2em] pointer-events-none bg-white/80 px-4 py-2 rounded-full shadow-sm md:bg-transparent md:shadow-none">
-                  {current + 1} / {images.length}
+                <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 text-[10px] font-semibold tabular-nums tracking-[0.2em] text-ink">
+                  {String(current + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
                 </div>
               </>
             )}
@@ -162,7 +210,7 @@ export default function ProductGallery({
                 e.stopPropagation();
                 setIsOpen(false);
               }}
-              className="pointer-events-auto p-4 flex items-center justify-center text-black/50 hover:text-black hover:rotate-90 transition-all duration-300 cursor-pointer bg-white/50 backdrop-blur-md rounded-full md:bg-transparent"
+              className="pointer-events-auto flex items-center justify-center border border-line bg-paper/90 p-3 text-ink transition-all duration-300 ease-out-expo hover:border-ink hover:rotate-90 md:border-transparent md:bg-transparent md:p-4"
               aria-label="Chiudi"
             >
               <svg className="w-8 h-8 md:w-10 md:h-10 stroke-current stroke-[1.5]" viewBox="0 0 24 24" fill="none">

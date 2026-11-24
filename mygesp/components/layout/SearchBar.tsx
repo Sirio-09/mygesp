@@ -112,13 +112,23 @@ function SearchBarContent() {
       {/* Form di ricerca */}
       <form
         onSubmit={handleSubmit}
+        role="search"
         className={
           mobileExpanded
-            ? "fixed inset-x-4 top-4 z-50 flex items-center bg-white border border-line/40 shadow-sm lg:static lg:bg-transparent lg:w-full lg:border-none lg:shadow-none"
+            ? "fixed inset-x-4 top-4 z-50 flex items-center border border-line bg-white lg:static lg:w-full lg:border-none lg:bg-transparent"
             : "hidden lg:block lg:w-full"
         }
       >
-        <div className="relative w-full flex items-center">
+        <div className="relative flex w-full items-center">
+          <svg
+            className="pointer-events-none absolute left-0 h-4 w-4 text-ink-soft/70"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+          </svg>
           <input
             type="text"
             autoFocus={mobileExpanded}
@@ -126,16 +136,17 @@ function SearchBarContent() {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => results.length > 0 && setOpen(true)}
             placeholder="Cerca prodotto..."
-            className="w-full bg-transparent text-ink placeholder:text-ink-soft/40 text-sm font-light px-4 py-2 border-b border-line/60 focus:border-ink outline-none transition-colors"
+            aria-label="Cerca prodotto"
+            className="w-full border-b border-line/60 bg-transparent py-2 pl-7 pr-8 text-sm font-light text-ink outline-none transition-colors duration-300 placeholder:text-ink-soft/70 focus:border-ink lg:pl-7"
           />
           {mobileExpanded && (
             <button
               type="button"
               onClick={closeMobileSearch}
-              className="lg:hidden absolute right-3 text-ink-soft hover:text-ink p-1"
+              className="absolute right-2 flex items-center justify-center p-1.5 text-ink-soft transition-colors duration-200 hover:text-ink lg:hidden"
               aria-label="Chiudi ricerca"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
@@ -147,10 +158,10 @@ function SearchBarContent() {
       {/* Dropdown dei suggerimenti */}
       {open && results.length > 0 && (
         <div
-          className={`bg-white border border-line/40 z-50 ${
+          className={`z-50 animate-fade-in border border-line bg-white ${
             mobileExpanded
-              ? "fixed inset-x-4 top-20 max-w-none max-h-[65vh] overflow-y-auto shadow-sm"
-              : "absolute top-full left-0 right-0 w-full mt-2"
+              ? "fixed inset-x-4 top-20 max-h-[65vh] max-w-none overflow-y-auto"
+              : "absolute left-0 right-0 top-full mt-2 w-full"
           }`}
         >
           <div className="px-4 py-3 border-b border-line/40 flex items-center justify-between sticky top-0 bg-white z-10">
@@ -162,29 +173,32 @@ function SearchBarContent() {
             </span>
           </div>
 
-          <div className="divide-y divide-line/40">
+          <div className="divide-y divide-line/60">
             {results.map((product) => (
               <button
                 key={product.id}
                 type="button"
                 onClick={() => handleProductSelect(product.slug)}
-                className="w-full text-left flex items-center gap-4 px-4 py-3 hover:bg-line/5 transition-colors group cursor-pointer"
+                className="group flex w-full cursor-pointer items-center gap-4 px-4 py-3 text-left transition-colors duration-200 hover:bg-paper-warm"
               >
-                <div className="w-10 h-10 bg-paper relative flex-shrink-0 overflow-hidden">
+                <div className="relative h-11 w-9 shrink-0 overflow-hidden bg-paper-warm">
                   {product.images && product.images[0] ? (
                     <Image
                       src={product.images[0]}
                       alt={product.name}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      sizes="36px"
+                      className="object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[8px] uppercase tracking-widest text-ink-soft/50">
-                      Img
+                    <div className="flex h-full w-full items-center justify-center text-ink-soft/60">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                     </div>
                   )}
                 </div>
-                <span className="text-[11px] font-medium text-ink uppercase tracking-widest group-hover:text-grass transition-colors truncate">
+                <span className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-ink transition-colors duration-200 group-hover:text-grass-deep">
                   {product.name}
                 </span>
               </button>
@@ -194,12 +208,12 @@ function SearchBarContent() {
           <button
             type="button"
             onClick={handleSubmit}
-            className="w-full bg-transparent hover:bg-ink hover:text-white text-ink text-[10px] font-semibold uppercase tracking-[0.2em] py-4 px-4 border-t border-line/40 text-center transition-colors flex items-center justify-between group sticky bottom-0 cursor-pointer"
+            className="group sticky bottom-0 flex w-full cursor-pointer items-center justify-between border-t border-line bg-white px-4 py-3.5 text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-ink transition-colors duration-300 hover:bg-ink hover:text-white"
           >
             <span className="truncate">Tutti i risultati</span>
-            <span className="transform group-hover:translate-x-1 transition-transform flex-shrink-0">
-              &rarr;
-            </span>
+            <svg className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </button>
         </div>
       )}
@@ -211,12 +225,13 @@ export default function SearchBar() {
   return (
     <Suspense
       fallback={
-        <div className="relative w-full lg:w-72 flex items-center">
+        <div className="relative flex w-full items-center lg:w-72">
           <input
             type="text"
             placeholder="Cerca prodotto..."
+            aria-label="Cerca prodotto"
             readOnly
-            className="w-full bg-transparent text-ink placeholder:text-ink-soft/40 text-sm font-light px-4 py-2 border-b border-line/60 outline-none"
+            className="w-full border-b border-line/60 bg-transparent py-2 pl-7 pr-4 text-sm font-light text-ink outline-none placeholder:text-ink-soft/70"
           />
         </div>
       }

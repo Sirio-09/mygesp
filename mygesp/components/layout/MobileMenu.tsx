@@ -40,6 +40,15 @@ export default function MobileMenu() {
   }, [open]);
 
   useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
+
+  useEffect(() => {
     if (open) {
       setLoading(true);
       fetch("/api/prodotti?featured=true&limit=6", { cache: "no-store" })
@@ -66,8 +75,10 @@ export default function MobileMenu() {
       {/* HAMBURGER BUTTON - Animazione più fluida e area di click migliorata */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex flex-col justify-center items-center w-10 h-10 gap-1.5 focus:outline-none relative z-30 hover:opacity-70 transition-opacity"
+        className="relative z-30 flex h-10 w-10 flex-col items-center justify-center gap-1.5 transition-opacity hover:opacity-70"
         aria-label="Apri Menu"
+        aria-expanded={open}
+        aria-controls="mobile-menu"
       >
         <span
           className={`w-6 h-0.5 bg-ink rounded-full transition-all duration-300 ease-out ${
@@ -92,36 +103,38 @@ export default function MobileMenu() {
             {/* BACKDROP - Blur aumentato per un effetto vetro più premium */}
             <div
               onClick={() => setOpen(false)}
-              className={`fixed inset-0 bg-ink/40 backdrop-blur-md z-[998] transition-all duration-400 ease-in-out ${
-                open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              className={`fixed inset-0 z-[998] bg-ink/40 backdrop-blur-md transition-opacity duration-300 ease-out-expo ${
+                open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
               }`}
+              aria-hidden="true"
             />
 
-            {/* SIDEBAR - Arrotondamento laterale e ombreggiatura profonda */}
+            {/* SIDEBAR */}
             <aside
-              className={`fixed top-0 left-0 h-[100dvh] w-[85%] max-w-sm bg-paper z-[999] shadow-2xl rounded-r-2xl flex flex-col justify-between transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) ${
+              id="mobile-menu"
+              className={`fixed left-0 top-0 z-[999] flex h-[100dvh] w-[85%] max-w-sm transform-gpu flex-col justify-between bg-paper shadow-[0_0_80px_-20px_rgba(34,40,31,0.45)] will-change-transform transition-transform duration-500 ease-out-expo ${
                 open ? "translate-x-0" : "-translate-x-full"
               }`}
             >
               {/* 1. HEADER */}
-              <div className="flex items-center justify-between p-5 border-b border-line/40 shrink-0">
-                <span className="font-black text-ink text-sm tracking-[0.2em] uppercase">
+              <div className="flex shrink-0 items-center justify-between border-b border-line/40 p-5">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
                   Esplora
                 </span>
                 <button
                   onClick={() => setOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-paper-warm text-ink-soft hover:text-ink hover:bg-line/30 hover:rotate-90 transition-all duration-300"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-soft transition-colors duration-200 ease-out-expo hover:bg-paper-warm hover:text-ink"
                   aria-label="Chiudi menu"
                 >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
                     <path d="M1 1L13 13M1 13L13 1" />
                   </svg>
                 </button>
               </div>
 
-              {/* 2. NAVIGAZIONE - Effetti hover di scorrimento (micro-interazioni) */}
-              <div className="flex-1 overflow-y-auto px-4 py-6 min-h-0">
-                <nav className="flex flex-col space-y-2">
+              {/* 2. NAVIGAZIONE */}
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6">
+                <nav className="flex flex-col">
                   {[
                     { name: "Abbigliamento", href: "/categoria/abbigliamento" },
                     { name: "Stivali", href: "/categoria/stivali" },
@@ -131,30 +144,31 @@ export default function MobileMenu() {
                       key={link.name}
                       href={link.href}
                       onClick={() => setOpen(false)}
-                      className="group flex items-center justify-between px-2 py-3 text-ink font-semibold text-sm hover:bg-paper-warm rounded-lg transition-colors uppercase tracking-widest"
+                      className="group flex items-center justify-between border-b border-line/40 px-1 py-4 text-[12px] font-semibold uppercase tracking-[0.16em] text-ink transition-colors duration-300 ease-out-expo hover:text-grass-deep"
                     >
-                      <span className="group-hover:translate-x-2 group-hover:text-grass-deep transition-all duration-300">
-                        {link.name}
-                      </span>
-                      <span className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-grass-deep">
-                        →
-                      </span>
+                      <span>{link.name}</span>
+                      <svg
+                        className="h-4 w-4 -translate-x-1 text-grass-deep opacity-0 transition-all duration-300 ease-out-expo group-hover:translate-x-0 group-hover:opacity-100"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
                     </Link>
                   ))}
                 </nav>
               </div>
 
               {/* 3. CONSIGLIATI IN EVIDENZA */}
-              <div className="p-5 border-t border-line/40 bg-paper shrink-0 rounded-br-2xl">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-xs font-bold uppercase text-ink tracking-widest">
+              <div className="shrink-0 border-t border-line/40 bg-paper p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                     In Evidenza
                   </p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-grass-deep font-bold bg-grass-deep/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-grass-deep opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-grass-deep"></span>
-                    </span>
+                  <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-grass-deep">
+                    <span className="h-1.5 w-1.5 rounded-full bg-grass-deep" aria-hidden="true" />
                     Novità
                   </div>
                 </div>
@@ -162,15 +176,15 @@ export default function MobileMenu() {
                 {loading ? (
                   <div className="flex gap-4 overflow-hidden pb-2">
                     {[1, 2].map((i) => (
-                      <div key={i} className="flex flex-col w-32 shrink-0 gap-2">
-                        <div className="w-full h-32 bg-line/20 rounded-xl animate-pulse" />
-                        <div className="w-3/4 h-3 bg-line/20 rounded animate-pulse" />
-                        <div className="w-1/2 h-3 bg-line/20 rounded animate-pulse" />
+                      <div key={i} className="flex w-32 shrink-0 flex-col gap-2">
+                        <div className="h-32 w-full bg-line/25" />
+                        <div className="h-3 w-3/4 bg-line/25" />
+                        <div className="h-3 w-1/2 bg-line/25" />
                       </div>
                     ))}
                   </div>
                 ) : recommended.length > 0 ? (
-                  <div className="flex gap-4 overflow-x-auto pb-4 -mb-4 pt-1 px-1 scrollbar-none snap-x snap-mandatory">
+                  <div className="no-scrollbar -mb-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-4 pt-1">
                     {recommended.map((item) => {
                       const imageSrc =
                         item.images && item.images.length > 0 ? item.images[0] : null;
@@ -185,21 +199,21 @@ export default function MobileMenu() {
                           key={item.id}
                           href={`/prodotto/${item.slug}`}
                           onClick={() => setOpen(false)}
-                          className="flex flex-col w-32 shrink-0 bg-paper border border-line/30 rounded-xl hover:border-grass-deep/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-2.5 snap-start group"
+                          className="group flex w-32 shrink-0 snap-start flex-col p-0"
                         >
                           {/* Immagine */}
-                          <div className="w-full h-28 relative bg-paper-warm overflow-hidden mb-3 rounded-lg">
+                          <div className="relative mb-3 h-28 w-full overflow-hidden bg-paper-warm">
                             {imageSrc ? (
                               <Image
                                 src={imageSrc}
                                 alt={item.name}
                                 fill
-                                sizes="(max-width: 768px) 128px, 128px"
-                                className="object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                                sizes="128px"
+                                className="object-cover transition-transform duration-500 ease-out-expo group-hover:scale-[1.04]"
                               />
                             ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center text-ink-soft/50">
-                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <div className="flex h-full w-full items-center justify-center text-ink-soft/50">
+                                <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                               </div>
@@ -207,11 +221,11 @@ export default function MobileMenu() {
                           </div>
 
                           {/* Testi e Prezzo */}
-                          <div className="flex flex-col justify-between flex-1">
-                            <p className="text-[11px] font-bold text-ink line-clamp-2 leading-tight group-hover:text-grass-deep transition-colors mb-2">
+                          <div className="flex flex-1 flex-col justify-between">
+                            <p className="mb-2 line-clamp-2 text-[11px] font-medium leading-snug text-ink transition-colors duration-200 group-hover:text-grass-deep">
                               {item.name}
                             </p>
-                            <p className="text-xs text-ink font-mono font-medium bg-paper-warm self-start px-2 py-0.5 rounded-md">
+                            <p className="self-start text-[11px] font-medium tabular-nums text-ink-soft">
                               €{formattedPrice}
                             </p>
                           </div>
@@ -220,9 +234,13 @@ export default function MobileMenu() {
                     })}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-6 text-center bg-paper-warm rounded-xl border border-line/30 border-dashed">
-                    <span className="text-2xl mb-1">🍃</span>
-                    <p className="text-xs text-ink-soft">Nessun prodotto<br/>disponibile al momento.</p>
+                  <div className="flex flex-col items-center justify-center gap-2 border border-dashed border-line bg-paper-warm/60 py-6 text-center">
+                    <svg className="h-6 w-6 text-ink-soft/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    <p className="text-[11px] font-light leading-relaxed text-ink-soft">
+                      Nessun prodotto<br />disponibile al momento.
+                    </p>
                   </div>
                 )}
               </div>

@@ -12,6 +12,25 @@ type Review = {
   customer: { name: string | null; email: string };
 };
 
+function Stars({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
+  const dimension = size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5";
+
+  return (
+    <span className="flex items-center gap-1" aria-hidden="true">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <svg
+          key={n}
+          className={`${dimension} ${n <= value ? "text-ink" : "text-line"}`}
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2.6l2.86 6.05 6.64.79-4.93 4.6 1.31 6.56L12 17.4l-5.88 3.2 1.31-6.56L2.5 9.44l6.64-.79L12 2.6z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
 export default function ProductReviews({ productId }: { productId: string }) {
   const { data: session, status } = useSession();
   const isLoadingSession = status === "loading";
@@ -151,17 +170,12 @@ export default function ProductReviews({ productId }: { productId: string }) {
         <div className="lg:col-span-7">
           {average ? (
             <div>
-              <div className="flex items-center gap-6 mb-8">
-                <span className="text-6xl sm:text-7xl font-light tracking-tighter text-ink leading-none">
+              <div className="mb-8 flex items-center gap-6">
+                <span className="text-6xl font-light leading-none tracking-tighter text-ink sm:text-7xl">
                   {average}
                 </span>
                 <div className="flex flex-col gap-2">
-                  <div className="text-ink text-lg tracking-widest flex">
-                    {"★".repeat(Math.round(Number(average)))}
-                    <span className="text-line/40">
-                      {"★".repeat(5 - Math.round(Number(average)))}
-                    </span>
-                  </div>
+                  <Stars value={Math.round(Number(average))} />
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
                     Basato su {totalReviews} recension{totalReviews === 1 ? "e" : "i"}
                   </p>
@@ -174,18 +188,25 @@ export default function ProductReviews({ productId }: { productId: string }) {
                   const count = ratingCounts[stars as keyof typeof ratingCounts];
                   const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                   return (
-                    <div key={stars} className="flex items-center gap-4">
-                      <span className="w-4 text-[11px] font-medium text-ink-soft text-right">
+                    <div key={stars} className="flex items-center gap-3">
+                      <span className="w-4 text-right text-[11px] font-medium tabular-nums text-ink-soft">
                         {stars}
                       </span>
-                      <span className="text-[10px] text-ink-soft">★</span>
-                      <div className="flex-1 h-1 bg-line/20 overflow-hidden">
+                      <svg
+                        className="h-2.5 w-2.5 text-ink-soft/70"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 2.6l2.86 6.05 6.64.79-4.93 4.6 1.31 6.56L12 17.4l-5.88 3.2 1.31-6.56L2.5 9.44l6.64-.79L12 2.6z" />
+                      </svg>
+                      <div className="h-1 flex-1 overflow-hidden bg-line/40">
                         <div
-                          className="h-full bg-ink transition-all duration-700 ease-out"
+                          className="h-full bg-ink transition-[width] duration-700 ease-out-expo"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <span className="w-6 text-[10px] font-medium text-ink-soft text-right">
+                      <span className="w-6 text-right text-[10px] font-medium tabular-nums text-ink-soft">
                         {count}
                       </span>
                     </div>
@@ -220,15 +241,20 @@ export default function ProductReviews({ productId }: { productId: string }) {
                         type="button"
                         onClick={() => setRating(n)}
                         onMouseEnter={() => setHoverRating(n)}
-                        className="text-2xl transition-transform hover:scale-110 focus:outline-none"
+                        aria-label={`${n} stelle`}
+                        aria-pressed={rating === n}
+                        className="p-0.5 transition-transform duration-200 ease-out-expo hover:scale-110"
                       >
-                        <span
-                          className={
-                            (hoverRating || rating) >= n ? "text-ink" : "text-line/40"
-                          }
+                        <svg
+                          className={`h-6 w-6 transition-colors duration-200 ${
+                            (hoverRating || rating) >= n ? "text-ink" : "text-line"
+                          }`}
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
                         >
-                          ★
-                        </span>
+                          <path d="M12 2.6l2.86 6.05 6.64.79-4.93 4.6 1.31 6.56L12 17.4l-5.88 3.2 1.31-6.56L2.5 9.44l6.64-.79L12 2.6z" />
+                        </svg>
                       </button>
                     ))}
                   </div>
@@ -244,7 +270,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                     required
                     rows={4}
                     placeholder="Racconta la tua esperienza con il prodotto..."
-                    className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/40 resize-none"
+                    className="w-full resize-none border border-line/60 bg-transparent p-4 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
                   />
                 </div>
 
@@ -331,14 +357,20 @@ export default function ProductReviews({ productId }: { productId: string }) {
                   id="sort-reviews"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "recent" | "highest")}
-                  className="appearance-none bg-transparent text-[11px] font-medium uppercase tracking-[0.1em] text-ink border-b border-line/60 focus:border-ink outline-none cursor-pointer pr-6 pb-1 transition-colors"
+                  className="cursor-pointer appearance-none border-b border-line/60 bg-transparent pb-1 pr-6 text-[11px] font-medium uppercase tracking-[0.1em] text-ink outline-none transition-colors focus:border-ink"
                 >
                   <option value="recent">Più recenti</option>
                   <option value="highest">Voti più alti</option>
                 </select>
-                <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[8px] text-ink pointer-events-none">
-                  ▼
-                </span>
+                <svg
+                  className="pointer-events-none absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 text-ink"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 9l6 6 6-6" />
+                </svg>
               </div>
             </div>
           </div>
@@ -350,13 +382,8 @@ export default function ProductReviews({ productId }: { productId: string }) {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-ink tracking-widest">
-                        {"★".repeat(review.rating)}
-                        <span className="text-line/40">
-                          {"★".repeat(5 - review.rating)}
-                        </span>
-                      </span>
-                      <span className="border border-line/60 px-2.5 py-1 text-[9px] uppercase tracking-[0.2em] font-medium text-ink-soft">
+                      <Stars value={review.rating} size="sm" />
+                      <span className="border border-line px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-ink-soft">
                         Acquisto Verificato
                       </span>
                     </div>

@@ -1,97 +1,106 @@
 // Footer.tsx
 import Link from "next/link";
+import Reveal from "@/components/motion/Reveal";
+
+const productLinks = [
+  { label: "Abbigliamento", href: "/categoria/abbigliamento" },
+  { label: "Stivali", href: "/categoria/stivali" },
+  { label: "Attrezzature", href: "/categoria/attrezzature" },
+];
+
+const serviceLinks = [
+  { label: "Il tuo carrello", href: "/carrello" },
+  { label: "I tuoi ordini", href: "/account/ordini" },
+  { label: "Password dimenticata", href: "/account/password-dimenticata" },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-ink text-white border-t border-line/10">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-16 sm:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16 items-start">
-          
+    <footer className="border-t border-line/10 bg-ink text-white">
+      <Reveal
+        variant="fade"
+        className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 sm:py-24 lg:px-10"
+      >
+        <div className="mb-16 grid grid-cols-1 items-start gap-10 md:grid-cols-12 md:gap-12">
+
           {/* Brand & Dati Generali */}
-          <div className="md:col-span-6 lg:col-span-5 flex flex-col justify-between">
+          <div className="flex flex-col justify-between md:col-span-6 lg:col-span-5">
             <div>
-              <Link href="/" className="inline-flex items-center text-2xl tracking-[0.1em] uppercase mb-6">
+              <Link
+                href="/"
+                className="mb-6 inline-flex items-center text-2xl uppercase tracking-[0.1em] transition-opacity duration-300 hover:opacity-70"
+              >
                 <span className="font-light">MY</span>
                 <span className="font-medium">GESP</span>
               </Link>
-              <p className="text-sm font-light text-white/60 leading-relaxed max-w-[360px]">
+              <p className="max-w-[360px] text-sm font-light leading-relaxed text-white/70">
                 Abbigliamento impermeabile, stivali termici e attrezzature professionali per agricoltura e allevamento. Testati in stalla, al pascolo e nel fango.
               </p>
             </div>
-            
-            <div className="mt-8 text-[11px] font-light text-white/40 uppercase tracking-widest">
-              <p className="text-white/60 font-medium mb-1">MyGesp di Panero Enrica</p>
+
+            <div className="mt-8 text-[11px] font-light uppercase tracking-[0.14em] text-white/60">
+              <p className="mb-1 font-medium text-white/80">MyGesp di Panero Enrica</p>
               <p>P.IVA 04093030049</p>
             </div>
           </div>
 
           {/* Prodotti */}
           <div className="md:col-span-3 lg:col-span-3">
-            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-6">
+            <h3 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
               Prodotti
             </h3>
             <ul className="space-y-4">
-              <li>
-                <Link href="/categoria/abbigliamento" className="text-sm font-light text-white/80 hover:text-white transition-colors duration-300">
-                  Abbigliamento
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/stivali" className="text-sm font-light text-white/80 hover:text-white transition-colors duration-300">
-                  Stivali
-                </Link>
-              </li>
-              <li>
-                <Link href="/categoria/attrezzature" className="text-sm font-light text-white/80 hover:text-white transition-colors duration-300">
-                  Attrezzature
-                </Link>
-              </li>
+              {productLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="link-underline inline-block text-sm font-light text-white/75 transition-colors duration-300 ease-out-expo hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Assistenza & Account */}
           <div className="md:col-span-3 lg:col-span-4">
-            <h3 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50 mb-6">
-              Assistenza & Account
+            <h3 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
+              Assistenza &amp; Account
             </h3>
             <ul className="space-y-4">
-              <li>
-                <Link href="/carrello" className="text-sm font-light text-white/80 hover:text-white transition-colors duration-300">
-                  Il tuo carrello
-                </Link>
-              </li>
-              <li>
-                <Link href="/account/ordini" className="text-sm font-light text-white/80 hover:text-white transition-colors duration-300">
-                  I tuoi ordini
-                </Link>
-              </li>
-              <li>
-                <Link href="/account/password-dimenticata" className="text-sm font-light text-white/80 hover:text-white transition-colors duration-300">
-                  Password dimenticata
-                </Link>
-              </li>
+              {serviceLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="link-underline inline-block text-sm font-light text-white/75 transition-colors duration-300 ease-out-expo hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
         </div>
 
         {/* Fascia di chiusura: Copyright & Link Legali */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] uppercase tracking-widest text-white/40 font-medium">
+        <div className="flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 text-[10px] font-medium uppercase tracking-[0.14em] text-white/60 md:flex-row">
           <p>© {new Date().getFullYear()} MyGesp. Tutti i diritti riservati.</p>
-          
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            <Link href="/termini" className="hover:text-white transition-colors duration-300">
+
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            <Link href="/termini" className="link-underline transition-colors duration-300 hover:text-white">
               Termini e Condizioni
             </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors duration-300">
+            <Link href="/privacy" className="link-underline transition-colors duration-300 hover:text-white">
               Privacy Policy
             </Link>
-            <Link href="/admin/login" className="text-white/20 hover:text-white transition-colors duration-300">
+            <Link href="/admin/login" className="transition-colors duration-300 hover:text-white">
               Area tecnica
             </Link>
           </div>
         </div>
-      </div>
+      </Reveal>
     </footer>
   );
 }

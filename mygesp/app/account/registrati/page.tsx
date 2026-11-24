@@ -86,26 +86,33 @@ export default function RegistratiPage() {
           <input
             type="text"
             placeholder="Nome completo"
+            aria-label="Nome completo"
+            autoComplete="name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+            className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
           />
           <input
             type="email"
             placeholder="Email"
+            aria-label="Email"
+            autoComplete="email"
+            inputMode="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
-            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+            className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
           />
           <input
             type="password"
             placeholder="Password (min. 6 caratteri)"
+            aria-label="Password"
+            autoComplete="new-password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
             minLength={6}
-            className="w-full bg-transparent border border-line/60 p-4 text-sm font-light text-ink focus:border-ink outline-none transition-colors placeholder:text-ink-soft/50"
+            className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
           />
         </div>
 
@@ -118,7 +125,7 @@ export default function RegistratiPage() {
                 checked={form.acceptTerms}
                 onChange={(e) => setForm({ ...form, acceptTerms: e.target.checked })}
                 required
-                className="appearance-none w-4 h-4 border border-line/60 checked:bg-ink checked:border-ink transition-colors cursor-pointer"
+                className="h-4 w-4 cursor-pointer appearance-none border border-line/60 transition-colors checked:border-ink checked:bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grass-deep"
               />
               {form.acceptTerms && (
                 <svg className="absolute w-3 h-3 text-white pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square">
@@ -137,7 +144,7 @@ export default function RegistratiPage() {
                 type="checkbox"
                 checked={form.subscribeNewsletter}
                 onChange={(e) => setForm({ ...form, subscribeNewsletter: e.target.checked })}
-                className="appearance-none w-4 h-4 border border-line/60 checked:bg-ink checked:border-ink transition-colors cursor-pointer"
+                className="h-4 w-4 cursor-pointer appearance-none border border-line/60 transition-colors checked:border-ink checked:bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-grass-deep"
               />
               {form.subscribeNewsletter && (
                 <svg className="absolute w-3 h-3 text-white pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square">
@@ -154,7 +161,7 @@ export default function RegistratiPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-ink text-white hover:bg-grass text-[11px] font-medium uppercase tracking-[0.2em] py-4 px-6 disabled:opacity-30 disabled:hover:bg-ink transition-colors duration-300 mt-4"
+          className="mt-4 w-full bg-ink px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-ink"
         >
           {loading ? "Registrazione in corso..." : "Registrati"}
         </button>

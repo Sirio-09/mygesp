@@ -67,8 +67,11 @@ function ResetPasswordForm() {
         <p className="text-soil-deep text-xs font-bold uppercase tracking-wider">
           Token di ripristino non valido o scaduto.
         </p>
-        <Link href="/account/password-dimenticata" className="text-grass-deep hover:text-grass text-xs font-bold uppercase block transition-colors">
-          Richiedi un nuovo link →
+        <Link href="/account/password-dimenticata" className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-grass-deep transition-colors duration-300 hover:text-grass">
+          Richiedi un nuovo link
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
         </Link>
       </div>
     )
@@ -83,7 +86,7 @@ function ResetPasswordForm() {
         <div className="text-grass-deep text-sm font-bold uppercase tracking-wider">
           Password aggiornata con successo!
         </div>
-        <Link href="/account/login" className="w-full h-12 bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider rounded-md transition-all shadow-md flex items-center justify-center mt-4">
+        <Link href="/account/login" className="mt-4 flex h-12 w-full items-center justify-center bg-ink text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass">
           Vai al Login
         </Link>
       </div>
@@ -93,7 +96,7 @@ function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-1.5 relative">
-        <label className="block text-xs font-bold uppercase text-ink tracking-wide">
+        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
           Nuova Password
         </label>
         <div className="relative">
@@ -101,12 +104,13 @@ function ResetPasswordForm() {
             type={showPassword ? "text" : "password"}
             required
             minLength={6}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full h-11 px-4 bg-white border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass focus:ring-1 focus:ring-grass transition-all"
+            className="h-11 w-full border border-line/70 bg-paper px-4 pr-11 text-sm text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/60 focus:border-ink"
           />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft hover:text-ink">
+          <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Nascondi password" : "Mostra password"} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-soft transition-colors duration-200 hover:text-ink">
             {showPassword ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
             ) : (
@@ -117,30 +121,31 @@ function ResetPasswordForm() {
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-xs font-bold uppercase text-ink tracking-wide">
+        <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
           Conferma Password
         </label>
         <input
           type={showPassword ? "text" : "password"}
           required
           minLength={6}
+          autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="••••••••"
-          className="w-full h-11 px-4 bg-white border border-line rounded-md text-sm text-ink focus:outline-none focus:border-grass focus:ring-1 focus:ring-grass transition-all"
+          className="h-11 w-full border border-line/70 bg-paper px-4 text-sm text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/60 focus:border-ink"
         />
       </div>
 
       {error && (
-        <div className="p-3 bg-soil-deep/10 border border-soil-deep/20 rounded-md">
-          <p className="text-soil-deep text-xs font-semibold text-center">{error}</p>
+        <div className="border-l-2 border-soil-deep bg-soil-deep/5 p-3">
+          <p className="text-center text-xs font-medium text-soil-deep">{error}</p>
         </div>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-12 mt-2 bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-widest rounded-md transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+        className="mt-2 flex h-12 w-full items-center justify-center bg-ink text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
           <span className="flex items-center gap-2">
@@ -155,30 +160,32 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-paper-warm/30">
-      <div className="w-full max-w-md bg-white border border-line rounded-xl p-8 space-y-8 shadow-sm">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-black uppercase text-ink tracking-tight">
+      <div className="min-h-[70vh] bg-paper px-4 py-16">
+      <div className="mx-auto w-full max-w-md border border-line/70 bg-paper p-8">
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-light tracking-tight text-ink">
             Nuova Password
           </h1>
-          <p className="text-xs text-ink-soft uppercase tracking-wider">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
             Scegli una password sicura per il tuo account
           </p>
         </div>
 
-        <Suspense fallback={<div className="text-center text-xs text-ink-soft py-8">Caricamento modulo...</div>}>
+        <div className="mt-8">
+        <Suspense fallback={<div className="py-8 text-center text-xs text-ink-soft">Caricamento modulo...</div>}>
           <ResetPasswordForm />
         </Suspense>
+        </div>
 
-        <div className="relative border-t border-line pt-6 text-center">
+        <div className="relative mt-8 border-t border-line/70 pt-6 text-center">
           <Link
             href="/account/login"
-            className="text-xs font-bold uppercase tracking-wider text-ink-soft hover:text-ink transition-colors underline-offset-4 hover:underline"
+            className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft underline-offset-4 transition-colors duration-300 hover:text-ink hover:underline"
           >
             Annulla e Torna al Login
           </Link>
         </div>
       </div>
-    </div>
+      </div>
   )
 }

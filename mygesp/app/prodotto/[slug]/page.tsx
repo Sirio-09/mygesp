@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import AddToCartButton from "@/components/product/AddToCartButton";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductReviews from "@/components/product/ProductReviews";
-import BackButton from "@/components/product/BackButton";
+import ProductCard from "@/components/product/ProductCard";
+import Reveal from "@/components/motion/Reveal";
 
 type DescriptionBlock = {
   title: string;
@@ -91,262 +91,265 @@ export default async function ProductPage({
   );
 
   return (
-    <main className="bg-paper min-h-screen pb-24 sm:pb-32 text-ink selection:bg-grass selection:text-white">
-      {/* HEADER SPAZIOSO CON BACK BUTTON */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 mb-8">
-        <BackButton />
+    <main className="min-h-screen bg-paper pb-24 text-ink selection:bg-grass selection:text-white sm:pb-32">
+      {/* BREADCRUMB */}
+      <div className="mx-auto max-w-[1280px] px-4 pt-8 sm:px-6 sm:pt-10 lg:px-10">
+        <nav
+          aria-label="Percorso"
+          className="flex min-w-0 items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft"
+        >
+          <Link href="/" className="shrink-0 transition-colors duration-300 hover:text-ink">
+            Home
+          </Link>
+          <span aria-hidden="true" className="text-line">
+            /
+          </span>
+          <Link
+            href={`/categoria/${product.category}`}
+            className="truncate transition-colors duration-300 hover:text-ink"
+          >
+            {product.category}
+          </Link>
+          <span aria-hidden="true" className="text-line">
+            /
+          </span>
+          <span aria-current="page" className="truncate text-ink">
+            {product.name}
+          </span>
+        </nav>
       </div>
 
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10">
-        <div className="space-y-24 sm:space-y-32">
-          
-          {/* SEZIONE PRINCIPALE PRODOTTO */}
-          <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
-            
-            {/* Galleria Immagini */}
-            <div className="lg:col-span-7 lg:sticky lg:top-24">
-              <ProductGallery images={product.images} productName={product.name} />
+      {/* HERO: GALLERIA + PANNELLO ACQUISTO */}
+      <div className="mx-auto mt-8 max-w-[1280px] px-4 sm:mt-12 sm:px-6 lg:px-10">
+        <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
+          {/* Galleria: altezza limitata alla viewport, così sticky funziona */}
+          <div className="lg:sticky lg:top-28 lg:col-span-7">
+            <ProductGallery images={product.images} productName={product.name} />
+          </div>
+
+          {/* Pannello acquisto */}
+          <div className="flex flex-col lg:col-span-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                {product.brand}
+              </span>
+              {isDiscountActive && (
+                <span className="bg-grass px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                  -{product.discountPercent}%
+                </span>
+              )}
             </div>
 
-            {/* Informazioni e Acquisto */}
-            <div className="lg:col-span-5 flex flex-col">
-              <div className="flex items-center gap-4 mb-5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
-                  {product.brand}
-                </span>
-                {isDiscountActive && (
-                  <span className="bg-grass text-white text-[10px] font-medium px-2 py-1 uppercase tracking-widest">
-                    -{product.discountPercent}%
-                  </span>
+            <h1 className="mt-5 text-[clamp(1.75rem,2.6vw,2.75rem)] font-light leading-[1.08] tracking-tight text-ink">
+              {product.name}
+            </h1>
+
+            {(product.shortTitle || product.shortDescription) && (
+              <div className="mt-6 max-w-[46ch]">
+                {product.shortTitle && (
+                  <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                    {product.shortTitle}
+                  </h2>
+                )}
+                {product.shortDescription && (
+                  <p className="text-sm font-light leading-relaxed text-ink-soft sm:text-base">
+                    {product.shortDescription}
+                  </p>
                 )}
               </div>
+            )}
 
-              <h1 className="text-ink font-light text-3xl sm:text-4xl lg:text-5xl tracking-tight mb-8 leading-[1.1]">
-                {product.name}
-              </h1>
+            <div className="mt-8">
+              <AddToCartButton
+                variants={product.variants}
+                productSlug={product.slug}
+                productName={product.name}
+                discountPercent={isDiscountActive ? product.discountPercent : null}
+                productImage={product.images[0]}
+              />
+            </div>
 
-              {(product.shortTitle || product.shortDescription) && (
-                <div className="mb-10">
-                  {product.shortTitle && (
-                    <h2 className="text-ink font-medium text-sm uppercase tracking-wider mb-3">
-                      {product.shortTitle}
-                    </h2>
-                  )}
-                  {product.shortDescription && (
-                    <p className="text-ink-soft text-base font-light leading-relaxed">
-                      {product.shortDescription}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {(product.waterColumn || product.minTemp) && (
-                <div className="flex flex-wrap gap-10 py-6 border-y border-line/40 mb-10">
-                  {product.waterColumn && (
-                    <div>
-                      <div className="text-[10px] font-medium uppercase tracking-widest text-ink-soft mb-1">
-                        Colonna d&apos;acqua
-                      </div>
-                      <div className="text-lg font-light text-ink">
-                        {product.waterColumn} MM
-                      </div>
-                    </div>
-                  )}
-                  {product.minTemp && (
-                    <div>
-                      <div className="text-[10px] font-medium uppercase tracking-widest text-ink-soft mb-1">
-                        Temp. minima
-                      </div>
-                      <div className="text-lg font-light text-ink">
-                        {product.minTemp}°C
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="mb-12">
-                <AddToCartButton
-                  variants={product.variants}
-                  productSlug={product.slug}
-                  productName={product.name}
-                  discountPercent={isDiscountActive ? product.discountPercent : null}
-                  productImage={product.images[0]}
-                />
-              </div>
-
-              {/* Trust Badges - Minimalisti */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-line/40">
+            {/* Trust: righe compatte, non tre colonne */}
+            <ul className="mt-10 divide-y divide-line/50 border-t border-line/50">
+              <li className="flex items-start gap-3 py-3.5">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-grass-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <div>
-                  <p className="text-ink font-medium text-[11px] mb-1.5 uppercase tracking-widest">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                     Testato in Stalla
                   </p>
-                  <p className="text-ink-soft text-xs font-light leading-relaxed">
+                  <p className="mt-1 text-xs font-light leading-relaxed text-ink-soft">
                     Resistenza professionale per il campo.
                   </p>
                 </div>
+              </li>
+              <li className="flex items-start gap-3 py-3.5">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-grass-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 <div>
-                  <p className="text-ink font-medium text-[11px] mb-1.5 uppercase tracking-widest">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                     Reso Facile
                   </p>
-                  <p className="text-ink-soft text-xs font-light leading-relaxed">
+                  <p className="mt-1 text-xs font-light leading-relaxed text-ink-soft">
                     30 giorni per cambi o restituzioni.
                   </p>
                 </div>
+              </li>
+              <li className="flex items-start gap-3 py-3.5">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-grass-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h10v9H3zM13 10h4l3 3v3h-7zM7 19a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM17 19a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                </svg>
                 <div>
-                  <p className="text-ink font-medium text-[11px] mb-1.5 uppercase tracking-widest">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                     Spedizione
                   </p>
-                  <p className="text-ink-soft text-xs font-light leading-relaxed">
+                  <p className="mt-1 text-xs font-light leading-relaxed text-ink-soft">
                     Gratuita per ordini superiori a 99€.
                   </p>
                 </div>
-              </div>
-            </div>
+              </li>
+            </ul>
           </div>
-
-          {/* DETTAGLI TECNICI */}
-          {descriptionBlocks && descriptionBlocks.length > 0 && (
-            <section className="pt-24 border-t border-line/40">
-              <div className="mb-12 md:mb-16">
-                <p className="text-ink-soft text-[10px] font-semibold uppercase tracking-[0.2em] mb-4">
-                  Specifiche
-                </p>
-                <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
-                  Dettagli tecnici
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-12">
-                {descriptionBlocks.map((block, i) => (
-                  <div key={i}>
-                    {block.title && (
-                      <h3 className="text-ink font-medium text-sm uppercase tracking-wider mb-4">
-                        {block.title}
-                      </h3>
-                    )}
-                    <p className="text-ink-soft text-sm font-light leading-relaxed">
-                      {block.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* PRODOTTI CORRELATI - Stile coerente con CategoryPage */}
-          {relatedProducts.length > 0 && (
-            <section className="pt-24 border-t border-line/40">
-              <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-                <div>
-                  <p className="text-ink-soft text-[10px] font-semibold uppercase tracking-[0.2em] mb-4">
-                    Esplora
-                  </p>
-                  <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
-                    Completa l&apos;equipaggiamento
-                  </h2>
-                </div>
-                <Link
-                  href={`/categoria/${product.category}`}
-                  className="text-[10px] font-medium uppercase tracking-[0.2em] text-ink hover:text-grass transition-colors"
-                >
-                  Vedi categoria &rarr;
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-16">
-                {relatedProducts.map((relProduct) => {
-                  const minPriceCents =
-                    relProduct.variants && relProduct.variants.length > 0
-                      ? Math.min(...relProduct.variants.map((v) => v.priceCents))
-                      : 0;
-
-                  const isRelDiscountActive = Boolean(
-                    relProduct.discountPercent &&
-                      relProduct.discountPercent > 0 &&
-                      (!relProduct.discountUntil ||
-                        new Date(relProduct.discountUntil) > new Date())
-                  );
-
-                  const discountedPriceCents = isRelDiscountActive
-                    ? Math.round(
-                        (minPriceCents * (100 - relProduct.discountPercent!)) / 100
-                      )
-                    : minPriceCents;
-
-                  const formattedPrice = (discountedPriceCents / 100).toFixed(2);
-                  const formattedFullPrice = (minPriceCents / 100).toFixed(2);
-
-                  return (
-                    <Link
-                      key={relProduct.id}
-                      href={`/prodotto/${relProduct.slug}`}
-                      className="group flex flex-col"
-                    >
-                      <div className="aspect-[4/5] bg-paper relative w-full overflow-hidden mb-5">
-                        {relProduct.images[0] ? (
-                          <Image
-                            src={relProduct.images[0]}
-                            alt={relProduct.name}
-                            fill
-                            className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-in-out"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs uppercase tracking-widest font-light bg-line/10">
-                            Nessuna immagine
-                          </div>
-                        )}
-
-                        {isRelDiscountActive && (
-                          <span className="absolute top-4 left-4 bg-grass text-white text-[10px] sm:text-xs font-medium px-3 py-1.5 uppercase tracking-widest">
-                            -{relProduct.discountPercent}%
-                          </span>
-                        )}
-                        
-                        {relProduct.waterColumn && (
-                          <span className="absolute top-4 right-4 bg-ink/90 text-white text-[10px] font-medium px-2 py-1 uppercase tracking-widest backdrop-blur-sm">
-                            {relProduct.waterColumn}MM
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col flex-grow">
-                        <h3 className="text-sm font-medium text-ink mb-2 leading-snug group-hover:text-grass transition-colors">
-                          {relProduct.name}
-                        </h3>
-
-                        {relProduct.variants.length > 0 && (
-                          <div className="mt-auto pt-2 flex items-baseline gap-3">
-                            {isRelDiscountActive ? (
-                              <>
-                                <span className="font-medium text-sm text-grass">
-                                  €{formattedPrice}
-                                </span>
-                                <span className="text-xs text-ink-soft line-through">
-                                  €{formattedFullPrice}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="font-medium text-sm text-ink-soft">
-                                €{formattedPrice}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* RECENSIONI */}
-          <section className="pt-24 border-t border-line/40">
-            <ProductReviews productId={product.id} />
-          </section>
-          
         </div>
       </div>
+
+      {/* SPECS: strip full-bleed, fuori dal pannello acquisto */}
+      {(product.waterColumn || product.minTemp) && (
+        <section className="mt-16 border-y border-line/50 bg-paper-warm/60 sm:mt-20">
+          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
+            <dl className="grid grid-cols-1 divide-y divide-line/50 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+              {product.waterColumn && (
+                <div className="py-8 sm:py-10 sm:pr-12">
+                  <dt className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                    Colonna d&apos;acqua
+                  </dt>
+                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink sm:text-3xl">
+                    {product.waterColumn} MM
+                  </dd>
+                </div>
+              )}
+              {product.minTemp && (
+                <div className="py-8 sm:py-10 sm:pl-12">
+                  <dt className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                    Temp. minima
+                  </dt>
+                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink sm:text-3xl">
+                    {product.minTemp}°C
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        </section>
+      )}
+
+      {/* DETTAGLI TECNICI: righe numerate, non due colonne di testo */}
+      {descriptionBlocks && descriptionBlocks.length > 0 && (
+        <section className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 sm:pt-28 lg:px-10">
+          <div className="mb-10 sm:mb-14">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+              Specifiche
+            </p>
+            <h2 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
+              Dettagli tecnici
+            </h2>
+          </div>
+
+          <dl className="border-t border-line/50">
+            {descriptionBlocks.map((block, i) => (
+              <Reveal
+                key={i}
+                as="div"
+                delay={Math.min(i, 6) * 60}
+                className="grid gap-x-10 gap-y-3 border-b border-line/50 py-8 sm:grid-cols-12 sm:py-10"
+              >
+                <dt className="flex items-baseline gap-4 sm:col-span-4">
+                  <span className="text-[10px] font-semibold tabular-nums tracking-[0.2em] text-ink-soft">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {block.title && (
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">
+                      {block.title}
+                    </span>
+                  )}
+                </dt>
+                <dd className="text-sm font-light leading-relaxed text-ink-soft sm:col-span-8">
+                  {block.text}
+                </dd>
+              </Reveal>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      {/* PRODOTTI CORRELATI */}
+      {relatedProducts.length > 0 && (
+        <section className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 sm:pt-28 lg:px-10">
+          <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-14 md:flex-row md:items-end">
+            <div>
+              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                Esplora
+              </p>
+              <h2 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
+                Completa l&apos;equipaggiamento
+              </h2>
+            </div>
+            <Link
+              href={`/categoria/${product.category}`}
+              className="group inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink transition-colors duration-300 hover:text-grass-deep"
+            >
+              Vedi categoria
+              <svg
+                className="h-3 w-3 transition-transform duration-300 ease-out-expo group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-6 gap-y-14 lg:grid-cols-4 lg:gap-y-16">
+            {relatedProducts.map((relProduct, index) => {
+              const minPriceCents =
+                relProduct.variants && relProduct.variants.length > 0
+                  ? Math.min(...relProduct.variants.map((v) => v.priceCents))
+                  : 0;
+
+              const isRelDiscountActive = Boolean(
+                relProduct.discountPercent &&
+                  relProduct.discountPercent > 0 &&
+                  (!relProduct.discountUntil ||
+                    new Date(relProduct.discountUntil) > new Date())
+              );
+
+              return (
+                <Reveal key={relProduct.id} delay={Math.min(index, 3) * 70} className="h-full">
+                  <ProductCard
+                    name={relProduct.name}
+                    slug={relProduct.slug}
+                    image={relProduct.images[0]}
+                    priceCents={minPriceCents}
+                    discountPercent={relProduct.discountPercent}
+                    isDiscountActive={isRelDiscountActive}
+                    waterColumn={relProduct.waterColumn}
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
+                  />
+                </Reveal>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* RECENSIONI */}
+      <section className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 sm:pt-28 lg:px-10">
+        <ProductReviews productId={product.id} />
+      </section>
     </main>
   );
 }

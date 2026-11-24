@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import Image from "next/image";
+import ProductCard from "@/components/product/ProductCard";
+import Reveal from "@/components/motion/Reveal";
 
 export default async function Home() {
   const featuredProducts = await prisma.product.findMany({
@@ -11,9 +13,9 @@ export default async function Home() {
   });
 
   return (
-    <main className="bg-paper min-h-screen text-ink selection:bg-grass selection:text-white">
+    <main className="min-h-screen bg-paper text-ink">
       {/* HERO SECTION */}
-      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="relative flex h-[80svh] min-h-[560px] items-center justify-center overflow-hidden">
         <Image
           src="/allevatore_che_indossa_giacca_lunga_impermeabile_uragan_tex.jpg"
           alt="Abbigliamento impermeabile Uragan-Tex"
@@ -25,64 +27,91 @@ export default async function Home() {
         <div className="absolute inset-0 bg-ink/60" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
 
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6 flex flex-col items-center mt-12">
-          <p className="text-white/80 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] mb-6">
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 text-center sm:px-6">
+          <p className="mb-6 animate-fade-up text-[10px] font-semibold uppercase tracking-[0.24em] text-white/80 sm:text-xs">
             Uragan-Tex · Bisont
           </p>
-          
-          <h1 className="text-white font-medium text-4xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-8">
+
+          <h1 className="mb-8 animate-fade-up text-4xl font-light leading-[1.05] tracking-tight text-white [animation-delay:80ms] sm:text-6xl lg:text-7xl">
             Testati in stalla, <br />
-            <span className="font-light italic text-white/90">non in laboratorio.</span>
+            <span className="italic text-white/90">non in laboratorio.</span>
           </h1>
-          
-          <p className="text-white/70 text-base sm:text-lg max-w-2xl mx-auto mb-10 font-light leading-relaxed">
+
+          <p className="mx-auto mb-10 max-w-2xl animate-fade-up text-base font-light leading-relaxed text-white/70 [animation-delay:160ms] sm:text-lg">
             Abbigliamento impermeabile e stivali termici progettati per la routine quotidiana tra pioggia, fango e freddo. Scelti dai veri professionisti del settore agricolo.
           </p>
-          
+
           <Link
             href="/categoria/abbigliamento"
-            className="inline-flex items-center justify-center bg-white text-ink hover:bg-grass hover:text-white font-medium text-sm px-8 py-4 transition-colors duration-300 uppercase tracking-widest"
+            className="group inline-flex animate-fade-up items-center justify-center gap-3 bg-white px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-colors duration-300 ease-out-expo [animation-delay:240ms] hover:bg-grass hover:text-white"
           >
             Esplora la collezione
+            <svg
+              className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
           </Link>
         </div>
       </section>
 
       {/* GAMMA PRODOTTI */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-24 sm:py-32">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 border-b border-line/40 pb-6">
+      <section className="mx-auto max-w-[1280px] px-4 py-24 sm:px-6 sm:py-32 lg:px-10">
+        <div className="mb-16 flex flex-col justify-between gap-6 border-b border-line/50 pb-6 md:flex-row md:items-end">
           <div>
-            <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
+            <h2 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
               Le nostre categorie
             </h2>
           </div>
-          <p className="text-ink-soft text-sm uppercase tracking-widest">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
             Equipaggiamento tecnico
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
           <Link href="/categoria/abbigliamento" className="group block">
-            <div className="border-t border-line pt-6 transition-colors duration-300 group-hover:border-grass">
-              <h3 className="text-ink font-medium text-xl mb-3 group-hover:text-grass transition-colors">Abbigliamento Impermeabile</h3>
-              <p className="text-ink-soft text-sm font-light leading-relaxed mb-6">Giacche, salopette e mantelle ad alta tenacità. Progettate per isolare completamente dall&apos;acqua.</p>
-              <span className="text-xs font-medium uppercase tracking-widest text-ink group-hover:text-grass transition-colors">Scopri i capi &rarr;</span>
+            <div className="border-t border-line pt-6 transition-colors duration-300 ease-out-expo group-hover:border-grass">
+              <span className="mb-4 block text-[10px] font-medium tabular-nums tracking-[0.2em] text-ink-soft">01</span>
+              <h3 className="mb-3 text-xl font-medium text-ink transition-colors duration-300 group-hover:text-grass-deep">Abbigliamento Impermeabile</h3>
+              <p className="mb-6 text-sm font-light leading-relaxed text-ink-soft">Giacche, salopette e mantelle ad alta tenacità. Progettate per isolare completamente dall&apos;acqua.</p>
+              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink transition-colors duration-300 group-hover:text-grass-deep">
+                Scopri i capi
+                <svg className="h-3 w-3 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
             </div>
           </Link>
 
           <Link href="/categoria/stivali" className="group block">
-            <div className="border-t border-line pt-6 transition-colors duration-300 group-hover:border-grass">
-              <h3 className="text-ink font-medium text-xl mb-3 group-hover:text-grass transition-colors">Stivali e Calzature</h3>
-              <p className="text-ink-soft text-sm font-light leading-relaxed mb-6">Stivali termici e scarponi con isolamento dal freddo e suole profilate per la massima aderenza.</p>
-              <span className="text-xs font-medium uppercase tracking-widest text-ink group-hover:text-grass transition-colors">Scopri i modelli &rarr;</span>
+            <div className="border-t border-line pt-6 transition-colors duration-300 ease-out-expo group-hover:border-grass">
+              <span className="mb-4 block text-[10px] font-medium tabular-nums tracking-[0.2em] text-ink-soft">02</span>
+              <h3 className="mb-3 text-xl font-medium text-ink transition-colors duration-300 group-hover:text-grass-deep">Stivali e Calzature</h3>
+              <p className="mb-6 text-sm font-light leading-relaxed text-ink-soft">Stivali termici e scarponi con isolamento dal freddo e suole profilate per la massima aderenza.</p>
+              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink transition-colors duration-300 group-hover:text-grass-deep">
+                Scopri i modelli
+                <svg className="h-3 w-3 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
             </div>
           </Link>
 
           <Link href="/categoria/attrezzature" className="group block">
-            <div className="border-t border-line pt-6 transition-colors duration-300 group-hover:border-grass">
-              <h3 className="text-ink font-medium text-xl mb-3 group-hover:text-grass transition-colors">Attrezzature e Accessori</h3>
-              <p className="text-ink-soft text-sm font-light leading-relaxed mb-6">Strumenti robusti e accessori complementari, pensati per resistere all&apos;usura del lavoro quotidiano.</p>
-              <span className="text-xs font-medium uppercase tracking-widest text-ink group-hover:text-grass transition-colors">Vedi attrezzature &rarr;</span>
+            <div className="border-t border-line pt-6 transition-colors duration-300 ease-out-expo group-hover:border-grass">
+              <span className="mb-4 block text-[10px] font-medium tabular-nums tracking-[0.2em] text-ink-soft">03</span>
+              <h3 className="mb-3 text-xl font-medium text-ink transition-colors duration-300 group-hover:text-grass-deep">Attrezzature e Accessori</h3>
+              <p className="mb-6 text-sm font-light leading-relaxed text-ink-soft">Strumenti robusti e accessori complementari, pensati per resistere all&apos;usura del lavoro quotidiano.</p>
+              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink transition-colors duration-300 group-hover:text-grass-deep">
+                Vedi attrezzature
+                <svg className="h-3 w-3 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </span>
             </div>
           </Link>
         </div>
@@ -101,8 +130,8 @@ export default async function Home() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-              {featuredProducts.map((product) => {
+            <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4">
+              {featuredProducts.map((product, index) => {
                 const minPriceCents = product.variants?.length > 0
                     ? Math.min(...product.variants.map((v) => v.priceCents))
                     : 0;
@@ -112,51 +141,24 @@ export default async function Home() {
                   (!product.discountUntil || new Date(product.discountUntil) > new Date())
                 );
 
-                const discountedPriceCents = isDiscountActive
-                  ? Math.round((minPriceCents * (100 - product.discountPercent!)) / 100)
-                  : minPriceCents;
-
                 return (
-                  <Link key={product.id} href={`/prodotto/${product.slug}`} className="group flex flex-col">
-                    <div className="aspect-[4/5] bg-paper-warm relative w-full overflow-hidden mb-5 rounded-md">
-                      {product.images[0] ? (
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          fill
-                          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
-                          className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-ink-soft text-xs">No img</div>
-                      )}
-
-                      {isDiscountActive && (
-                        <span className="absolute top-4 left-4 bg-grass text-white text-xs font-medium px-3 py-1.5 uppercase tracking-widest">
-                          -{product.discountPercent}%
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col flex-grow">
-                      <h3 className="text-sm font-medium text-ink mb-2 leading-snug group-hover:text-grass transition-colors">
-                        {product.name}
-                      </h3>
-                      
-                      {product.variants.length > 0 && (
-                        <div className="mt-auto pt-2 flex items-baseline gap-3">
-                          {isDiscountActive ? (
-                            <>
-                              <span className="font-medium text-sm text-grass">€{(discountedPriceCents / 100).toFixed(2)}</span>
-                              <span className="text-xs text-ink-soft line-through">€{(minPriceCents / 100).toFixed(2)}</span>
-                            </>
-                          ) : (
-                            <span className="font-medium text-sm text-ink-soft">€{(discountedPriceCents / 100).toFixed(2)}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                  <Reveal
+                    key={product.id}
+                    delay={Math.min(index, 3) * 70}
+                    className="h-full"
+                  >
+                    <ProductCard
+                      name={product.name}
+                      slug={product.slug}
+                      image={product.images[0]}
+                      priceCents={minPriceCents}
+                      discountPercent={product.discountPercent}
+                      isDiscountActive={isDiscountActive}
+                      waterColumn={product.waterColumn}
+                      priority={index < 2}
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
+                    />
+                  </Reveal>
                 );
               })}
             </div>
@@ -165,94 +167,89 @@ export default async function Home() {
       )}
 
       {/* SOCIAL PROOF */}
-      <section className="relative py-32 sm:py-40 overflow-hidden flex items-center justify-center transform-gpu">
+      <section className="relative flex items-center justify-center overflow-hidden py-32 sm:py-40">
         <Image
-          src="/allevatore_che_indossa_giacca_lunga_impermeabile_uragan_tex.jpg" 
+          src="/allevatore_che_indossa_giacca_lunga_impermeabile_uragan_tex.jpg"
           alt="Lavoro sul campo"
           fill
           sizes="100vw"
-          className="object-cover object-center"
+          className="scale-105 object-cover object-[center_72%]"
         />
-        <div className="absolute inset-0 bg-[#1A2E1F]/70" />
+        <div className="absolute inset-0 bg-ink/80" />
 
-        <div className="relative z-10 max-w-3xl mx-auto px-4 text-center text-white">
-          <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.2em] mb-10">L&apos;esperienza di chi lavora</p>
-          <blockquote className="text-2xl sm:text-4xl font-light leading-relaxed mb-10 italic">
+        <Reveal
+          variant="fade"
+          className="relative z-10 mx-auto max-w-3xl px-4 text-center text-white"
+        >
+          <p className="mb-10 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">L&apos;esperienza di chi lavora</p>
+          <blockquote className="mb-10 text-2xl font-light italic leading-relaxed sm:text-4xl">
             &ldquo;La salopette la indosso ogni mattina per la mungitura. Dopo un anno di fango e lavaggi continui, è ancora impermeabile come il primo giorno.&rdquo;
           </blockquote>
-          <p className="text-white text-sm uppercase tracking-widest font-medium">— Cliente MyGesp</p>
-        </div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white">— Cliente MyGesp</p>
+        </Reveal>
       </section>
 
-      {/* PERCHÉ SCEGLIERCI E FAQ (RIPRISTINATO E OTTIMIZZATO) */}
-      <section className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-10 py-24 sm:py-32 grid lg:grid-cols-2 gap-16 lg:gap-24">
-        
+      {/* PERCHÉ SCEGLIERCI E FAQ */}
+      <section className="mx-auto grid max-w-[1280px] gap-16 px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-2 lg:gap-24 lg:px-10">
+
         {/* Colonna Sinistra: Perché Sceglierci */}
         <div>
-          <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight mb-10">I nostri standard</h2>
+          <h2 className="mb-10 text-3xl font-light tracking-tight text-ink sm:text-4xl">I nostri standard</h2>
           <div className="space-y-8">
-            <div className="border-t border-line/40 pt-6">
-              <h3 className="text-ink font-medium text-lg mb-2">100% Impermeabili</h3>
-              <p className="text-ink-soft text-sm font-light leading-relaxed">Cuciture termonastrate e materiali idrorepellenti ad alta densità per garantirti di restare asciutto anche sotto piogge torrenziali e getti d&apos;acqua ad alta pressione.</p>
+            <div className="border-t border-line/50 pt-6">
+              <h3 className="mb-2 text-lg font-medium text-ink">100% Impermeabili</h3>
+              <p className="text-sm font-light leading-relaxed text-ink-soft">Cuciture termonastrate e materiali idrorepellenti ad alta densità per garantirti di restare asciutto anche sotto piogge torrenziali e getti d&apos;acqua ad alta pressione.</p>
             </div>
-            <div className="border-t border-line/40 pt-6">
-              <h3 className="text-ink font-medium text-lg mb-2">Resistenza Agricola</h3>
-              <p className="text-ink-soft text-sm font-light leading-relaxed">Progettati per non strapparsi al primo contatto con recinzioni, macchinari o animali. Usiamo tessuti antistrappo che durano anni, non mesi.</p>
+            <div className="border-t border-line/50 pt-6">
+              <h3 className="mb-2 text-lg font-medium text-ink">Resistenza Agricola</h3>
+              <p className="text-sm font-light leading-relaxed text-ink-soft">Progettati per non strapparsi al primo contatto con recinzioni, macchinari o animali. Usiamo tessuti antistrappo che durano anni, non mesi.</p>
             </div>
-            <div className="border-t border-line/40 pt-6">
-              <h3 className="text-ink font-medium text-lg mb-2">Comfort e Mobilità</h3>
-              <p className="text-ink-soft text-sm font-light leading-relaxed">Materiali che bloccano il vento gelido invernale ma garantiscono una vestibilità comoda, pensata per indossare strati termici sottostanti senza limitare i movimenti lavorativi.</p>
+            <div className="border-t border-line/50 pt-6">
+              <h3 className="mb-2 text-lg font-medium text-ink">Comfort e Mobilità</h3>
+              <p className="text-sm font-light leading-relaxed text-ink-soft">Materiali che bloccano il vento gelido invernale ma garantiscono una vestibilità comoda, pensata per indossare strati termici sottostanti senza limitare i movimenti lavorativi.</p>
             </div>
           </div>
         </div>
 
         {/* Colonna Destra: FAQ Zero-JS */}
         <div>
-          <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight mb-10">Domande frequenti</h2>
-          <div className="space-y-4">
-            
-            <details className="group border-b border-line/40 pb-4 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer items-center justify-between gap-1.5 text-ink font-medium">
-                Come scelgo la taglia corretta?
-                <span className="shrink-0 transition-transform duration-300 group-open:-rotate-180 text-grass">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </summary>
-              <p className="mt-4 leading-relaxed text-ink-soft text-sm font-light">
-                I nostri capi protettivi vestono generalmente comodi per permettere di indossare felpe o maglioni pesanti al di sotto. Ti consigliamo di acquistare la tua taglia abituale.
-              </p>
-            </details>
-
-            <details className="group border-b border-line/40 pb-4 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer items-center justify-between gap-1.5 text-ink font-medium">
-                Come posso lavare i capi in Uragan-Tex?
-                <span className="shrink-0 transition-transform duration-300 group-open:-rotate-180 text-grass">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </summary>
-              <p className="mt-4 leading-relaxed text-ink-soft text-sm font-light">
-                Per mantenere inalterata l&apos;impermeabilità, consigliamo un lavaggio a mano con semplice spugna e acqua. Se necessario, è possibile il lavaggio in lavatrice a massimo 30°C senza centrifuga. Non utilizzare mai ammorbidenti o asciugatrice.
-              </p>
-            </details>
-
-            <details className="group border-b border-line/40 pb-4 [&_summary::-webkit-details-marker]:hidden">
-              <summary className="flex cursor-pointer items-center justify-between gap-1.5 text-ink font-medium">
-                Effettuate spedizioni in tutta Italia?
-                <span className="shrink-0 transition-transform duration-300 group-open:-rotate-180 text-grass">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </span>
-              </summary>
-              <p className="mt-4 leading-relaxed text-ink-soft text-sm font-light">
-                Assolutamente sì. Affidiamo le nostre spedizioni ai migliori corrieri nazionali per garantire consegne rapide in 24/48 ore lavorative in tutta la penisola e isole maggiori.
-              </p>
-            </details>
-
+          <h2 className="mb-10 text-3xl font-light tracking-tight text-ink sm:text-4xl">Domande frequenti</h2>
+          <div>
+            {[
+              {
+                question: "Come scelgo la taglia corretta?",
+                answer:
+                  "I nostri capi protettivi vestono generalmente comodi per permettere di indossare felpe o maglioni pesanti al di sotto. Ti consigliamo di acquistare la tua taglia abituale.",
+              },
+              {
+                question: "Come posso lavare i capi in Uragan-Tex?",
+                answer:
+                  "Per mantenere inalterata l'impermeabilità, consigliamo un lavaggio a mano con semplice spugna e acqua. Se necessario, è possibile il lavaggio in lavatrice a massimo 30°C senza centrifuga. Non utilizzare mai ammorbidenti o asciugatrice.",
+              },
+              {
+                question: "Effettuate spedizioni in tutta Italia?",
+                answer:
+                  "Assolutamente sì. Affidiamo le nostre spedizioni ai migliori corrieri nazionali per garantire consegne rapide in 24/48 ore lavorative in tutta la penisola e isole maggiori.",
+              },
+            ].map((faq) => (
+              <details key={faq.question} className="group border-b border-line/50 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer items-center justify-between gap-4 py-5 text-ink transition-colors duration-300 hover:text-grass-deep">
+                  <span className="text-[13px] font-medium leading-snug">{faq.question}</span>
+                  <span className="shrink-0 text-grass-deep transition-transform duration-300 ease-out-expo group-open:-rotate-180">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 9l6 6 6-6" />
+                    </svg>
+                  </span>
+                </summary>
+                <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out-expo group-open:grid-rows-[1fr]">
+                  <div className="overflow-hidden">
+                    <p className="pb-5 pr-8 text-sm font-light leading-relaxed text-ink-soft">
+                      {faq.answer}
+                    </p>
+                  </div>
+                </div>
+              </details>
+            ))}
           </div>
         </div>
       </section>

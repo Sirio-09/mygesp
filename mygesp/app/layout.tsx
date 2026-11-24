@@ -9,7 +9,7 @@ import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-sans",
 });
 
@@ -58,16 +58,16 @@ export default function RootLayout({
           position="bottom-right"
           toastOptions={{
             style: {
-              background: "#ffffff",
-              color: "#111111",
-              border: "1px solid #e5e5e0",
+              background: "#FFFFFF",
+              color: "#22281F",
+              border: "1px solid #E2E0D5",
               borderRadius: "0px",
               fontFamily: "var(--font-sans), sans-serif",
-              fontSize: "12px",
+              fontSize: "11px",
               fontWeight: "600",
               textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              boxShadow: "none",
+              letterSpacing: "0.14em",
+              boxShadow: "0 18px 40px -24px rgba(34, 40, 31, 0.45)",
             },
           }}
         />

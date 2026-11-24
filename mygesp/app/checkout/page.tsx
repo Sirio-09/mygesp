@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useCartStore } from '@/lib/cart-store'
 import type { CartItem } from '@/lib/cart-store'
 
@@ -72,20 +73,23 @@ export default function CheckoutPage() {
 
   if (!mounted) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-paper-warm/20">
-        <div className="animate-spin w-8 h-8 border-4 border-line border-t-grass rounded-full mb-4"></div>
-        <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">Preparazione checkout sicuro...</p>
+      <main className="flex min-h-[70vh] flex-col items-center justify-center bg-paper">
+        <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-line border-t-grass-deep"></div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">Preparazione checkout sicuro...</p>
       </main>
     )
   }
 
   if (items.length === 0) {
     return (
-      <main className="max-w-[800px] mx-auto px-4 py-20 text-center space-y-6">
-        <h1 className="text-3xl font-black uppercase text-ink">Nessun articolo da pagare</h1>
-        <p className="text-sm text-ink-soft">Il tuo carrello è vuoto. Aggiungi i prodotti prima di procedere al checkout.</p>
-        <Link href="/prodotti" className="inline-block bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-4 px-8 rounded-md transition-colors shadow-md">
+      <main className="mx-auto max-w-[720px] space-y-6 px-4 py-24 text-center text-ink">
+        <h1 className="text-3xl font-light tracking-tight">Nessun articolo da pagare</h1>
+        <p className="text-sm font-light text-ink-soft">Il tuo carrello è vuoto. Aggiungi i prodotti prima di procedere al checkout.</p>
+        <Link href="/prodotti" className="group inline-flex items-center gap-3 bg-ink px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass">
           Torna allo Shop
+          <svg className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
         </Link>
       </main>
     )
@@ -93,67 +97,132 @@ export default function CheckoutPage() {
 
   const finalTotalCents = subtotalCents + (shippingEstimate ?? 0)
 
+  const labelClass =
+    "mb-2 block text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft"
+  const fieldClass =
+    "w-full border border-line bg-paper px-4 py-3 text-sm text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/60 focus:border-ink"
+
   return (
-    <main className="min-h-screen bg-paper-warm/20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
-        
-        <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-ink">Checkout Sicuro</h1>
-          <div className="flex items-center justify-center gap-2 mt-3 text-grass-deep text-xs font-bold uppercase tracking-widest">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+    <main className="min-h-screen bg-paper text-ink">
+      <div className="mx-auto max-w-[1120px] px-4 py-14 sm:px-6 sm:py-20">
+
+        <header className="mb-12 border-b border-line/50 pb-8">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+            Pagamento
+          </p>
+          <h1 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
+            Checkout Sicuro
+          </h1>
+          <div className="mt-4 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-grass-deep">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
             Crittografia SSL a 256-bit
           </div>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-12">
+
           {/* Colonna Modulo */}
-          <div className="lg:col-span-7 space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              
-              <div className="bg-white border border-line rounded-xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-lg font-black uppercase text-ink mb-6 flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-grass text-white flex items-center justify-center text-xs">1</span>
+          <div className="lg:col-span-7">
+            <form onSubmit={handleSubmit} className="space-y-8">
+
+              <section>
+                <h2 className="mb-6 flex items-center gap-3 border-b border-line/50 pb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] font-semibold tabular-nums text-white">1</span>
                   Contatti
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink">Nome e Cognome</label>
-                    <input type="text" required placeholder="Mario Rossi" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-line px-4 py-3 text-sm focus:border-grass focus:ring-1 focus:ring-grass outline-none rounded-md transition-all" />
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="checkout-name" className={labelClass}>Nome e Cognome</label>
+                    <input
+                      id="checkout-name"
+                      type="text"
+                      required
+                      autoComplete="name"
+                      placeholder="Mario Rossi"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className={fieldClass}
+                    />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink">Email</label>
-                    <input type="email" required placeholder="mario@esempio.it" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-line px-4 py-3 text-sm focus:border-grass focus:ring-1 focus:ring-grass outline-none rounded-md transition-all" />
+                  <div>
+                    <label htmlFor="checkout-email" className={labelClass}>Email</label>
+                    <input
+                      id="checkout-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      inputMode="email"
+                      placeholder="mario@esempio.it"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={fieldClass}
+                    />
                   </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="bg-white border border-line rounded-xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-lg font-black uppercase text-ink mb-6 flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-full bg-grass text-white flex items-center justify-center text-xs">2</span>
+              <section>
+                <h2 className="mb-6 flex items-center gap-3 border-b border-line/50 pb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] font-semibold tabular-nums text-white">2</span>
                   Indirizzo di Spedizione
                 </h2>
                 <div className="space-y-5">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-ink">Indirizzo e N° Civico</label>
-                    <input type="text" required placeholder="Via Roma 10" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full border border-line px-4 py-3 text-sm focus:border-grass focus:ring-1 focus:ring-grass outline-none rounded-md transition-all" />
+                  <div>
+                    <label htmlFor="checkout-address" className={labelClass}>Indirizzo e N° Civico</label>
+                    <input
+                      id="checkout-address"
+                      type="text"
+                      required
+                      autoComplete="street-address"
+                      placeholder="Via Roma 10"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className={fieldClass}
+                    />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-ink">Città</label>
-                      <input type="text" required placeholder="Milano" value={city} onChange={(e) => setCity(e.target.value)} className="w-full border border-line px-4 py-3 text-sm focus:border-grass focus:ring-1 focus:ring-grass outline-none rounded-md transition-all" />
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="checkout-city" className={labelClass}>Città</label>
+                      <input
+                        id="checkout-city"
+                        type="text"
+                        required
+                        autoComplete="address-level2"
+                        placeholder="Milano"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        className={fieldClass}
+                      />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-ink">CAP <span className="text-grass-deep lowercase text-[10px] ml-1">(calcola spedizione)</span></label>
-                      <input type="text" required maxLength={5} placeholder="20100" value={cap} onChange={(e) => setCap(e.target.value.replace(/\D/g, ''))} className="w-full border border-line px-4 py-3 text-sm font-bold text-ink focus:border-grass focus:ring-1 focus:ring-grass outline-none rounded-md transition-all" />
+                    <div>
+                      <label htmlFor="checkout-cap" className={labelClass}>
+                        CAP
+                        <span className="ml-2 font-normal normal-case tracking-normal text-grass-deep">(calcola spedizione)</span>
+                      </label>
+                      <input
+                        id="checkout-cap"
+                        type="text"
+                        required
+                        maxLength={5}
+                        autoComplete="postal-code"
+                        inputMode="numeric"
+                        placeholder="20100"
+                        value={cap}
+                        onChange={(e) => setCap(e.target.value.replace(/\D/g, ''))}
+                        className={`${fieldClass} tabular-nums`}
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
+              </section>
 
               {error && (
-                <div className="p-4 bg-soil-deep/10 border border-soil-deep/20 text-soil-deep text-sm font-semibold rounded-lg flex items-start gap-3">
-                  <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div className="flex items-start gap-3 border-l-2 border-soil-deep bg-soil-deep/5 p-4 text-sm text-soil-deep">
+                  <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   {error}
                 </div>
               )}
@@ -161,75 +230,97 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-ink hover:bg-black text-white font-black text-sm uppercase tracking-widest py-5 px-6 rounded-lg transition-all shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                className="group flex w-full items-center justify-center gap-3 bg-ink px-6 py-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white transition-colors duration-300 ease-out-expo hover:bg-grass disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? 'Elaborazione...' : 'Procedi al Pagamento Sicuro'}
-                {!loading && <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>}
+                {!loading && (
+                  <svg className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                )}
               </button>
             </form>
           </div>
 
           {/* Colonna Riepilogo */}
-          <div className="lg:col-span-5">
-            <div className="bg-white border border-line rounded-xl p-6 sm:p-8 sticky top-24 shadow-sm">
-              <h2 className="text-lg font-black uppercase text-ink border-b border-line pb-4 mb-6">
+          <aside className="lg:col-span-5">
+            <div className="sticky top-28 border border-line/70 bg-paper-warm/40 p-6 sm:p-7">
+              <h2 className="mb-6 border-b border-line/70 pb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
                 Riepilogo Ordine
               </h2>
 
-              <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-line">
-                {items.map((item: any) => (
-                  <div key={item.variantId} className="flex gap-4 text-sm">
-                    <div className="w-16 h-16 bg-paper-warm rounded border border-line shrink-0 flex items-center justify-center text-[10px] text-ink-soft">
-                      {/* Qui ci andrebbe l'immagine se disponibile */}
-                      {item.quantity}x
+              <ul className="no-scrollbar mb-6 max-h-[320px] space-y-5 overflow-y-auto pr-1">
+                {items.map((item: CartItem) => (
+                  <li key={item.variantId} className="flex gap-4">
+                    <div className="relative aspect-[4/5] w-14 shrink-0 overflow-hidden bg-paper">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.productName}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-[8px] font-medium uppercase tracking-[0.14em] text-ink-soft/60">
+                          N/D
+                        </span>
+                      )}
+                      <span className="absolute bottom-0 right-0 bg-ink px-1 text-[9px] font-semibold tabular-nums text-white">
+                        {item.quantity}
+                      </span>
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-ink line-clamp-2">{item.productName}</p>
-                      <p className="text-xs text-ink-soft mt-1">Taglia: {item.size}</p>
+                      <p className="line-clamp-2 text-[13px] font-medium leading-snug text-ink">{item.productName}</p>
+                      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-soft">Taglia: {item.size}</p>
                     </div>
-                    <p className="font-black text-ink">
+                    <p className="text-[13px] font-medium tabular-nums text-ink">
                       {(((item.priceCents || 0) * item.quantity) / 100).toFixed(2)} €
                     </p>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
 
-              <div className="space-y-3 text-sm border-t border-line pt-6">
-                <div className="flex justify-between text-ink-soft font-medium">
-                  <span>Subtotale</span>
-                  <span className="text-ink">{(subtotalCents / 100).toFixed(2)} €</span>
+              <dl className="space-y-3 border-t border-line/70 pt-6 text-sm">
+                <div className="flex justify-between text-ink-soft">
+                  <dt className="font-light">Subtotale</dt>
+                  <dd className="font-medium tabular-nums text-ink">{(subtotalCents / 100).toFixed(2)} €</dd>
                 </div>
 
-                <div className="flex justify-between items-center text-ink-soft font-medium">
-                  <span>Spedizione</span>
-                  <span>
+                <div className="flex items-center justify-between text-ink-soft">
+                  <dt className="font-light">Spedizione</dt>
+                  <dd>
                     {isFreeShipping ? (
-                      <strong className="text-grass-deep font-bold uppercase tracking-wider text-xs bg-grass/10 px-2 py-1 rounded">Gratuita</strong>
+                      <span className="bg-grass/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-grass-deep">Gratuita</span>
                     ) : shippingEstimate !== null ? (
-                      <span className="text-ink">{(shippingEstimate / 100).toFixed(2)} €</span>
+                      <span className="font-medium tabular-nums text-ink">{(shippingEstimate / 100).toFixed(2)} €</span>
                     ) : (
-                      <span className="text-[10px] uppercase tracking-wider text-ink-soft italic">Calcolata con CAP</span>
+                      <span className="text-[10px] uppercase tracking-[0.14em] text-ink-soft">Calcolata con CAP</span>
                     )}
-                  </span>
+                  </dd>
                 </div>
 
-                <div className="flex justify-between items-end border-t border-line pt-4 mt-4">
-                  <span className="font-bold uppercase tracking-wider text-ink text-xs">Da pagare</span>
-                  <span className="text-3xl font-black text-ink leading-none">{(finalTotalCents / 100).toFixed(2)} €</span>
+                <div className="mt-4 flex items-end justify-between border-t border-line/70 pt-4">
+                  <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">Da pagare</dt>
+                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink">{(finalTotalCents / 100).toFixed(2)} €</dd>
                 </div>
-              </div>
-              
-              <div className="mt-8 pt-6 border-t border-line border-dashed">
-                <p className="text-[10px] text-ink-soft uppercase tracking-widest text-center font-bold mb-4">Pagamenti accettati</p>
-                <div className="flex justify-center gap-3 opacity-50 grayscale hover:grayscale-0 transition-all">
-                   {/* Sostituisci con icone vere di Stripe, Visa, MC, Apple Pay */}
-                   <div className="h-6 w-10 bg-line rounded"></div>
-                   <div className="h-6 w-10 bg-line rounded"></div>
-                   <div className="h-6 w-10 bg-line rounded"></div>
+              </dl>
+
+              <div className="mt-8 border-t border-dashed border-line pt-6">
+                <p className="mb-4 text-center text-[9px] font-semibold uppercase tracking-[0.2em] text-ink-soft">Pagamenti accettati</p>
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-ink-soft">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em]">Carte di credito</span>
+                  <span className="h-3 w-px bg-line" aria-hidden="true" />
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em]">Apple Pay</span>
+                  <span className="h-3 w-px bg-line" aria-hidden="true" />
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.14em]">Google Pay</span>
                 </div>
               </div>
             </div>
-          </div>
+          </aside>
 
         </div>
       </div>
