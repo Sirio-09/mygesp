@@ -151,21 +151,45 @@ export default function ProductReviews({ productId }: { productId: string }) {
     });
   }, [reviews, sortBy]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <section aria-busy="true" aria-label="Caricamento recensioni">
+        {/* Riserva lo spazio: senza skeleton la sezione compariva spingendo il footer */}
+        <div className="mb-10 sm:mb-14">
+          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+            Cosa ne pensano
+          </p>
+          <h2 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
+            Recensioni
+          </h2>
+        </div>
+
+        <div className="mb-10 grid items-start gap-12 sm:mb-14 lg:grid-cols-12 lg:gap-20">
+          <div className="space-y-4 lg:col-span-7">
+            <div className="h-16 w-48 animate-pulse bg-line/40" />
+            <div className="h-1 w-full max-w-sm animate-pulse bg-line/40" />
+            <div className="h-1 w-full max-w-sm animate-pulse bg-line/40" />
+            <div className="h-1 w-full max-w-sm animate-pulse bg-line/40" />
+          </div>
+          <div className="h-40 border border-line/50 lg:col-span-5" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section>
       {/* HEADER SEZIONE */}
-      <div className="mb-12 md:mb-16">
-        <p className="text-ink-soft text-[10px] font-semibold uppercase tracking-[0.2em] mb-4">
+      <div className="mb-10 sm:mb-14">
+        <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
           Cosa ne pensano
         </p>
-        <h2 className="text-ink font-light text-3xl sm:text-4xl tracking-tight">
+        <h2 className="text-3xl font-light tracking-tight text-ink sm:text-4xl">
           Recensioni
         </h2>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-12 lg:gap-20 items-start mb-16">
+      <div className="mb-10 grid items-start gap-12 sm:mb-14 lg:grid-cols-12 lg:gap-20">
         {/* COLONNA SINISTRA: STATISTICHE */}
         <div className="lg:col-span-7">
           {average ? (
@@ -223,10 +247,10 @@ export default function ProductReviews({ productId }: { productId: string }) {
 
         {/* COLONNA DESTRA: AZIONI / FORM */}
         <div className="lg:col-span-5">
-          <div className="border border-line/40 p-6 sm:p-8 bg-paper">
+          <div className="border border-line/50 bg-paper p-6 sm:p-8">
             {showForm ? (
               <form onSubmit={handleSubmit}>
-                <h3 className="text-[11px] font-semibold text-ink uppercase tracking-[0.2em] mb-6">
+                <h3 className="mb-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                   Scrivi una recensione
                 </h3>
 
@@ -297,7 +321,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               </form>
             ) : (
               <div className="flex flex-col items-start gap-4">
-                <h3 className="text-[11px] font-semibold text-ink uppercase tracking-[0.2em] mb-2">
+                <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                   La tua opinione
                 </h3>
                 
@@ -343,7 +367,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
       {reviews.length > 0 && (
         <div>
           {/* BARRA ORDINAMENTO */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-line/40 mb-8">
+          <div className="mb-8 flex flex-col justify-between gap-4 border-b border-line/50 pb-4 sm:flex-row sm:items-center">
             <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
               {totalReviews} Recension{totalReviews === 1 ? "e" : "i"}
             </span>
@@ -376,7 +400,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
           </div>
 
           {/* LISTA */}
-          <div className="divide-y divide-line/40">
+          <div className="divide-y divide-line/50">
             {sortedReviews.map((review) => (
               <div key={review.id} className="py-8 first:pt-0">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
@@ -403,7 +427,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
                   </span>
                 </div>
                 
-                <p className="text-sm font-light text-ink leading-relaxed max-w-4xl">
+                <p className="max-w-[70ch] text-sm font-light leading-relaxed text-ink">
                   {review.comment}
                 </p>
               </div>

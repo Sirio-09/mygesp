@@ -14,6 +14,16 @@
   /* Motion: un'unica curva per tutto il sito */
   --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* Altezza header (banner 26px + nav 80px) da sm in su.
+     Usata dagli offset sticky, così cambiare la navbar non rompe i layout. */
+  --header-h: 6.625rem;
+
+  /* Offset sticky della galleria prodotto (header + 8px di respiro) */
+  --sticky-top: calc(var(--header-h) + 0.5rem);
+
+  /* Altezza utile della galleria sticky: la viewport meno header e margine */
+  --gallery-h: calc(100svh - var(--header-h) - 3.5rem);
+
   /* Animazioni d'ingresso sobrie */
   --animate-fade-in: fade-in 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-up: fade-up 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -60,6 +70,13 @@
     to {
       opacity: 1;
     }
+  }
+}
+
+/* Sotto sm la nav è 64px (non 80px): l'header totale scende a 5.625rem */
+@media (width < 40rem) {
+  :root {
+    --header-h: 5.625rem;
   }
 }
 
@@ -121,6 +138,23 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Contenitore unico del sito: stessa larghezza e stesso gutter ovunque.
+   Evita che un blocco nuovo usi px-8 e sfasi la griglia. */
+@utility container-page {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
   }
 }
 

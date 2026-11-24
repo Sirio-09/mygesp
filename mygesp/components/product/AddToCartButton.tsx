@@ -61,10 +61,10 @@ export default function AddToCartButton({
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Prezzo: sempre visibile, sincronizzato con la taglia selezionata */}
       {selectedVariant && (
-        <div className="flex items-baseline gap-4 border-b border-line/40 pb-8 tabular-nums">
+        <div className="flex items-baseline gap-4 border-b border-line/50 pb-6 tabular-nums">
           {discountPercent ? (
             <>
               <span
@@ -88,12 +88,12 @@ export default function AddToCartButton({
         </div>
       )}
 
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-10">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-8">
         {/* Selettore Taglia */}
         <div>
           <p
             id="taglia-label"
-            className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft"
+            className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft"
           >
             Seleziona Taglia
           </p>
@@ -134,7 +134,7 @@ export default function AddToCartButton({
 
         {/* Selettore Quantità */}
         <div>
-          <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
             Quantità
           </p>
           <div className="flex w-fit items-center border border-line">
@@ -172,12 +172,12 @@ export default function AddToCartButton({
 
       {/* Pulsante Acquisto */}
       <div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex flex-col gap-3">
           <button
             onClick={handleAdd}
             disabled={isSoldOut}
             aria-live="polite"
-            className={`group inline-flex w-full items-center justify-center gap-3 px-10 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] transition-colors duration-300 ease-out-expo active:scale-[0.995] sm:w-auto sm:min-w-[272px] ${
+            className={`group inline-flex w-full items-center justify-center gap-3 px-10 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] transition-colors duration-300 ease-out-expo active:scale-[0.995] ${
               isSoldOut
                 ? "cursor-not-allowed border border-line bg-transparent text-ink-soft/60"
                 : added

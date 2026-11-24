@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 
@@ -13,6 +13,9 @@ export default function ProductGallery({
   const [current, setCurrent] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const hasImages = images && images.length > 0;
   const isSingleImage = images?.length === 1;
@@ -42,6 +45,45 @@ export default function ProductGallery({
     };
   }, [isOpen]);
 
+  // Focus trap + ripristino del focus quando il lightbox si chiude
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+
+      const focusables = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleTab);
+    return () => {
+      document.removeEventListener("keydown", handleTab);
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isOpen && e.key === "Escape") setIsOpen(false);
@@ -56,17 +98,23 @@ export default function ProductGallery({
 
   if (!hasImages) {
     return (
-      <div className="flex aspect-[3/4] w-full items-center justify-center bg-paper-warm text-[10px] font-medium uppercase tracking-[0.2em] text-ink-soft">
+      <div className="flex aspect-[3/4] w-full items-center justify-center bg-paper-warm text-[10px] font-medium uppercase tracking-[0.2em] text-ink-soft lg:aspect-auto lg:h-[var(--gallery-h)]">
         Nessuna immagine
       </div>
     );
   }
 
   return (
-    <div className="w-full">
+    <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-start lg:gap-4">
       {/* --- 1. ZONA IMMAGINE IN PAGINA --- */}
-      <div className="group relative aspect-[3/4] w-full overflow-hidden bg-paper-warm md:aspect-[4/5] lg:aspect-auto lg:h-[calc(100svh-11rem)]">
-        <div onClick={() => setIsOpen(true)} className="absolute inset-0 cursor-zoom-in">
+      <div className="group relative order-1 aspect-[3/4] w-full overflow-hidden bg-paper-warm md:aspect-[4/5] lg:order-2 lg:aspect-auto lg:h-[var(--gallery-h)] lg:flex-1">
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label={`Ingrandisci immagine di ${productName}`}
+          aria-haspopup="dialog"
+          className="absolute inset-0 cursor-zoom-in"
+        >
           {images.map((image, index) => (
             <Image
               key={`${image}-${index}`}
@@ -81,7 +129,7 @@ export default function ProductGallery({
               }`}
             />
           ))}
-        </div>
+        </button>
 
         {!isSingleImage && (
           <>
@@ -112,45 +160,48 @@ export default function ProductGallery({
         )}
       </div>
 
-      {/* --- 1b. MINIATURE --- */}
+      {/* --- 1b. MINIATURE: strip orizzontale su mobile, rail verticale su desktop --- */}
       {!isSingleImage && (
-        <div className="mt-3 grid grid-cols-5 gap-2">
-          {images.map((image, index) => (
-            <button
-              key={`${image}-${index}`}
-              type="button"
-              onClick={() => setCurrent(index)}
-              aria-label={`Mostra immagine ${index + 1}`}
-              aria-current={index === current}
-              className={`relative aspect-[4/5] overflow-hidden border transition-colors duration-200 ease-out-expo ${
-                index === current
-                  ? "border-line"
-                  : "border-transparent hover:border-line"
-              }`}
-            >
-              <Image
-                src={image}
-                alt=""
-                fill
-                sizes="120px"
-                className={`object-cover transition-opacity duration-300 ease-out-expo ${
-                  index === current ? "opacity-100" : "opacity-60 hover:opacity-100"
+        <div className="order-2 lg:order-1 lg:w-16 lg:shrink-0">
+          <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1 lg:max-h-[var(--gallery-h)] lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0">
+            {images.map((image, index) => (
+              <button
+                key={`${image}-${index}`}
+                type="button"
+                onClick={() => setCurrent(index)}
+                aria-label={`Mostra immagine ${index + 1}`}
+                aria-current={index === current}
+                className={`relative aspect-[4/5] w-[calc((100%_-_2rem)_/_5)] shrink-0 overflow-hidden border transition-colors duration-200 ease-out-expo sm:w-20 lg:w-full ${
+                  index === current
+                    ? "border-line"
+                    : "border-transparent hover:border-line"
                 }`}
-              />
-              <span
-                aria-hidden="true"
-                className={`absolute inset-x-0 bottom-0 h-0.5 origin-left bg-ink transition-transform duration-500 ease-out-expo ${
-                  index === current ? "scale-x-100" : "scale-x-0"
-                }`}
-              />
-            </button>
-          ))}
+              >
+                <Image
+                  src={image}
+                  alt=""
+                  fill
+                  sizes="64px"
+                  className={`object-cover transition-opacity duration-300 ease-out-expo ${
+                    index === current ? "opacity-100" : "opacity-60 hover:opacity-100"
+                  }`}
+                />
+                <span
+                  aria-hidden="true"
+                  className={`absolute inset-x-0 bottom-0 h-0.5 origin-left bg-ink transition-transform duration-500 ease-out-expo ${
+                    index === current ? "scale-x-100" : "scale-x-0"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
       {/* --- 2. LIGHTBOX FULLSCREEN (PORTAL) --- */}
       {mounted && isOpen && createPortal(
         <div
+          ref={dialogRef}
           onClick={() => setIsOpen(false)}
           role="dialog"
           aria-modal="true"
@@ -206,6 +257,7 @@ export default function ProductGallery({
           {/* Header Lightbox: X (Ora posizionata alla fine e con z-index SUPERIORE alle frecce: z-[100010]) */}
           <div className="absolute top-0 right-0 p-4 md:p-8 z-[100010] pointer-events-none">
             <button
+              ref={closeButtonRef}
               onClick={(e) => {
                 e.stopPropagation();
                 setIsOpen(false);

@@ -90,10 +90,21 @@ export default async function ProductPage({
       (!product.discountUntil || new Date(product.discountUntil) > new Date())
   );
 
+  // Specifiche: la strip deve adattarsi a 1 o 2 valori, senza lasciare metà vuota
+  const specs: { label: string; value: string }[] = [];
+
+  if (product.waterColumn !== null) {
+    specs.push({ label: "Colonna d'acqua", value: `${product.waterColumn} MM` });
+  }
+
+  if (product.minTemp !== null) {
+    specs.push({ label: "Temp. minima", value: `${product.minTemp}°C` });
+  }
+
   return (
     <main className="min-h-screen bg-paper pb-24 text-ink selection:bg-grass selection:text-white sm:pb-32">
       {/* BREADCRUMB */}
-      <div className="mx-auto max-w-[1280px] px-4 pt-8 sm:px-6 sm:pt-10 lg:px-10">
+      <div className="container-page pt-8 sm:pt-10">
         <nav
           aria-label="Percorso"
           className="flex min-w-0 items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft"
@@ -120,27 +131,27 @@ export default async function ProductPage({
       </div>
 
       {/* HERO: GALLERIA + PANNELLO ACQUISTO */}
-      <div className="mx-auto mt-8 max-w-[1280px] px-4 sm:mt-12 sm:px-6 lg:px-10">
+      <div className="container-page mt-8 sm:mt-12">
         <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
           {/* Galleria: altezza limitata alla viewport, così sticky funziona */}
-          <div className="lg:sticky lg:top-28 lg:col-span-7">
+          <div className="lg:sticky lg:top-[var(--sticky-top)] lg:col-span-7">
             <ProductGallery images={product.images} productName={product.name} />
           </div>
 
           {/* Pannello acquisto */}
           <div className="flex flex-col lg:col-span-5">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-baseline gap-3">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
                 {product.brand}
               </span>
               {isDiscountActive && (
-                <span className="bg-grass px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                <span className="bg-grass px-2 py-1 text-[10px] font-semibold uppercase leading-none tracking-[0.14em] text-white">
                   -{product.discountPercent}%
                 </span>
               )}
             </div>
 
-            <h1 className="mt-5 text-[clamp(1.75rem,2.6vw,2.75rem)] font-light leading-[1.08] tracking-tight text-ink">
+            <h1 className="mt-4 text-[clamp(1.75rem,2.6vw,2.75rem)] font-light leading-[1.08] tracking-tight text-ink">
               {product.name}
             </h1>
 
@@ -159,7 +170,7 @@ export default async function ProductPage({
               </div>
             )}
 
-            <div className="mt-8">
+            <div className="mt-6">
               <AddToCartButton
                 variants={product.variants}
                 productSlug={product.slug}
@@ -216,30 +227,33 @@ export default async function ProductPage({
       </div>
 
       {/* SPECS: strip full-bleed, fuori dal pannello acquisto */}
-      {(product.waterColumn || product.minTemp) && (
+      {specs.length > 0 && (
         <section className="mt-16 border-y border-line/50 bg-paper-warm/60 sm:mt-20">
-          <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-10">
-            <dl className="grid grid-cols-1 divide-y divide-line/50 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-              {product.waterColumn && (
-                <div className="py-8 sm:py-10 sm:pr-12">
+          <div className="container-page">
+            <dl
+              className={`grid grid-cols-1 divide-y divide-line/50 ${
+                specs.length > 1 ? "sm:grid-cols-2 sm:divide-x sm:divide-y-0" : ""
+              }`}
+            >
+              {specs.map((spec, index) => (
+                <div
+                  key={spec.label}
+                  className={`py-8 sm:py-10 ${
+                    specs.length > 1
+                      ? index === 0
+                        ? "sm:pr-12"
+                        : "sm:pl-12"
+                      : ""
+                  }`}
+                >
                   <dt className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
-                    Colonna d&apos;acqua
+                    {spec.label}
                   </dt>
                   <dd className="text-2xl font-light tabular-nums tracking-tight text-ink sm:text-3xl">
-                    {product.waterColumn} MM
+                    {spec.value}
                   </dd>
                 </div>
-              )}
-              {product.minTemp && (
-                <div className="py-8 sm:py-10 sm:pl-12">
-                  <dt className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
-                    Temp. minima
-                  </dt>
-                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink sm:text-3xl">
-                    {product.minTemp}°C
-                  </dd>
-                </div>
-              )}
+              ))}
             </dl>
           </div>
         </section>
@@ -247,7 +261,7 @@ export default async function ProductPage({
 
       {/* DETTAGLI TECNICI: righe numerate, non due colonne di testo */}
       {descriptionBlocks && descriptionBlocks.length > 0 && (
-        <section className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 sm:pt-28 lg:px-10">
+        <section className="container-page pt-20 sm:pt-28">
           <div className="mb-10 sm:mb-14">
             <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
               Specifiche
@@ -275,7 +289,7 @@ export default async function ProductPage({
                     </span>
                   )}
                 </dt>
-                <dd className="text-sm font-light leading-relaxed text-ink-soft sm:col-span-8">
+                <dd className="max-w-[62ch] text-sm font-light leading-relaxed text-ink-soft sm:col-span-8">
                   {block.text}
                 </dd>
               </Reveal>
@@ -286,7 +300,7 @@ export default async function ProductPage({
 
       {/* PRODOTTI CORRELATI */}
       {relatedProducts.length > 0 && (
-        <section className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 sm:pt-28 lg:px-10">
+        <section className="container-page pt-20 sm:pt-28">
           <div className="mb-10 flex flex-col justify-between gap-6 sm:mb-14 md:flex-row md:items-end">
             <div>
               <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
@@ -313,7 +327,7 @@ export default async function ProductPage({
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-6 gap-y-14 lg:grid-cols-4 lg:gap-y-16">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:grid-cols-4 lg:gap-y-16">
             {relatedProducts.map((relProduct, index) => {
               const minPriceCents =
                 relProduct.variants && relProduct.variants.length > 0
@@ -347,7 +361,7 @@ export default async function ProductPage({
       )}
 
       {/* RECENSIONI */}
-      <section className="mx-auto max-w-[1280px] px-4 pt-20 sm:px-6 sm:pt-28 lg:px-10">
+      <section className="container-page pt-20 sm:pt-28">
         <ProductReviews productId={product.id} />
       </section>
     </main>
