@@ -265,8 +265,18 @@ export async function POST(req: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Errore Stripe Checkout:", err);
+
+    // Stripe risponde "Not a valid URL" quando success_url/cancel_url non sono
+    // URL assoluti validi: quasi sempre è un problema di NEXT_PUBLIC_SITE_URL.
+    // Al cliente non serve l'errore tecnico in inglese.
+    const isUrlConfigError = /valid URL|invalid URL/i.test(message);
+
     return NextResponse.json(
-      { error: message || "Errore del server" },
+      {
+        error: isUrlConfigError
+          ? "Configurazione pagamenti non valida: l'URL del sito non è corretto. Riprova più tardi o contatta l'assistenza."
+          : message || "Errore del server",
+      },
       { status: 500 }
     );
   }

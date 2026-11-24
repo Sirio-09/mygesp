@@ -43,16 +43,77 @@ export function getStripeWebhookSecret(): string {
 }
 
 /**
+ * Estrae un URL utilizzabile da un valore d'ambiente "sporco".
+ *
+ * Capita di incollare nel .env un link Markdown
+ * (`[https://sito.it](https://sito.it)`) o un host senza schema: in entrambi i
+ * casi l'URL finirebbe dentro `success_url` di Stripe e la sessione verrebbe
+ * rifiutata con un errore opaco ("Not a valid URL").
+ */
+function resolveSiteUrlCandidate(raw: string): string | null {
+  // Ripuliamo virgolette/parentesi incollate per errore attorno al valore.
+  const cleaned = raw.trim().replace(/^["'<(\s]+|["'>)\s]+$/g, "");
+
+  const embedded = cleaned.match(/https?:\/\/[^\s)\]"']+/i);
+
+  if (embedded) return embedded[0].replace(/[.,;:]+$/, "");
+
+  // Host nudo ("sito.it", "localhost:3000") → aggiungiamo lo schema.
+  if (/^[a-z0-9.-]+(:\d+)?(\/.*)?$/i.test(cleaned)) {
+    const scheme = /^(localhost|127\.0\.0\.1)/i.test(cleaned) ? "http" : "https";
+    return `${scheme}://${cleaned}`;
+  }
+
+  return null;
+}
+
+/**
  * URL pubblico del sito, normalizzato (senza slash finale).
  * Usato per success_url / cancel_url delle sessioni Stripe e per i link email.
+ *
+ * Se `NEXT_PUBLIC_SITE_URL` non contiene un URL valido si ripiega su
+ * NEXTAUTH_URL / AUTH_URL e infine su localhost, così un errore di
+ * configurazione non blocca i pagamenti con un messaggio incomprensibile.
  */
 export function getSiteUrl(): string {
-  const raw =
+  const fallback = "http://localhost:3000";
+
+  const raw = (
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXTAUTH_URL ||
-    "http://localhost:3000";
+    process.env.AUTH_URL ||
+    fallback
+  ).trim();
 
-  const withProtocol = raw.startsWith("http") ? raw : `https://${raw}`;
+  const candidate = resolveSiteUrlCandidate(raw);
 
-  return withProtocol.replace(/\/+$/, "");
+  if (!candidate) {
+    console.error(
+      `[stripe] NEXT_PUBLIC_SITE_URL non è un URL valido ("${raw}"): uso ${fallback}.`
+    );
+    return fallback;
+  }
+
+  try {
+    const parsed = new URL(candidate);
+
+    if (!parsed.hostname) throw new Error("hostname mancante");
+
+    let base = `${parsed.origin}${parsed.pathname}`;
+
+    while (base.endsWith("/")) base = base.slice(0, -1);
+
+    if (candidate !== raw) {
+      console.error(
+        `[stripe] NEXT_PUBLIC_SITE_URL non è un URL pulito ("${raw}"): uso ${base}.`
+      );
+    }
+
+    return base;
+  } catch {
+    console.error(
+      `[stripe] NEXT_PUBLIC_SITE_URL non è un URL valido ("${raw}"): uso ${fallback}.`
+    );
+    return fallback;
+  }
 }
