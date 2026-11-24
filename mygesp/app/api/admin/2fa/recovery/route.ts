@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OTP } from "otplib";
 import QRCode from "qrcode";
+import { findBackupCodeIndex } from "@/lib/backup-codes";
+import { encryptSecret } from "@/lib/secret-crypto";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -35,11 +37,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const normalizedInput = code.trim().toUpperCase().replace(/-/g, "");
-
-  const backupIndex = (admin.backupCodes || []).findIndex(
-    (bCode) => bCode.replace(/-/g, "") === normalizedInput
-  );
+  const backupIndex = findBackupCodeIndex(admin.backupCodes ?? [], code);
 
   // 2. Se il codice di recupero è errato: incremento tentativi e blocco
   if (backupIndex === -1) {
@@ -88,7 +86,7 @@ export async function POST(req: Request) {
   await prisma.admin.update({
     where: { id: admin.id },
     data: {
-      totpSecret: newSecret,
+      totpSecret: encryptSecret(newSecret),
       totpEnabled: false,
       backupCodes: updatedBackupCodes,
       failed2faAttempts: 0,

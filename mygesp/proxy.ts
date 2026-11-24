@@ -4,12 +4,15 @@ import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
 
+// In Next.js 16 il file convention `middleware.ts` è deprecato e rinominato
+// `proxy.ts`. Il runtime è Node.js per default (v16+).
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const role = (req.auth?.user as { role?: string })?.role;
   const otpVerified = (req.auth?.user as { otpVerified?: boolean })?.otpVerified;
   const totpEnabled = (req.auth?.user as { totpEnabled?: boolean })?.totpEnabled;
-  const mustChangePassword = (req.auth?.user as { mustChangePassword?: boolean })?.mustChangePassword;
+  const mustChangePassword = (req.auth?.user as { mustChangePassword?: boolean })
+    ?.mustChangePassword;
   const pathname = req.nextUrl.pathname;
 
   if (!pathname.startsWith("/admin")) return;

@@ -8,10 +8,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Devi accedere al tuo account per lasciare una recensione" }, { status: 401 });
   }
 
-  const { productId, rating, comment } = await req.json();
+  let productId: unknown;
+  let rating: unknown;
+  let comment: unknown;
+
+  try {
+    const body = (await req.json()) as {
+      productId?: unknown;
+      rating?: unknown;
+      comment?: unknown;
+    };
+    productId = body?.productId;
+    rating = body?.rating;
+    comment = body?.comment;
+  } catch {
+    return NextResponse.json({ error: "Payload JSON non valido" }, { status: 400 });
+  }
+
   const customerId = (session.user as { id: string }).id;
 
-  if (!productId || !rating || rating < 1 || rating > 5 || !comment?.trim()) {
+  if (
+    typeof productId !== "string" ||
+    typeof rating !== "number" ||
+    rating < 1 ||
+    rating > 5 ||
+    typeof comment !== "string" ||
+    !comment.trim()
+  ) {
     return NextResponse.json({ error: "Dati non validi" }, { status: 400 });
   }
 

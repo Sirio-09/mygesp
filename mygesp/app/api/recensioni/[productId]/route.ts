@@ -7,9 +7,16 @@ export async function GET(
 ) {
   const { productId } = await params;
 
+  // Rimossi i dati sensibili del cliente (email e nome) per prevenire il leak
+  // Ora restituiamo solo i dati della recensione
   const reviews = await prisma.review.findMany({
     where: { productId },
-    include: { customer: { select: { name: true, email: true } } },
+    select: {
+      id: true,
+      comment: true,
+      rating: true,
+      createdAt: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 

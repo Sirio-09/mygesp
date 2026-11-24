@@ -50,7 +50,7 @@ export default async function CercaPage({ searchParams }: PageProps) {
               Non siamo riusciti a trovare nulla che corrisponda a "{query}". Prova a controllare l'ortografia o usa termini più generici.
             </p>
             <div className="flex justify-center gap-4">
-              <Link href="/shop" className="bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3 px-6 rounded-md transition-colors">
+              <Link href="/prodotti" className="bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-3 px-6 rounded-md transition-colors">
                 Esplora lo Shop
               </Link>
             </div>

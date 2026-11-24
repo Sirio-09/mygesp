@@ -1,17 +1,30 @@
 import { prisma } from "@/lib/db";
-import { resend } from "@/lib/resend";
+import { sendEmail } from "@/lib/resend";
 import { hasValidMxRecords } from "@/lib/email-check";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { rateLimitResponse } from "@/lib/rate-limiter";
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 3 registrazioni per 15 minuti per IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rateLimitRes = await rateLimitResponse(ip, 3, 15 * 60 * 1000);
+    if (rateLimitRes) return rateLimitRes;
+
     const { email, password, name, acceptTerms, subscribeNewsletter } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email e password obbligatorie." },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: "La password deve contenere almeno 8 caratteri." },
         { status: 400 }
       );
     }
@@ -89,8 +102,7 @@ export async function POST(req: Request) {
     const verifyUrl = `${baseUrl}/account/verify-email?token=${token}`;
 
     // 7. Invio email stilizzata tramite Resend
-    const { error: emailError } = await resend.emails.send({
-      from: "MyGesp <onboarding@resend.dev>",
+    const emailResult = await sendEmail({
       to: cleanEmail,
       subject: "Conferma la tua email — MyGesp",
       html: `
@@ -166,11 +178,16 @@ export async function POST(req: Request) {
       `,
     });
 
-    if (emailError) {
-      console.error("Errore Resend:", emailError);
+    if (!emailResult.ok) {
+      console.error("Errore Resend:", emailResult.error);
+      // L'account è stato creato: non fallire l'intera registrazione per un'email
+      // L'utente potrà richiedere un nuovo link di verifica dal login.
       return NextResponse.json(
-        { error: `Errore nell'invio dell'email: ${emailError.message}` },
-        { status: 500 }
+        {
+          success: true,
+          message: "Account creato. Non è stato possibile inviare l'email di verifica; richiedi un nuovo link dal login.",
+        },
+        { status: 201 }
       );
     }
 

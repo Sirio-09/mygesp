@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 export default function CambiaPasswordPage() {
   const { update } = useSession();
 
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,6 +15,11 @@ export default function CambiaPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!currentPassword) {
+      setError("Inserisci la password attuale");
+      return;
+    }
 
     if (newPassword.length < 8) {
       setError("La password deve contenere almeno 8 caratteri");
@@ -25,13 +31,18 @@ export default function CambiaPasswordPage() {
       return;
     }
 
+    if (newPassword === currentPassword) {
+      setError("La nuova password deve essere diversa da quella attuale");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch("/api/admin/cambia-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
 
       const data = await res.json();
@@ -44,8 +55,9 @@ export default function CambiaPasswordPage() {
 
       // Il reload completo evita che il router lato client mantenga lo stato vecchio
       window.location.href = "/admin";
-    } catch (err: any) {
-      setError(err.message || "Errore di connessione");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || "Errore di connessione");
     } finally {
       setLoading(false);
     }
@@ -76,6 +88,21 @@ export default function CambiaPasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
+              Password Attuale
+            </label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
+              placeholder="Inserisci la password attuale"
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
               Nuova Password
             </label>
             <input
@@ -84,6 +111,7 @@ export default function CambiaPasswordPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
               placeholder="Minimo 8 caratteri"
+              autoComplete="new-password"
               required
             />
           </div>
@@ -98,6 +126,7 @@ export default function CambiaPasswordPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
               placeholder="Ripeti la password"
+              autoComplete="new-password"
               required
             />
           </div>

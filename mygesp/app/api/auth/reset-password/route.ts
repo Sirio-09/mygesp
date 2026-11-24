@@ -13,9 +13,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: "La password deve contenere almeno 6 caratteri." },
+        { error: "La password deve contenere almeno 8 caratteri." },
         { status: 400 }
       );
     }

@@ -44,7 +44,7 @@ export default function CartPage() {
             </p>
           </div>
           <Link
-            href="/shop"
+            href="/prodotti"
             className="inline-block w-full bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-widest py-4 rounded transition-all shadow-md"
           >
             Inizia gli acquisti
@@ -163,7 +163,7 @@ export default function CartPage() {
             })}
 
             <div className="flex justify-between items-center pt-4 px-2">
-              <Link href="/shop" className="text-xs text-ink-soft hover:text-ink font-bold uppercase tracking-wider flex items-center gap-2 transition-colors group">
+              <Link href="/prodotti" className="text-xs text-ink-soft hover:text-ink font-bold uppercase tracking-wider flex items-center gap-2 transition-colors group">
                 <span className="transform transition-transform group-hover:-translate-x-1">←</span> Continua lo shopping
               </Link>
               <button

@@ -1,156 +1,58 @@
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { revalidatePath } from "next/cache";
+import {
+  parseProductInput,
+  toFriendlyPrismaError,
+  type RawProductInput,
+} from "@/lib/product-input";
+import { sendEmail, isEmailConfigured } from "@/lib/resend";
+import { getSiteUrl } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+/**
+ * Notifica gli iscritti alla newsletter quando il prezzo minimo scende.
+ * L'invio è "best effort": eventuali errori non bloccano il salvataggio.
+ */
+async function notifyPriceDrop(
+  productName: string,
+  slug: string,
+  oldMinPrice: number,
+  newMinPrice: number
 ) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  if (!isEmailConfigured() || newMinPrice >= oldMinPrice) return;
 
-  const { id } = await params;
-  const body = await req.json();
+  const subscribers = await prisma.newsletter.findMany({
+    select: { email: true },
+  });
 
-  try {
-    const existingProduct = await prisma.product.findUnique({
-      where: { id },
-      include: { variants: true },
-    });
+  if (subscribers.length === 0) return;
 
-    if (!existingProduct) {
-      return NextResponse.json({ error: "Prodotto non trovato" }, { status: 404 });
-    }
+  const productUrl = `${getSiteUrl()}/prodotto/${slug}`;
 
-    const oldMinPrice =
-      existingProduct.variants.length > 0
-        ? Math.min(...existingProduct.variants.map((v) => v.priceCents))
-        : null;
+  const results = await Promise.all(
+    subscribers.map((subscriber) =>
+      sendEmail({
+        to: subscriber.email,
+        subject: `Sconto su ${productName}`,
+        html: `
+          <h2>${productName} ora costa meno</h2>
+          <p>Prezzo precedente: €${(oldMinPrice / 100).toFixed(2)}</p>
+          <p>Nuovo prezzo: €${(newMinPrice / 100).toFixed(2)}</p>
+          <p><a href="${productUrl}">Vai al prodotto</a></p>
+        `,
+      })
+    )
+  );
 
-    const isFeatured = body.featured === true || body.featured === "true";
+  const failed = results.filter((result) => !result.ok).length;
 
-    await prisma.product.update({
-      where: { id },
-      data: {
-        name: body.name,
-        slug: body.slug,
-        shortTitle: body.shortTitle || null,
-        shortDescription: body.shortDescription || null,
-        descriptionBlocks: body.descriptionBlocks,
-        brand: body.brand,
-        category: body.category,
-        images: body.images ?? [],
-        waterColumn: body.waterColumn ? parseInt(body.waterColumn) : null,
-        minTemp: body.minTemp ? parseInt(body.minTemp) : null,
-        featured: isFeatured,
-        discountPercent: body.discountPercent ? parseInt(body.discountPercent) : 0,
-        discountUntil: body.discountUntil ? new Date(body.discountUntil) : null,
-      },
-    });
-
-    const existingVariants = existingProduct.variants;
-    const incomingVariants = body.variants || [];
-
-    const incomingIds = incomingVariants.map((v: { id?: string }) => v.id).filter(Boolean);
-    const incomingSkus = incomingVariants.map((v: { sku: string }) => v.sku).filter(Boolean);
-
-    const variantsToDelete = existingVariants.filter(
-      (v) => !incomingIds.includes(v.id) && !incomingSkus.includes(v.sku)
+  if (failed > 0) {
+    console.warn(
+      `Notifica calo prezzo: ${failed}/${results.length} email non inviate.`
     );
-
-    for (const variant of variantsToDelete) {
-      const orderCount = await prisma.orderItem.count({
-        where: { variantId: variant.id },
-      });
-
-      if (orderCount === 0) {
-        if ("cartItem" in prisma) {
-          await (prisma as any).cartItem.deleteMany({
-            where: { variantId: variant.id },
-          });
-        }
-        await prisma.variant.delete({ where: { id: variant.id } });
-      } else {
-        await prisma.variant.update({
-          where: { id: variant.id },
-          data: { stock: 0 },
-        });
-      }
-    }
-
-    for (const v of incomingVariants) {
-      const priceCents = parseInt(v.priceCents || "0");
-      const stock = parseInt(v.stock || "0");
-
-      const existingBySku = v.sku
-        ? await prisma.variant.findUnique({ where: { sku: v.sku } })
-        : null;
-
-      const targetId = v.id || existingBySku?.id;
-
-      if (targetId) {
-        await prisma.variant.update({
-          where: { id: targetId },
-          data: {
-            productId: id,
-            size: v.size,
-            sku: v.sku,
-            priceCents,
-            stock,
-          },
-        });
-      } else {
-        await prisma.variant.create({
-          data: {
-            productId: id,
-            size: v.size,
-            sku: v.sku,
-            priceCents,
-            stock,
-          },
-        });
-      }
-    }
-
-    revalidatePath("/", "layout");
-
-    const newMinPrice =
-      incomingVariants.length > 0
-        ? Math.min(...incomingVariants.map((v: { priceCents: string }) => parseInt(v.priceCents)))
-        : 0;
-
-    if (oldMinPrice !== null && newMinPrice < oldMinPrice && process.env.RESEND_API_KEY) {
-      const subscribers = await prisma.newsletter.findMany();
-
-      if (subscribers.length > 0) {
-        for (const subscriber of subscribers) {
-          await resend.emails.send({
-            from: "MyGesp <onboarding@resend.dev>",
-            to: subscriber.email,
-            subject: `Sconto su ${body.name}`,
-            html: `
-              <h2>${body.name} ora costa meno</h2>
-              <p>Prezzo precedente: €${(oldMinPrice / 100).toFixed(2)}</p>
-              <p>Nuovo prezzo: €${(newMinPrice / 100).toFixed(2)}</p>
-              <p><a href="${process.env.NEXT_PUBLIC_SITE_URL}/prodotto/${body.slug}">Vai al prodotto</a></p>
-            `,
-          });
-        }
-      }
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error("Errore aggiornamento prodotto:", err);
-    return NextResponse.json({ error: err.message || "Errore salvataggio" }, { status: 500 });
   }
 }
 
@@ -166,45 +68,185 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    await prisma.$transaction(async (tx) => {
-      const variants = await tx.variant.findMany({
-        where: { productId: id },
-        select: { id: true },
+    const variants = await prisma.variant.findMany({
+      where: { productId: id },
+      select: { id: true },
+    });
+    const variantIds = variants.map((variant) => variant.id);
+
+    // Non cancelliamo mai righe d'ordine: perderemmo lo storico fiscale.
+    if (variantIds.length > 0) {
+      const orderItemsCount = await prisma.orderItem.count({
+        where: { variantId: { in: variantIds } },
       });
-      const variantIds = variants.map((v) => v.id);
 
-      if (variantIds.length > 0) {
-        await tx.orderItem.deleteMany({
-          where: { variantId: { in: variantIds } },
-        });
-
-        if ("cartItem" in tx) {
-          await (tx as any).cartItem.deleteMany({
-            where: { variantId: { in: variantIds } },
-          });
-        }
-
-        await tx.variant.deleteMany({
-          where: { productId: id },
-        });
+      if (orderItemsCount > 0) {
+        return NextResponse.json(
+          {
+            error:
+              "Questo prodotto compare in ordini esistenti e non può essere eliminato senza perdere lo storico. Imposta le giacenze a 0 e togli la spunta \"In evidenza\" per nasconderlo dal catalogo.",
+          },
+          { status: 409 }
+        );
       }
+    }
 
-      await tx.review.deleteMany({
-        where: { productId: id },
-      });
-
-      await tx.product.delete({
-        where: { id },
-      });
+    await prisma.$transaction(async (tx) => {
+      await tx.review.deleteMany({ where: { productId: id } });
+      await tx.variant.deleteMany({ where: { productId: id } });
+      await tx.product.delete({ where: { id } });
     });
 
     revalidatePath("/", "layout");
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error("Errore eliminazione definitiva prodotto:", err);
     return NextResponse.json(
-      { error: err.message || "Errore durante l'eliminazione" },
+      { error: toFriendlyPrismaError(err) },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session || (session.user as { role?: string })?.role !== "admin") {
+    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  let body: RawProductInput;
+  try {
+    body = (await req.json()) as RawProductInput;
+  } catch {
+    return NextResponse.json({ error: "Payload JSON non valido" }, { status: 400 });
+  }
+
+  const parsed = parseProductInput(body);
+
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+
+  try {
+    const existing = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Prodotto non trovato" }, { status: 404 });
+    }
+
+    const oldMinPrice =
+      existing.variants.length > 0
+        ? Math.min(...existing.variants.map((v) => v.priceCents))
+        : null;
+
+    // Uno SKU è unico a livello globale: blocchiamo il riuso da parte di altri prodotti
+    // invece di "spostare" silenziosamente la variante (bug precedente).
+    const incomingSkus = parsed.variants.map((v) => v.sku);
+    const conflictingVariants = await prisma.variant.findMany({
+      where: { sku: { in: incomingSkus }, productId: { not: id } },
+      select: { sku: true },
+    });
+
+    if (conflictingVariants.length > 0) {
+      return NextResponse.json(
+        {
+          error: `SKU già usati da altri prodotti: ${conflictingVariants
+            .map((v) => v.sku)
+            .join(", ")}`,
+        },
+        { status: 409 }
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.product.update({ where: { id }, data: parsed.data });
+
+      const existingById = new Map(existing.variants.map((v) => [v.id, v]));
+      const existingBySku = new Map(existing.variants.map((v) => [v.sku, v]));
+      const keptIds = new Set<string>();
+
+      for (const variant of parsed.variants) {
+        const match =
+          (variant.id ? existingById.get(variant.id) : undefined) ??
+          existingBySku.get(variant.sku);
+
+        if (match) {
+          await tx.variant.update({
+            where: { id: match.id },
+            data: {
+              size: variant.size,
+              sku: variant.sku,
+              priceCents: variant.priceCents,
+              stock: variant.stock,
+            },
+          });
+          keptIds.add(match.id);
+        } else {
+          const created = await tx.variant.create({
+            data: {
+              productId: id,
+              size: variant.size,
+              sku: variant.sku,
+              priceCents: variant.priceCents,
+              stock: variant.stock,
+            },
+          });
+          keptIds.add(created.id);
+        }
+      }
+
+      // Varianti rimosse dal form: eliminabili solo se non compaiono in ordini.
+      const variantsToRemove = existing.variants.filter(
+        (variant) => !keptIds.has(variant.id)
+      );
+
+      for (const variant of variantsToRemove) {
+        const orderCount = await tx.orderItem.count({
+          where: { variantId: variant.id },
+        });
+
+        if (orderCount === 0) {
+          await tx.variant.delete({ where: { id: variant.id } });
+        } else {
+          await tx.variant.update({
+            where: { id: variant.id },
+            data: { stock: 0 },
+          });
+        }
+      }
+    });
+
+    revalidatePath("/", "layout");
+
+    const newMinPrice = Math.min(...parsed.variants.map((v) => v.priceCents));
+
+    if (oldMinPrice !== null) {
+      try {
+        await notifyPriceDrop(
+          parsed.data.name,
+          parsed.data.slug,
+          oldMinPrice,
+          newMinPrice
+        );
+      } catch (emailErr) {
+        console.error("Errore notifica newsletter calo prezzo:", emailErr);
+      }
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Errore aggiornamento prodotto:", err);
+    return NextResponse.json(
+      { error: toFriendlyPrismaError(err) },
       { status: 500 }
     );
   }

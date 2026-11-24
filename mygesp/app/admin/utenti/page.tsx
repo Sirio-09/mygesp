@@ -31,6 +31,7 @@ export default function UtentiAdminPage() {
   const [tempPasswordData, setTempPasswordData] = useState<{
     username: string;
     tempPassword: string;
+    message?: string;
   } | null>(null);
 
   const [resettingId, setResettingId] = useState<string | null>(null);
@@ -73,7 +74,8 @@ export default function UtentiAdminPage() {
         setEmail("");
         setTempPasswordData({
           username: data.username,
-          tempPassword: data.tempPassword,
+          tempPassword: data.tempPassword ?? "",
+          message: data.message,
         });
         await loadAdmins();
       } else {
@@ -102,7 +104,8 @@ export default function UtentiAdminPage() {
       if (res.ok) {
         setTempPasswordData({
           username: targetUsername,
-          tempPassword: data.tempPassword,
+          tempPassword: data.tempPassword ?? "",
+          message: data.message,
         });
         await loadAdmins();
       } else {
@@ -173,22 +176,37 @@ export default function UtentiAdminPage() {
               </button>
             </div>
             <p className="text-sm font-light text-ink-soft leading-relaxed">
-              Comunica questa password a <strong className="font-medium text-ink">{tempPasswordData.username}</strong>. Al suo prossimo accesso gli verrà richiesto il cambio obbligatorio.
+              {tempPasswordData.tempPassword ? (
+                <>
+                  Comunica questa password a{" "}
+                  <strong className="font-medium text-ink">
+                    {tempPasswordData.username}
+                  </strong>
+                  . Al suo prossimo accesso gli verrà richiesto il cambio
+                  obbligatorio.
+                </>
+              ) : (
+                <>{tempPasswordData.message}</>
+              )}
             </p>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-              <code className="bg-transparent border border-line/40 px-6 py-4 font-mono text-lg font-light text-ink select-all flex-1 text-center sm:text-left">
-                {tempPasswordData.tempPassword}
-              </code>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(tempPasswordData.tempPassword);
-                  alert("Password temporanea copiata negli appunti!");
-                }}
-                className="bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors"
-              >
-                Copia
-              </button>
-            </div>
+            {tempPasswordData.tempPassword && (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                <code className="bg-transparent border border-line/40 px-6 py-4 font-mono text-lg font-light text-ink select-all flex-1 text-center sm:text-left">
+                  {tempPasswordData.tempPassword}
+                </code>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      tempPasswordData.tempPassword
+                    );
+                    alert("Password temporanea copiata negli appunti!");
+                  }}
+                  className="bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors"
+                >
+                  Copia
+                </button>
+              </div>
+            )}
           </div>
         )}
 

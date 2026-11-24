@@ -171,7 +171,8 @@ export default function EditProductForm({ product }: { product: Product }) {
     if (res.ok) {
       router.push("/admin");
     } else {
-      setError("Errore nel salvataggio, controlla i campi inseriti.");
+      const data = await res.json().catch(() => null);
+      setError(data?.error || "Errore nel salvataggio, controlla i campi inseriti.");
     }
   };
 
@@ -183,7 +184,8 @@ export default function EditProductForm({ product }: { product: Product }) {
     if (res.ok) {
       router.push("/admin");
     } else {
-      setError("Errore durante l'eliminazione");
+      const data = await res.json().catch(() => null);
+      setError(data?.error || "Errore durante l'eliminazione");
     }
   };
 

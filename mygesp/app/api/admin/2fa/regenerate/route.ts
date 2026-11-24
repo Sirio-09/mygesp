@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OTP } from "otplib";
 import QRCode from "qrcode";
+import { generateBackupCodes } from "@/lib/backup-codes";
+import { encryptSecret } from "@/lib/secret-crypto";
 
 export async function POST() {
   const session = await auth();
@@ -19,11 +21,19 @@ export async function POST() {
   });
   const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
-  // sovrascrive il vecchio segreto: il vecchio QR/app smette di generare codici validi
+  // Rigenera anche i codici di backup e forza una nuova verifica: altrimenti
+  // il vecchio app resterebbe "attivo" con un segreto ormai non più valido,
+  // bloccando l'utente fuori dall'account.
+  const { plain, hashed } = generateBackupCodes(8);
+
   await prisma.admin.update({
     where: { id: (session.user as { id: string }).id },
-    data: { totpSecret: secret },
+    data: {
+      totpSecret: encryptSecret(secret),
+      totpEnabled: false,
+      backupCodes: hashed,
+    },
   });
 
-  return NextResponse.json({ qrCodeDataUrl });
+  return NextResponse.json({ qrCodeDataUrl, secret, backupCodes: plain });
 }

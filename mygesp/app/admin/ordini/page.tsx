@@ -74,10 +74,6 @@ export default function AdminOrdiniPage() {
   const [trackingCode, setTrackingCode] = useState("");
   const [carrier, setCarrier] = useState("BRT");
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   const fetchOrders = async () => {
     try {
       const res = await fetch("/api/admin/ordini");
@@ -94,6 +90,10 @@ export default function AdminOrdiniPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const updateOrderStatus = async (
     orderId: string,
@@ -119,7 +119,8 @@ export default function AdminOrdiniPage() {
         );
         toast.success(`Ordine #${orderId.slice(-6)} aggiornato`);
       } else {
-        toast.error("Errore durante l'aggiornamento dell'ordine");
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Errore durante l'aggiornamento dell'ordine");
       }
     } catch (err) {
       console.error("Errore aggiornamento stato:", err);

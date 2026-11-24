@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 
@@ -21,15 +21,15 @@ export default function ProductGallery({
     setMounted(true);
   }, []);
 
-  const next = (e?: React.MouseEvent) => {
+  const next = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!isSingleImage) setCurrent((c) => (c + 1) % images.length);
-  };
+  }, [isSingleImage, images.length]);
 
-  const prev = (e?: React.MouseEvent) => {
+  const prev = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (!isSingleImage) setCurrent((c) => (c - 1 + images.length) % images.length);
-  };
+  }, [isSingleImage, images.length]);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,7 +52,7 @@ export default function ProductGallery({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isSingleImage, images.length]);
+  }, [isOpen, isSingleImage, images.length, next, prev]);
 
   if (!hasImages) {
     return (

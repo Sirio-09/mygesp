@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/resend";
 import crypto from "crypto";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { rateLimitResponse } from "@/lib/rate-limiter";
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting: 5 richieste per 15 minuti per IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rateLimitRes = await rateLimitResponse(ip, 5, 15 * 60 * 1000);
+    if (rateLimitRes) return rateLimitRes;
+
     const { email } = await req.json();
 
     if (!email) {
@@ -38,11 +42,10 @@ export async function POST(req: Request) {
       data: { token, customerId: customer.id, expiresAt },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL;
-    const resetUrl = `${baseUrl}/account/reimposta-password?token=${token}`;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const resetUrl = `${baseUrl.replace(/\/$/, "")}/account/reimposta-password?token=${token}`;
 
-    await resend.emails.send({
-      from: "MyGesp <onboarding@resend.dev>",
+    await sendEmail({
       to: cleanEmail,
       subject: "Reimposta la tua password — MyGesp",
       html: `

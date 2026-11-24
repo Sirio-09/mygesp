@@ -6,7 +6,8 @@ async function main() {
     data: {
       name: 'Giacca Antipioggia Uragan-Tex',
       slug: 'giacca-antipioggia-uragan-tex',
-      description: 'Giacca impermeabile a doppio strato per lavoro agricolo.',
+      shortDescription: 'Giacca impermeabile a doppio strato per lavoro agricolo.',
+      descriptionBlocks: [],
       brand: 'Uragan-Tex',
       category: 'abbigliamento',
       activities: ['agricoltura', 'allevamento'],

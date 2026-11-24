@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useCartStore } from '@/lib/cart-store'
+import type { CartItem } from '@/lib/cart-store'
 
 export default function CheckoutPage() {
   const { items } = useCartStore()
@@ -16,31 +17,26 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [shippingEstimate, setShippingEstimate] = useState<number | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   const subtotalCents = items.reduce(
-    (acc: number, item: any) => acc + (item.priceCents || 0) * item.quantity,
+    (acc: number, item: CartItem) => acc + (item.priceCents || 0) * item.quantity,
     0
   )
 
   const isFreeShipping = subtotalCents >= 9900
 
-  useEffect(() => {
-    if (isFreeShipping) {
-      setShippingEstimate(0)
-      return
-    }
+  const shippingEstimate = useMemo(() => {
+    if (isFreeShipping) return 0
     if (cap.trim().length === 5) {
       const prefix2 = cap.substring(0, 2)
       const isSpecialZone = ['90', '91', '92', '93', '94', '95', '96', '97', '98', '07', '08', '09'].includes(prefix2) || cap.startsWith('301')
-      setShippingEstimate(isSpecialZone ? 990 : 690)
-    } else {
-      setShippingEstimate(null)
+      return isSpecialZone ? 990 : 690
     }
+    return null
   }, [cap, isFreeShipping])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +53,7 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map((i: any) => ({ variantId: i.variantId, quantity: i.quantity })),
+          items: items.map((i: CartItem) => ({ variantId: i.variantId, quantity: i.quantity })),
           cap: cap.trim(), email: email.trim(), name: name.trim(), address: address.trim(), city: city.trim(),
         }),
       })
@@ -88,7 +84,7 @@ export default function CheckoutPage() {
       <main className="max-w-[800px] mx-auto px-4 py-20 text-center space-y-6">
         <h1 className="text-3xl font-black uppercase text-ink">Nessun articolo da pagare</h1>
         <p className="text-sm text-ink-soft">Il tuo carrello è vuoto. Aggiungi i prodotti prima di procedere al checkout.</p>
-        <Link href="/shop" className="inline-block bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-4 px-8 rounded-md transition-colors shadow-md">
+        <Link href="/prodotti" className="inline-block bg-grass hover:bg-grass-deep text-white font-bold text-sm uppercase tracking-wider py-4 px-8 rounded-md transition-colors shadow-md">
           Torna allo Shop
         </Link>
       </main>

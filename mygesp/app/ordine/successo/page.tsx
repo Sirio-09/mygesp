@@ -36,7 +36,7 @@ export default function SuccessoPage() {
             I miei ordini
           </Link>
           <Link 
-            href="/shop" 
+            href="/prodotti" 
             className="bg-grass hover:bg-grass-deep text-white font-bold text-xs uppercase tracking-wider py-4 px-6 rounded-md transition-colors shadow-md"
           >
             Torna allo Shop

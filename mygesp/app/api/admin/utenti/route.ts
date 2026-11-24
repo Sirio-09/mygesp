@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { sendEmail } from "@/lib/resend";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -45,12 +46,52 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({
-    id: admin.id,
-    username: admin.username,
-    email: admin.email,
-    tempPassword, // Restituiamo la password in chiaro per mostrarla a schermo al Manager
+  // La password temporanea viene inviata via email all'indirizzo dell'utente.
+  const emailResult = await sendEmail({
+    to: admin.email,
+    subject: "Credenziali di accesso MyGesp",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111; line-height: 1.6;">
+        <h2>Benvenuto nello staff MyGesp</h2>
+        <p>È stato creato un account amministratore per te.</p>
+        <ul>
+          <li><strong>Nome utente:</strong> ${admin.username}</li>
+          <li><strong>Password temporanea:</strong> <code style="font-size: 16px;">${tempPassword}</code></li>
+        </ul>
+        <p>Al primo accesso ti verrà richiesto di scegliere una nuova password e di configurare la verifica in due passaggi.</p>
+        <p style="color: #666; font-size: 13px;">Se non ti aspettavi questa email, contatta il responsabile del negozio.</p>
+      </div>
+    `,
   });
+
+  if (emailResult.ok) {
+    return NextResponse.json(
+      {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        emailSent: true,
+        message:
+          "Utente creato. La password temporanea è stata inviata all'indirizzo email indicato.",
+      },
+      { status: 201 }
+    );
+  }
+
+  // Fallback: se Resend non è configurato l'account resterebbe inaccessibile,
+  // quindi restituiamo la password al Manager (unico autorizzato a questa API).
+  return NextResponse.json(
+    {
+      id: admin.id,
+      username: admin.username,
+      email: admin.email,
+      emailSent: false,
+      tempPassword,
+      message:
+        "Utente creato, ma l'email con la password non è stata inviata (RESEND_API_KEY non configurata). Comunica tu la password temporanea.",
+    },
+    { status: 201 }
+  );
 }
 
 export async function GET() {
