@@ -1,21 +1,18 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OTP } from "otplib";
 import QRCode from "qrcode";
 import { generateBackupCodes } from "@/lib/backup-codes";
 import { encryptSecret, decryptSecret } from "@/lib/secret-crypto";
+import { requireAdmin } from "@/lib/admin-guard";
 
 export async function POST() {
-  const session = await auth();
-  const userId = (session?.user as { id?: string })?.id;
-  if (
-    !session ||
-    (session.user as { role?: string })?.role !== "admin" ||
-    !userId
-  ) {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  // Setup consentito anche prima della verifica 2FA (è il bootstrap del
+  // secondo fattore), ma mai con una password temporanea ancora da cambiare.
+  const guard = await requireAdmin({ allowUnverified2fa: true });
+  if (!guard.ok) return guard.response;
+
+  const userId = guard.adminId;
 
   const admin = await prisma.admin.findUnique({
     where: { id: userId },
@@ -39,7 +36,7 @@ export async function POST() {
 
   const otp = new OTP({ strategy: "totp" });
   const issuer = "MyGesp";
-  const label = session.user?.email ?? "admin";
+  const label = guard.admin.email || "admin";
 
   // Setup idempotente: se esiste già un secret non ancora attivato lo riusiamo.
   // Rigenerarlo a ogni POST è pericoloso: un reload della pagina cambierebbe il

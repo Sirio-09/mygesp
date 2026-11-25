@@ -1,9 +1,9 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { generateBackupCodes } from "@/lib/backup-codes";
 import { rateLimitResponse } from "@/lib/rate-limiter";
+import { requireAdmin } from "@/lib/admin-guard";
 
 /**
  * Codici di recupero del 2FA dell'utente collegato.
@@ -22,24 +22,13 @@ function clientIp(req: Request): string {
   );
 }
 
-async function sessionAdminId(): Promise<string | null> {
-  const session = await auth();
-  const user = session?.user as { id?: string; role?: string } | undefined;
-
-  if (!session || user?.role !== "admin" || !user.id) return null;
-
-  return user.id;
-}
-
 export async function GET() {
-  const adminId = await sessionAdminId();
+  const guard = await requireAdmin();
 
-  if (!adminId) {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  if (!guard.ok) return guard.response;
 
   const admin = await prisma.admin.findUnique({
-    where: { id: adminId },
+    where: { id: guard.adminId },
     select: { totpEnabled: true, backupCodes: true },
   });
 
@@ -54,11 +43,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const adminId = await sessionAdminId();
+  const guard = await requireAdmin();
 
-  if (!adminId) {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  if (!guard.ok) return guard.response;
+
+  const adminId = guard.adminId;
 
   const limited = await rateLimitResponse(
     `2fa-backup-codes:${clientIp(req)}`,

@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
+const MAX_COMMENT_LENGTH = 1000;
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session || (session.user as { role?: string })?.role !== "customer") {
@@ -27,15 +29,25 @@ export async function POST(req: Request) {
 
   const customerId = (session.user as { id: string }).id;
 
+  const cleanComment = typeof comment === "string" ? comment.trim() : "";
+
   if (
     typeof productId !== "string" ||
+    productId.length === 0 ||
+    productId.length > 64 ||
     typeof rating !== "number" ||
+    !Number.isInteger(rating) ||
     rating < 1 ||
     rating > 5 ||
-    typeof comment !== "string" ||
-    !comment.trim()
+    cleanComment.length === 0 ||
+    cleanComment.length > MAX_COMMENT_LENGTH
   ) {
-    return NextResponse.json({ error: "Dati non validi" }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: `Dati non validi: il commento deve contenere da 1 a ${MAX_COMMENT_LENGTH} caratteri e il voto essere un intero da 1 a 5.`,
+      },
+      { status: 400 }
+    );
   }
 
   const hasPurchased = await prisma.order.findFirst({
@@ -59,7 +71,7 @@ export async function POST(req: Request) {
 
   try {
     const review = await prisma.review.create({
-      data: { productId, customerId, rating, comment: comment.trim() },
+      data: { productId, customerId, rating, comment: cleanComment },
     });
     return NextResponse.json(review);
   } catch {

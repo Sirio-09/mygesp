@@ -1,5 +1,6 @@
 // OrdiniPage.tsx
 import type { Metadata } from "next";
+import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -23,8 +24,20 @@ export default async function OrdiniPage() {
 
   const orders = await prisma.order.findMany({
     where: { customerId: session.user?.id },
-    include: { items: true },
+    include: {
+      items: {
+        include: {
+          variant: {
+            select: {
+              size: true,
+              product: { select: { name: true, slug: true } },
+            },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 
   return (
@@ -78,6 +91,56 @@ export default async function OrdiniPage() {
               <div className="mb-6 border-t border-line/50 pt-6 text-2xl font-light tabular-nums tracking-tight text-ink">
                 {formatEuro(order.totalCents)}
               </div>
+
+              {order.items.length > 0 && (
+                <div className="border-t border-line/40 pt-6">
+                  <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft mb-3">
+                    Articoli
+                  </h4>
+                  <ul className="divide-y divide-line/40">
+                    {order.items.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-baseline justify-between gap-4 py-2 text-sm font-light text-ink"
+                      >
+                        <span className="min-w-0">
+                          <Link
+                            href={`/prodotto/${item.variant.product.slug}`}
+                            className="underline decoration-line/70 underline-offset-4 transition-colors hover:text-grass-deep"
+                          >
+                            {item.variant.product.name}
+                          </Link>
+                          <span className="text-ink-soft">
+                            {" "}
+                            · Taglia {item.variant.size} · Qtà {item.quantity}
+                          </span>
+                        </span>
+                        <span className="shrink-0 tabular-nums text-ink-soft">
+                          {formatEuro(item.priceCents * item.quantity)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(order.trackingCode || order.carrier) && (
+                <div className="mt-6 border-t border-line/40 pt-6">
+                  <h4 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft mb-3">
+                    Spedizione
+                  </h4>
+                  <p className="text-sm font-light text-ink">
+                    {order.carrier ? `${order.carrier} · ` : ""}
+                    {order.trackingCode ? (
+                      <span className="font-mono text-xs tracking-[0.05em]">
+                        {order.trackingCode}
+                      </span>
+                    ) : (
+                      "In preparazione"
+                    )}
+                  </p>
+                </div>
+              )}
 
               {order.shippingLine1 && (
                 <div className="border-t border-line/40 pt-6">

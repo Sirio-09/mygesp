@@ -1,27 +1,34 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OTP } from "otplib";
 import QRCode from "qrcode";
 import { findBackupCodeIndex } from "@/lib/backup-codes";
 import { encryptSecret } from "@/lib/secret-crypto";
+import { requireAdmin } from "@/lib/admin-guard";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
+  // Recupero d'emergenza: per definizione avviene senza prova 2FA attiva.
+  const guard = await requireAdmin({ allowUnverified2fa: true });
+  if (!guard.ok) return guard.response;
+
+  let code: unknown;
+
+  try {
+    const body = (await req.json()) as { code?: unknown };
+    code = body?.code;
+  } catch {
+    return NextResponse.json({ error: "Richiesta non valida" }, { status: 400 });
   }
 
-  const { code } = await req.json();
-  if (!code || typeof code !== "string") {
+  if (!code || typeof code !== "string" || code.length > 40) {
     return NextResponse.json({ error: "Codice mancante" }, { status: 400 });
   }
 
   const admin = await prisma.admin.findUnique({
-    where: { id: (session.user as { id: string }).id },
+    where: { id: guard.adminId },
   });
 
   if (!admin) {
@@ -97,7 +104,7 @@ export async function POST(req: Request) {
   const newSecret = otp.generateSecret();
   const otpauthUrl = otp.generateURI({
     issuer: "MyGesp",
-    label: session.user?.email ?? "admin",
+    label: admin.email || admin.username,
     secret: newSecret,
   });
   const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);

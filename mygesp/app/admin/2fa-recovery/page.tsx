@@ -105,8 +105,9 @@ export default function RecoveryOtpPage() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        await update({ otpVerified: true, totpEnabled: true });
+        await update({ totpEnabled: true });
         router.push("/admin");
+        router.refresh();
       } else if (res.status === 429 && typeof data.lockedUntil === "string") {
         lock(data.lockedUntil);
       } else {

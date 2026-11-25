@@ -132,11 +132,13 @@ export default function AccountSicurezzaPage() {
 
     try {
       await postWithPassword("/api/admin/2fa/regenerate");
-      // Il token deve riflettere il reset, altrimenti il proxy rimanda alla
-      // dashboard invece di lasciar completare la nuova configurazione.
-      await update({ otpVerified: false, totpEnabled: false });
+      // L'endpoint invalida anche il cookie di prova 2FA: il token deve
+      // riflettere il reset, altrimenti il proxy rimanda alla dashboard invece
+      // di lasciar completare la nuova configurazione.
+      await update({ totpEnabled: false });
       toast.success("2FA azzerato: configura il nuovo dispositivo.");
       router.replace("/admin/2fa-setup");
+      router.refresh();
     } catch (error) {
       setModalError(
         error instanceof Error ? error.message : "Errore di rete. Riprova."

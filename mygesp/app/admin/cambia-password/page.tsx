@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import AdminAlert from "@/components/admin/ui/AdminAlert";
 import AdminButton from "@/components/admin/ui/AdminButton";
 import AdminField from "@/components/admin/ui/AdminField";
@@ -10,7 +10,6 @@ import AdminSection from "@/components/admin/ui/AdminSection";
 import { inputClass } from "@/components/admin/ui/field-styles";
 
 export default function CambiaPasswordPage() {
-  const { update } = useSession();
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -57,10 +56,10 @@ export default function CambiaPasswordPage() {
         throw new Error(data.error || "Errore durante il cambio password");
       }
 
-      await update({ mustChangePassword: false });
-
-      // Il reload completo evita che il router lato client mantenga lo stato vecchio
-      window.location.href = "/admin";
+      // Il cambio password invalida la prova 2FA lato server: la sessione viene
+      // chiusa e si rientra con le nuove credenziali (poi di nuovo il 2FA).
+      // Così il JWT non resta valido con un `mustChangePassword` ormai vecchio.
+      await signOut({ callbackUrl: "/admin/login?password=aggiornata" });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message || "Errore di connessione");
@@ -90,6 +89,7 @@ export default function CambiaPasswordPage() {
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Inserisci la password attuale"
               autoComplete="current-password"
+              maxLength={72}
               required
               className={inputClass}
             />
@@ -106,6 +106,7 @@ export default function CambiaPasswordPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Minimo 8 caratteri"
               autoComplete="new-password"
+              maxLength={72}
               required
               className={inputClass}
             />
@@ -118,6 +119,7 @@ export default function CambiaPasswordPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Ripeti la password"
               autoComplete="new-password"
+              maxLength={72}
               required
               className={inputClass}
             />
@@ -127,7 +129,8 @@ export default function CambiaPasswordPage() {
 
           <div className="flex flex-col gap-4 border-t border-line/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs font-light leading-relaxed text-ink-soft">
-              Al termine verrai riportato alla dashboard.
+              Al termine verrai disconnesso: rientra con la nuova password e
+              rifai la verifica in due passaggi.
             </p>
             <AdminButton
               type="submit"

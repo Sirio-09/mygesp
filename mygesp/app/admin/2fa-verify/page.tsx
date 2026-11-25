@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import AdminAlert from "@/components/admin/ui/AdminAlert";
 import AdminButton from "@/components/admin/ui/AdminButton";
@@ -13,7 +12,6 @@ import { formatLockoutTime, useLockoutCountdown } from "@/lib/use-lockout";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
-  const { update } = useSession();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,8 +33,10 @@ export default function VerifyOtpPage() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        await update({ otpVerified: true });
+        // Il cookie firmato di prova 2FA è impostato dalla risposta: la
+        // navigazione successiva passa dal proxy senza toccare il JWT.
         router.push("/admin");
+        router.refresh();
       } else if (res.status === 429 && typeof data.lockedUntil === "string") {
         // Blocco attivo: conto alla rovescia e form riabilitato alla scadenza.
         lock(data.lockedUntil);

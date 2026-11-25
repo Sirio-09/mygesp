@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/resend";
+import { requireAdmin } from "@/lib/admin-guard";
+import { escapeHtml } from "@/lib/escape-html";
 
 export const dynamic = "force-dynamic";
 
@@ -31,15 +32,24 @@ const STOCK_DEDUCTED_STATUSES: string[] = [
   "delivered",
 ];
 
-export async function GET() {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+export async function GET(req: Request) {
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
 
   try {
+    // Paginazione leggera: il pannello ordini non deve caricare l'intero
+    // storico (con tutte le righe e i prodotti) a ogni apertura. Il client può
+    // chiedere più righe con `?limit=`, entro un tetto ragionevole.
+    const { searchParams } = new URL(req.url);
+    const requested = Number.parseInt(searchParams.get("limit") ?? "", 10);
+    const take =
+      Number.isFinite(requested) && requested > 0
+        ? Math.min(requested, 300)
+        : 100;
+
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: "desc" },
+      take,
       include: {
         items: {
           include: {
@@ -53,20 +63,17 @@ export async function GET() {
 
     return NextResponse.json(orders);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error("Errore recupero ordini:", err);
     return NextResponse.json(
-      { error: message || "Errore del server" },
+      { error: "Errore durante il recupero degli ordini" },
       { status: 500 }
     );
   }
 }
 
 export async function PATCH(req: Request) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
 
   try {
     const { orderId, status, trackingCode, carrier } = await req.json();
@@ -95,12 +102,12 @@ export async function PATCH(req: Request) {
 
     const normalizedTracking =
       typeof trackingCode === "string" && trackingCode.trim().length > 0
-        ? trackingCode.trim()
+        ? trackingCode.trim().slice(0, 64)
         : undefined;
 
     const normalizedCarrier =
       typeof carrier === "string" && carrier.trim().length > 0
-        ? carrier.trim()
+        ? carrier.trim().slice(0, 40)
         : undefined;
 
     // Se l'ordine viene annullato dopo che le giacenze erano state scaricate,
@@ -163,7 +170,7 @@ export async function PATCH(req: Request) {
         .map(
           (item) => `
           <li style="margin-bottom: 6px;">
-            <strong>${item.variant.product.name}</strong> (Taglia: ${item.variant.size}) - Qta: ${item.quantity}
+            <strong>${escapeHtml(item.variant.product.name)}</strong> (Taglia: ${escapeHtml(item.variant.size)}) - Qta: ${item.quantity}
           </li>
         `
         )
@@ -173,8 +180,8 @@ export async function PATCH(req: Request) {
         ? `
           <div style="background-color: #f9f9f8; border: 1px solid #e5e5e0; padding: 16px; margin: 20px 0;">
             <p style="margin: 0; font-weight: bold; color: #111; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Dettagli Spedizione</p>
-            <p style="margin: 6px 0 0 0; color: #444; font-size: 14px;">Corriere: <strong>${updatedOrder.carrier || "Standard"}</strong></p>
-            <p style="margin: 4px 0 0 0; color: #444; font-size: 14px;">Codice Tracking: <strong style="font-family: monospace;">${updatedOrder.trackingCode}</strong></p>
+            <p style="margin: 6px 0 0 0; color: #444; font-size: 14px;">Corriere: <strong>${escapeHtml(updatedOrder.carrier || "Standard")}</strong></p>
+            <p style="margin: 4px 0 0 0; color: #444; font-size: 14px;">Codice Tracking: <strong style="font-family: monospace;">${escapeHtml(updatedOrder.trackingCode)}</strong></p>
           </div>
         `
         : `
@@ -189,7 +196,7 @@ export async function PATCH(req: Request) {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111; line-height: 1.6; border: 1px solid #e5e5e0; padding: 24px; background-color: #ffffff;">
             <h2 style="color: #111; margin-top: 0; font-size: 18px; font-weight: 800; border-bottom: 1px solid #e5e5e0; padding-bottom: 12px; text-transform: uppercase;">Spedizione Confermata</h2>
-            <p>Ciao <strong>${updatedOrder.shippingName || "Cliente"}</strong>,</p>
+            <p>Ciao <strong>${escapeHtml(updatedOrder.shippingName || "Cliente")}</strong>,</p>
             <p>Il tuo ordine è stato spedito ed è in viaggio verso l'indirizzo indicato.</p>
 
             ${trackingHtml}
@@ -214,10 +221,9 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json(updatedOrder);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error("Errore aggiornamento stato ordine:", err);
     return NextResponse.json(
-      { error: message || "Errore del server" },
+      { error: "Errore durante l'aggiornamento dell'ordine" },
       { status: 500 }
     );
   }

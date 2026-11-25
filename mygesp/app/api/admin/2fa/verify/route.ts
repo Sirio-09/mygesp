@@ -1,26 +1,41 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { OTP } from "otplib";
 import { findBackupCodeIndex } from "@/lib/backup-codes";
 import { decryptSecret, encryptSecret, isEncryptedSecret } from "@/lib/secret-crypto";
+import { grantAdmin2fa, requireAdmin } from "@/lib/admin-guard";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
+  // Endpoint di bootstrap: la verifica 2FA non è ancora stata fatta, quindi è
+  // l'unico (insieme a setup/recovery) che può girare senza prova 2FA.
+  const guard = await requireAdmin({ allowUnverified2fa: true });
+  if (!guard.ok) return guard.response;
+
+  let code: unknown;
+
+  try {
+    const body = (await req.json()) as { code?: unknown };
+    code = body?.code;
+  } catch {
+    return NextResponse.json({ error: "Richiesta non valida" }, { status: 400 });
   }
 
-  const { code } = await req.json();
-  if (!code || typeof code !== "string") {
+  if (!code || typeof code !== "string" || code.length > 40) {
     return NextResponse.json({ error: "Codice mancante" }, { status: 400 });
   }
 
+  if (!guard.sessionId) {
+    return NextResponse.json(
+      { error: "Sessione non valida: accedi di nuovo." },
+      { status: 401 }
+    );
+  }
+
   const admin = await prisma.admin.findUnique({
-    where: { id: (session.user as { id: string }).id },
+    where: { id: guard.adminId },
   });
 
   if (!admin?.totpSecret) {
@@ -69,14 +84,14 @@ export async function POST(req: Request) {
   }
 
   // 3. Verifica del codice TOTP (6 cifre)
-  //    `epochTolerance: 30` = uno step RFC 6238 di tolleranza: senza, un codice
-  //    corretto viene rifiutato se l'orologio del telefono è disallineato o se
-  //    la digitazione cade a cavallo del cambio di finestra.
+  //    Tolleranza solo verso il passato: accettiamo la finestra precedente (per
+  //    orologi leggermente indietro e digitazioni a cavallo del cambio step) ma
+  //    non quella futura, che amplierebbe inutilmente la finestra di replay.
   const otp = new OTP({ strategy: "totp" });
   const result = await otp.verify({
     token: cleanCode,
     secret: totpSecret,
-    epochTolerance: 30,
+    epochTolerance: [30, 0],
   });
 
   if (result.valid) {
@@ -92,7 +107,14 @@ export async function POST(req: Request) {
           : { totpSecret: encryptSecret(totpSecret) }),
       },
     });
-    return NextResponse.json({ success: true });
+
+    // Prova 2FA firmata: da qui in avanti le API admin sono sbloccate per
+    // questa sessione (vedi lib/admin-guard.ts).
+    return grantAdmin2fa(
+      NextResponse.json({ success: true }),
+      admin.id,
+      guard.sessionId
+    );
   }
 
   // 4. Se il TOTP fallisce, verifica se è un codice di backup valido
@@ -114,11 +136,15 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      usedBackupCode: true,
-      remainingCodes: updatedBackupCodes.length,
-    });
+    return grantAdmin2fa(
+      NextResponse.json({
+        success: true,
+        usedBackupCode: true,
+        remainingCodes: updatedBackupCodes.length,
+      }),
+      admin.id,
+      guard.sessionId
+    );
   }
 
   // 5. Gestione tentativi errati e blocco temporaneo

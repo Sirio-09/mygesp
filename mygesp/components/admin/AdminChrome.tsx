@@ -16,11 +16,17 @@ import { ArrowUpRight, Menu } from "./ui/icons";
  */
 
 const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/ordini", label: "Ordini" },
-  { href: "/admin/nuovo-prodotto", label: "Nuovo prodotto" },
-  { href: "/admin/utenti", label: "Staff" },
-  { href: "/admin/sicurezza", label: "Account" },
+  { href: "/admin", label: "Dashboard", managerOnly: false },
+  { href: "/admin/ordini", label: "Ordini", managerOnly: false },
+  {
+    href: "/admin/nuovo-prodotto",
+    label: "Nuovo prodotto",
+    managerOnly: false,
+  },
+  // La pagina Staff (e tutte le sue API) è riservata ai Manager: mostrarla a
+  // chi non lo è portava solo a una schermata di errore.
+  { href: "/admin/utenti", label: "Staff", managerOnly: true },
+  { href: "/admin/sicurezza", label: "Account", managerOnly: false },
 ];
 
 const AUTH_ROUTES = [
@@ -63,6 +69,9 @@ export default function AdminChrome({
   const user = session?.user as SessionUser | undefined;
   const displayName = user?.name ?? user?.email ?? "Staff";
   const initials = displayName.slice(0, 2).toUpperCase();
+  const navItems = NAV_ITEMS.filter(
+    (item) => !item.managerOnly || user?.isManager
+  );
 
   const closeMobileMenu = () => {
     if (mobileMenuRef.current) mobileMenuRef.current.open = false;
@@ -102,7 +111,7 @@ export default function AdminChrome({
           {/* Navigazione desktop */}
           <nav aria-label="Navigazione area tecnica" className="hidden lg:block">
             <ul className="flex items-center gap-7">
-              {NAV_ITEMS.map((item) => {
+              {navItems.map((item) => {
                 const active = isActive(pathname, item.href);
 
                 return (
@@ -170,7 +179,7 @@ export default function AdminChrome({
               <div className="absolute right-0 top-full z-50 mt-2 w-64 border border-line bg-paper p-2">
                 <nav aria-label="Navigazione area tecnica (mobile)">
                   <ul>
-                    {NAV_ITEMS.map((item) => {
+                    {navItems.map((item) => {
                       const active = isActive(pathname, item.href);
 
                       return (

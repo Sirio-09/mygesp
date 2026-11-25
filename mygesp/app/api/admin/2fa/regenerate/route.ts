@@ -1,4 +1,3 @@
-import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -7,6 +6,7 @@ import QRCode from "qrcode";
 import { generateBackupCodes } from "@/lib/backup-codes";
 import { rateLimitResponse } from "@/lib/rate-limiter";
 import { encryptSecret } from "@/lib/secret-crypto";
+import { clearAdmin2fa, requireAdmin } from "@/lib/admin-guard";
 
 function clientIp(req: Request): string {
   return (
@@ -17,15 +17,10 @@ function clientIp(req: Request): string {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  const userId = (session?.user as { id?: string })?.id;
-  if (
-    !session ||
-    (session.user as { role?: string })?.role !== "admin" ||
-    !userId
-  ) {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
+
+  const userId = guard.adminId;
 
   // Rigenerare il 2FA azzera il fattore attivo: senza la password attuale
   // basterebbe una sessione rubata per prendere il controllo dell'account.
@@ -92,5 +87,7 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ qrCodeDataUrl, secret, backupCodes: plain });
+  return clearAdmin2fa(
+    NextResponse.json({ qrCodeDataUrl, secret, backupCodes: plain })
+  );
 }

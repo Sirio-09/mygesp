@@ -7,8 +7,11 @@ import {
   isStripeConfigured,
 } from "@/lib/stripe";
 import { calculateShippingCents, getShippingLabel } from "@/lib/site";
+import { rateLimitResponse } from "@/lib/rate-limiter";
 
 export const dynamic = "force-dynamic";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
 type IncomingItem = { variantId: string; quantity: number };
 
@@ -68,16 +71,22 @@ function normalizeItems(rawItems: unknown): IncomingItem[] | null {
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const limited = await rateLimitResponse(
+      `checkout:ip:${ip}`,
+      10,
+      10 * 60 * 1000
+    );
+    if (limited) return limited;
+
     const body = await req.json().catch(() => null);
 
     if (!body || typeof body !== "object") {
       return NextResponse.json({ error: "Payload non valido" }, { status: 400 });
     }
 
-    const { items, cap, email, name, address, city } = body as Record<
-      string,
-      unknown
-    >;
+    const { items, cap, email, name, address, city, expectedSubtotalCents } =
+      body as Record<string, unknown>;
 
     const normalizedItems = normalizeItems(items);
 
@@ -147,10 +156,59 @@ export async function POST(req: Request) {
     const shippingCostCents = calculateShippingCents(subtotalCents, cleanCap);
     const totalCents = subtotalCents + shippingCostCents;
 
-    const cleanEmail = typeof email === "string" ? email.trim() : "";
-    const cleanName = typeof name === "string" ? name.trim() : "";
-    const cleanAddress = typeof address === "string" ? address.trim() : "";
-    const cleanCity = typeof city === "string" ? city.trim() : "";
+    // Coerenza prezzi: il client mostra il riepilogo con i prezzi salvati nel
+    // carrello (localStorage). Se nel frattempo un prezzo o uno sconto è
+    // cambiato, l'utente pagherebbe un importo diverso da quello che ha letto:
+    // blocchiamo il checkout chiedendogli di ricontrollare il carrello.
+    if (
+      typeof expectedSubtotalCents === "number" &&
+      Number.isFinite(expectedSubtotalCents) &&
+      expectedSubtotalCents !== subtotalCents
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "I prezzi di alcuni articoli sono cambiati. Abbiamo aggiornato il riepilogo: controllalo e riprova.",
+          code: "price-changed",
+          subtotalCents,
+          // Prezzi autorevoli per permettere al client di riallineare il
+          // carrello locale (localStorage) invece di restare bloccato.
+          prices: normalizedItems.map((item) => ({
+            variantId: item.variantId,
+            priceCents: getEffectivePriceCents(
+              variants.find((v) => v.id === item.variantId)!
+            ),
+          })),
+        },
+        { status: 409 }
+      );
+    }
+
+    const cleanEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const cleanName = typeof name === "string" ? name.trim().slice(0, 120) : "";
+    const cleanAddress = typeof address === "string" ? address.trim().slice(0, 200) : "";
+    const cleanCity = typeof city === "string" ? city.trim().slice(0, 100) : "";
+
+    // L'email serve per la ricevuta e per la conferma d'ordine: senza un
+    // indirizzo valido l'ordine resterebbe orfano e il cliente non riceverebbe
+    // nulla (prima veniva accettata anche una stringa vuota o "abc").
+    if (
+      cleanEmail.length === 0 ||
+      cleanEmail.length > 254 ||
+      !EMAIL_PATTERN.test(cleanEmail)
+    ) {
+      return NextResponse.json(
+        { error: "Inserisci un indirizzo email valido per la conferma d'ordine." },
+        { status: 400 }
+      );
+    }
+
+    if (!cleanName || !cleanAddress || !cleanCity) {
+      return NextResponse.json(
+        { error: "Nome, indirizzo e città sono obbligatori per la spedizione." },
+        { status: 400 }
+      );
+    }
 
     // 1. Creiamo subito l'ordine in stato "pending": è la fonte di verità che il
     // webhook confermerà. In questo modo il metadata Stripe resta piccolo
@@ -256,7 +314,7 @@ export async function POST(req: Request) {
       {
         error: isUrlConfigError
           ? "Configurazione pagamenti non valida: l'URL del sito non è corretto. Riprova più tardi o contatta l'assistenza."
-          : message || "Errore del server",
+          : "Non è stato possibile avviare il pagamento. Riprova tra poco o contatta l'assistenza.",
       },
       { status: 500 }
     );

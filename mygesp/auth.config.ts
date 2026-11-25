@@ -1,5 +1,16 @@
 import type { NextAuthConfig } from "next-auth";
 
+/**
+ * Configurazione condivisa fra il server (`auth.ts`) e il proxy.
+ *
+ * Sicurezza: il ramo `trigger === "update"` viene invocato da
+ * `useSession().update(...)`, cioè con dati che arrivano dal browser. In
+ * precedenza accettava `otpVerified`, `mustChangePassword`, `totpEnabled` e
+ * `isVerified`: un `update({ otpVerified: true })` dalla console del browser
+ * disattivava di fatto il 2FA. Ora l'unica cosa aggiornabile è `totpEnabled`,
+ * che serve solo a scegliere quale pagina di 2FA mostrare (la verifica reale
+ * vive nel cookie firmato gestito da `/api/admin/2fa/verify`).
+ */
 export const authConfig = {
   providers: [],
   pages: {
@@ -16,31 +27,22 @@ export const authConfig = {
           token.totpEnabled = user.totpEnabled;
           token.isManager = user.isManager;
           token.mustChangePassword = user.mustChangePassword;
-          token.otpVerified = false;
         }
       }
 
+      // Identificativo della singola sessione: lega la prova 2FA al login
+      // corrente, così un accesso successivo deve rifare il secondo fattore.
+      // Il fallback copre i token emessi prima di questa modifica.
+      if (!token.sid) {
+        token.sid = globalThis.crypto.randomUUID();
+      }
+
       if (trigger === "update" && updateData) {
-        const newMustChange =
-          updateData.mustChangePassword ?? updateData.user?.mustChangePassword;
-        const newOtpVerified =
-          updateData.otpVerified ?? updateData.user?.otpVerified;
         const newTotpEnabled =
           updateData.totpEnabled ?? updateData.user?.totpEnabled;
-        const newIsVerified =
-          updateData.isVerified ?? updateData.user?.isVerified;
 
-        if (typeof newMustChange === "boolean") {
-          token.mustChangePassword = newMustChange;
-        }
-        if (typeof newOtpVerified === "boolean") {
-          token.otpVerified = newOtpVerified;
-        }
         if (typeof newTotpEnabled === "boolean") {
           token.totpEnabled = newTotpEnabled;
-        }
-        if (typeof newIsVerified === "boolean") {
-          token.isVerified = newIsVerified;
         }
       }
 
@@ -51,12 +53,12 @@ export const authConfig = {
         session.user.id = token.id as string;
         session.user.role = token.role;
         session.user.isVerified = token.isVerified;
+        session.user.sid = token.sid;
 
         if (token.role === "admin") {
           session.user.totpEnabled = token.totpEnabled;
           session.user.isManager = token.isManager;
           session.user.mustChangePassword = token.mustChangePassword;
-          session.user.otpVerified = token.otpVerified;
         }
       }
       return session;

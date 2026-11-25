@@ -3,17 +3,26 @@ import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/resend";
 import crypto from "crypto";
 import { rateLimitResponse } from "@/lib/rate-limiter";
+import { getSiteUrl } from "@/lib/stripe";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting: 5 richieste per 15 minuti per IP
+    // Rate limiting per IP e per indirizzo: chiavi distinte da quelle di
+    // registrazione e login, altrimenti i tre flussi si consumavano a vicenda
+    // lo stesso contatore.
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const rateLimitRes = await rateLimitResponse(ip, 5, 15 * 60 * 1000);
-    if (rateLimitRes) return rateLimitRes;
+    const ipLimit = await rateLimitResponse(
+      `password-reset:ip:${ip}`,
+      5,
+      15 * 60 * 1000
+    );
+    if (ipLimit) return ipLimit;
 
     const { email } = await req.json();
 
-    if (!email) {
+    if (typeof email !== "string" || !email.trim()) {
       return NextResponse.json(
         { error: "Inserisci un indirizzo email valido." },
         { status: 400 }
@@ -21,6 +30,21 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanEmail.length > 254 || !EMAIL_PATTERN.test(cleanEmail)) {
+      return NextResponse.json(
+        { error: "Inserisci un indirizzo email valido." },
+        { status: 400 }
+      );
+    }
+
+    const emailLimit = await rateLimitResponse(
+      `password-reset:email:${cleanEmail}`,
+      3,
+      15 * 60 * 1000
+    );
+    if (emailLimit) return emailLimit;
+
     const customer = await prisma.customer.findUnique({
       where: { email: cleanEmail },
     });
@@ -42,8 +66,7 @@ export async function POST(req: Request) {
       data: { token, customerId: customer.id, expiresAt },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const resetUrl = `${baseUrl.replace(/\/$/, "")}/account/reimposta-password?token=${token}`;
+    const resetUrl = `${getSiteUrl()}/account/reimposta-password?token=${token}`;
 
     await sendEmail({
       to: cleanEmail,

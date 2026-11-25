@@ -9,13 +9,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    // Limite sulla lunghezza: una query arbitrariamente lunga finiva in quattro
+    // `contains` su tutta la tabella prodotti.
+    const safeQuery = q.slice(0, 60);
+
     const products = await prisma.product.findMany({
       where: {
         OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          { brand: { contains: q, mode: "insensitive" } },
-          { shortTitle: { contains: q, mode: "insensitive" } },
-          { shortDescription: { contains: q, mode: "insensitive" } },
+          { name: { contains: safeQuery, mode: "insensitive" } },
+          { brand: { contains: safeQuery, mode: "insensitive" } },
+          { shortTitle: { contains: safeQuery, mode: "insensitive" } },
+          { shortDescription: { contains: safeQuery, mode: "insensitive" } },
         ],
       },
       take: 10,

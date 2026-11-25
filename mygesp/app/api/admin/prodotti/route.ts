@@ -1,20 +1,18 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import {
   parseProductInput,
   toFriendlyPrismaError,
   type RawProductInput,
 } from "@/lib/product-input";
+import { requireAdmin } from "@/lib/admin-guard";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/admin/prodotti — elenco prodotti per il pannello di gestione
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
 
   try {
     const { searchParams } = req.nextUrl;
@@ -60,10 +58,8 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/prodotti — creazione prodotto
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
 
   try {
     const body = (await req.json()) as RawProductInput;

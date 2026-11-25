@@ -1,6 +1,10 @@
 import NextAuth from "next-auth";
 import { authConfig } from "@/auth.config";
 import { NextResponse } from "next/server";
+import {
+  ADMIN_2FA_COOKIE,
+  verifyAdmin2faToken,
+} from "@/lib/admin-2fa-token";
 
 const { auth } = NextAuth(authConfig);
 
@@ -8,14 +12,36 @@ const { auth } = NextAuth(authConfig);
 // `proxy.ts`. Il runtime è Node.js per default (v16+).
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const role = (req.auth?.user as { role?: string })?.role;
-  const otpVerified = (req.auth?.user as { otpVerified?: boolean })?.otpVerified;
-  const totpEnabled = (req.auth?.user as { totpEnabled?: boolean })?.totpEnabled;
-  const mustChangePassword = (req.auth?.user as { mustChangePassword?: boolean })
-    ?.mustChangePassword;
+  const user = req.auth?.user as
+    | {
+        id?: string;
+        role?: string;
+        sid?: string;
+        totpEnabled?: boolean;
+        mustChangePassword?: boolean;
+      }
+    | undefined;
+
+  const role = user?.role;
+  const totpEnabled = user?.totpEnabled;
+  const mustChangePassword = user?.mustChangePassword;
   const pathname = req.nextUrl.pathname;
 
   if (!pathname.startsWith("/admin")) return;
+
+  // La verifica 2FA non è più un flag nel JWT (era falsificabile con
+  // `useSession().update()` dal browser): si legge il cookie firmato e lo si
+  // lega all'admin e alla sessione correnti. Il proxy resta comunque solo un
+  // livello di UX: la vera autorizzazione è in `lib/admin-guard.ts` su ogni API.
+  const proof = verifyAdmin2faToken(
+    req.cookies.get(ADMIN_2FA_COOKIE)?.value
+  );
+  const otpVerified =
+    !!proof &&
+    !!user?.id &&
+    !!user.sid &&
+    proof.adminId === user.id &&
+    proof.sessionId === user.sid;
 
   const isLoginPage = pathname === "/admin/login";
   const is2faSetupPage = pathname === "/admin/2fa-setup";
@@ -26,7 +52,7 @@ export default auth((req) => {
 
   // 1. Se è già autenticato e verificato, non deve accedere alla pagina di Login
   if (isLoginPage) {
-    if (isLoggedIn && otpVerified) {
+    if (isLoggedIn && otpVerified && !mustChangePassword) {
       return NextResponse.redirect(new URL("/admin", req.nextUrl));
     }
     return;
@@ -76,3 +102,4 @@ export default auth((req) => {
 export const config = {
   matcher: ["/admin/:path*"],
 };
+

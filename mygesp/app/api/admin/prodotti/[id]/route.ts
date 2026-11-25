@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
@@ -10,6 +9,7 @@ import {
 import { sendEmail, isEmailConfigured } from "@/lib/resend";
 import { getSiteUrl } from "@/lib/stripe";
 import { formatEuro } from "@/lib/site";
+import { requireAdmin } from "@/lib/admin-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -61,10 +61,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
 
   const { id } = await params;
 
@@ -114,10 +112,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
 
   const { id } = await params;
 

@@ -16,10 +16,23 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+
+  // Messaggi per tutti i casi di redirect prodotti dal flusso di verifica:
+  // prima solo `token-scaduto` aveva un testo, gli altri sparivano nel nulla.
+  const redirectErrorMessages: Record<string, string> = {
+    "token-scaduto": "Il link di verifica non è valido o è scaduto.",
+    "token-mancante": "Il link di verifica è incompleto. Richiedine uno nuovo.",
+    "server-error":
+      "Si è verificato un errore durante la verifica. Riprova più tardi.",
+  };
+  const redirectError = errorParam ? redirectErrorMessages[errorParam] : undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setResendMessage("");
     setLoading(true);
 
     try {
@@ -42,6 +55,49 @@ function LoginForm() {
     }
   };
 
+  const handleResend = async () => {
+    setError("");
+    setResendMessage("");
+
+    if (!email.trim()) {
+      setError("Inserisci la tua email per ricevere un nuovo link di conferma.");
+      return;
+    }
+
+    setResendLoading(true);
+
+    try {
+      const res = await fetch("/account/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : "Non è stato possibile inviare l'email di conferma."
+        );
+      }
+
+      // Risposta volutamente generica (nessuna enumerazione degli indirizzi).
+      setResendMessage(
+        "Se l'indirizzo è registrato e non ancora confermato, riceverai a breve una nuova email."
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Si è verificato un errore durante l'invio."
+      );
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {isVerifiedParam && (
@@ -56,6 +112,14 @@ function LoginForm() {
         <div className="border border-red-500/30 p-4 bg-red-50">
           <p className="text-red-600 text-[11px] uppercase tracking-[0.1em] font-semibold">
             Il link di verifica non è valido o è scaduto.
+          </p>
+        </div>
+      )}
+
+      {redirectError && errorParam !== "token-scaduto" && (
+        <div className="border border-red-500/30 p-4 bg-red-50">
+          <p className="text-red-600 text-[11px] uppercase tracking-[0.1em] font-semibold">
+            {redirectError}
           </p>
         </div>
       )}
@@ -97,6 +161,23 @@ function LoginForm() {
           {error}
         </p>
       )}
+
+      {resendMessage && (
+        <p className="text-grass-deep text-[11px] uppercase tracking-[0.1em] font-semibold text-center mt-2">
+          {resendMessage}
+        </p>
+      )}
+
+      <button
+        type="button"
+        onClick={handleResend}
+        disabled={resendLoading}
+        className="w-full border border-line/70 px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft transition-colors duration-300 hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {resendLoading
+          ? "Invio in corso..."
+          : "Non hai ricevuto l'email di conferma? Reinvia"}
+      </button>
     </form>
   );
 }

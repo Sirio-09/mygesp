@@ -7,18 +7,31 @@ export async function GET(
 ) {
   const { productId } = await params;
 
-  // Rimossi i dati sensibili del cliente (email e nome) per prevenire il leak
-  // Ora restituiamo solo i dati della recensione
-  const reviews = await prisma.review.findMany({
-    where: { productId },
-    select: {
-      id: true,
-      comment: true,
-      rating: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  if (!productId || productId.length > 64) {
+    return NextResponse.json([]);
+  }
 
-  return NextResponse.json(reviews);
+  try {
+    // Rimossi i dati sensibili del cliente (email e nome) per prevenire il leak
+    // Ora restituiamo solo i dati della recensione
+    const reviews = await prisma.review.findMany({
+      where: { productId },
+      select: {
+        id: true,
+        comment: true,
+        rating: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    return NextResponse.json(reviews);
+  } catch (err) {
+    console.error("Errore recupero recensioni:", err);
+    return NextResponse.json(
+      { error: "Errore durante il recupero delle recensioni" },
+      { status: 500 }
+    );
+  }
 }

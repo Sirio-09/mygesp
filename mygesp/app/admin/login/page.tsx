@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import AdminAlert from "@/components/admin/ui/AdminAlert";
@@ -13,11 +13,23 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Letto dal browser invece che con `useSearchParams()`: questa pagina resta
+  // statica e non ha bisogno di un boundary Suspense solo per un messaggio.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("password") === "aggiornata") {
+      setNotice("Password aggiornata. Accedi con le nuove credenziali.");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotice("");
     setLoading(true);
 
     const result = await signIn("admin-login", {
@@ -75,6 +87,8 @@ export default function LoginPage() {
             className={`${inputClass} tracking-[0.2em]`}
           />
         </AdminField>
+
+        {notice && <AdminAlert tone="success">{notice}</AdminAlert>}
 
         {error && <AdminAlert tone="danger">{error}</AdminAlert>}
 

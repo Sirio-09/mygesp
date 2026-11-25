@@ -13,6 +13,7 @@ import {
 
 export default function CheckoutPage() {
   const { items } = useCartStore()
+  const applyPrices = useCartStore((state) => state.applyPrices)
 
   const [mounted, setMounted] = useState(false)
   const [name, setName] = useState('')
@@ -59,10 +60,19 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: items.map((i: CartItem) => ({ variantId: i.variantId, quantity: i.quantity })),
           cap: cap.trim(), email: email.trim(), name: name.trim(), address: address.trim(), city: city.trim(),
+          // Il server ricalcola il subtotale dai prezzi reali: se non coincide
+          // con quello mostrato qui, il checkout si ferma invece di far pagare
+          // un importo diverso da quello letto (code: "price-changed").
+          expectedSubtotalCents: subtotalCents,
         }),
       })
       const data = await res.json()
       if (!res.ok) {
+        // Prezzi cambiati nel frattempo: il server restituisce quelli reali,
+        // così il riepilogo si riallinea e l'utente può riprovare subito.
+        if (data.code === 'price-changed' && Array.isArray(data.prices)) {
+          applyPrices(data.prices)
+        }
         setError(data.error || "Errore durante l'avvio del pagamento.")
         setLoading(false)
         return

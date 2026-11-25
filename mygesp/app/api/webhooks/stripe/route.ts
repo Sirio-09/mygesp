@@ -8,6 +8,7 @@ import {
 } from "@/lib/stripe";
 import { sendEmail } from "@/lib/resend";
 import { formatEuro } from "@/lib/site";
+import { escapeHtml } from "@/lib/escape-html";
 
 export const dynamic = "force-dynamic";
 
@@ -144,8 +145,13 @@ async function confirmPaidOrder(
   const orderId = order.id;
 
   const confirmed = await prisma.$transaction(async (tx) => {
-    const updated = await tx.order.update({
-      where: { id: orderId },
+    // Gate di idempotenza atomico: solo la prima esecuzione trova l'ordine in
+    // stato diverso da "paid" e può proseguire. Prima era un `update` + un check
+    // in memoria, quindi due webhook concorrenti (Stripe può consegnare lo
+    // stesso evento più volte in parallelo) scaricavano le giacenze due volte e
+    // mandavano due email di conferma.
+    const gate = await tx.order.updateMany({
+      where: { id: orderId, status: { not: "paid" } },
       data: {
         status: "paid",
         stripeSessionId,
@@ -157,6 +163,15 @@ async function confirmPaidOrder(
         shippingCountry,
         totalCents: session.amount_total ?? order.totalCents,
       },
+    });
+
+    if (gate.count === 0) {
+      console.log("Ordine già confermato da un altro evento, salto:", orderId);
+      return null;
+    }
+
+    const updated = await tx.order.findUniqueOrThrow({
+      where: { id: orderId },
       include: ORDER_INCLUDE,
     });
 
@@ -224,7 +239,7 @@ async function sendOrderConfirmation(
       (item) => `
         <tr>
           <td style="padding: 10px; border-bottom: 1px solid #eee;">
-            <strong>${item.variant.product.name}</strong> (Taglia: ${item.variant.size})
+            <strong>${escapeHtml(item.variant.product.name)}</strong> (Taglia: ${escapeHtml(item.variant.size)})
           </td>
           <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">
             ${item.quantity}
@@ -253,7 +268,7 @@ async function sendOrderConfirmation(
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6; border: 1px solid #eee; padding: 24px; border-radius: 8px;">
         <h2 style="color: #111; text-align: center; margin-top: 0;">Grazie per il tuo ordine!</h2>
-        <p>Ciao <strong>${order.shippingName || "Cliente"}</strong>,</p>
+        <p>Ciao <strong>${escapeHtml(order.shippingName || "Cliente")}</strong>,</p>
         <p>Abbiamo ricevuto il tuo pagamento e il tuo ordine è in fase di preparazione.</p>
 
         <div style="background-color: #f8f9fa; padding: 16px; border-radius: 6px; margin: 20px 0;">
@@ -349,10 +364,9 @@ export async function POST(req: Request) {
       getStripeWebhookSecret()
     );
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error("Webhook signature non valida:", err);
     return NextResponse.json(
-      { error: `Signature non valida: ${message}` },
+      { error: "Firma del webhook non valida" },
       { status: 400 }
     );
   }
@@ -408,13 +422,44 @@ export async function POST(req: Request) {
         break;
       }
 
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object;
+        const metadata = session.metadata ?? {};
+
+        const failedOrder = metadata.orderId
+          ? await prisma.order.findUnique({ where: { id: metadata.orderId } })
+          : await prisma.order.findFirst({
+              where: { stripeSessionId: session.id },
+            });
+
+        // Le giacenze non sono mai state scaricate (l'ordine non è mai passato
+        // a "paid"): basta annullarlo così il cliente non resta con un ordine
+        // pendente a tempo indefinito.
+        if (failedOrder && failedOrder.status === "pending") {
+          await prisma.order.update({
+            where: { id: failedOrder.id },
+            data: { status: "canceled" },
+          });
+          console.log(
+            "Ordine annullato (pagamento asincrono fallito):",
+            failedOrder.id
+          );
+        }
+
+        break;
+      }
+
       default:
         break;
     }
   } catch (err) {
-    // Rispondiamo comunque 200 per evitare retry storm di Stripe su errori
-    // applicativi già loggati (es. email non inviata).
+    // 500 (e non 200): un errore applicativo deve far ritentare Stripe, che è
+    // l'unico modo per non perdere la conferma di un pagamento già incassato.
     console.error("ERRORE durante la gestione dell'evento Stripe:", err);
+    return NextResponse.json(
+      { error: "Errore nella gestione dell'evento" },
+      { status: 500 }
+    );
   }
 
   return NextResponse.json({ received: true });

@@ -11,13 +11,14 @@ declare module "next-auth" {
     totpEnabled?: boolean;
     isManager?: boolean;
     mustChangePassword?: boolean;
-    otpVerified?: boolean;
     isVerified?: boolean;
   }
   interface Session {
     user: User & {
       id: string;
       email: string;
+      /** Identificativo della singola sessione (lega la prova 2FA al login). */
+      sid?: string;
     };
   }
 }
@@ -29,8 +30,8 @@ declare module "@auth/core/jwt" {
     totpEnabled?: boolean;
     isManager?: boolean;
     mustChangePassword?: boolean;
-    otpVerified?: boolean;
     isVerified?: boolean;
+    sid?: string;
   }
 }
 
@@ -65,8 +66,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        const admin = await prisma.admin.findUnique({
-          where: { username: credentials.username as string },
+        const admin = await prisma.admin.findFirst({
+          // Ricerca case-insensitive: il rate limiting normalizza lo username in
+          // minuscolo, quindi il lookup deve usare la stessa normalizzazione o
+          // bastava cambiare maiuscole/minuscole per aggirare il limite per
+          // utente (e per creare account dall'ortografia ambigua).
+          where: { username: { equals: username, mode: "insensitive" } },
         });
         if (!admin) return null;
 
@@ -83,7 +88,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           totpEnabled: admin.totpEnabled,
           isManager: admin.isManager,
           mustChangePassword: admin.mustChangePassword,
-          otpVerified: false,
         };
       },
     }),

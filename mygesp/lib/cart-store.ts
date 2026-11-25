@@ -19,6 +19,8 @@ type CartStore = {
   addItem: (item: CartItem) => void;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
+  /** Riallinea i prezzi salvati nel carrello con quelli autorevoli del server. */
+  applyPrices: (prices: { variantId: string; priceCents: number }[]) => void;
   clear: () => void;
   totalCents: () => number;
   totalItems: () => number;
@@ -65,6 +67,32 @@ export const useCartStore = create<CartStore>()(
           items: get().items.map((i) =>
             i.variantId === variantId ? { ...i, quantity } : i
           ),
+        });
+      },
+
+      applyPrices: (prices) => {
+        if (!Array.isArray(prices) || prices.length === 0) return;
+
+        const byVariant = new Map(
+          prices
+            .filter(
+              (entry) =>
+                typeof entry?.variantId === "string" &&
+                Number.isFinite(entry?.priceCents)
+            )
+            .map((entry) => [entry.variantId, entry.priceCents] as const)
+        );
+
+        if (byVariant.size === 0) return;
+
+        set({
+          items: get().items.map((item) => {
+            const price = byVariant.get(item.variantId);
+
+            return price === undefined || price === item.priceCents
+              ? item
+              : { ...item, priceCents: price };
+          }),
         });
       },
 

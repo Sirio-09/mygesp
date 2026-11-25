@@ -1,50 +1,84 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/resend";
+import { requireAdmin } from "@/lib/admin-guard";
+import { escapeHtml } from "@/lib/escape-html";
+
+const USERNAME_PATTERN = /^[a-z0-9._-]{3,32}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
-  if (!(session.user as { isManager?: boolean })?.isManager) {
-    return NextResponse.json({ error: "Solo il manager può creare nuovi utenti" }, { status: 403 });
+  const guard = await requireAdmin({ requireManager: true });
+  if (!guard.ok) return guard.response;
+
+  let body: { username?: unknown; email?: unknown };
+
+  try {
+    body = (await req.json()) as { username?: unknown; email?: unknown };
+  } catch {
+    return NextResponse.json({ error: "Richiesta non valida" }, { status: 400 });
   }
 
-  const { username, email } = await req.json();
+  const username =
+    typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
-  if (!username || !email) {
+  if (!USERNAME_PATTERN.test(username)) {
     return NextResponse.json(
-      { error: "Nome utente ed email sono obbligatori" },
+      {
+        error:
+          "Nome utente non valido: 3-32 caratteri tra lettere, numeri, punto, trattino e underscore.",
+      },
       { status: 400 }
     );
   }
 
-  const existingUsername = await prisma.admin.findUnique({ where: { username } });
+  if (email.length > 254 || !EMAIL_PATTERN.test(email)) {
+    return NextResponse.json({ error: "Email non valida" }, { status: 400 });
+  }
+
+  const [existingUsername, existingEmail] = await Promise.all([
+    prisma.admin.findUnique({ where: { username } }),
+    prisma.admin.findUnique({ where: { email } }),
+  ]);
+
   if (existingUsername) {
     return NextResponse.json({ error: "Nome utente già in uso" }, { status: 400 });
   }
 
-  const existingEmail = await prisma.admin.findUnique({ where: { email } });
   if (existingEmail) {
-    return NextResponse.json({ error: "Email già registrata come admin" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Email già registrata come admin" },
+      { status: 400 }
+    );
   }
 
-  // Genera password casuale di 10 caratteri
-  const tempPassword = crypto.randomBytes(5).toString("hex");
-  const hashedPassword = await bcrypt.hash(tempPassword, 10);
+  // Password temporanea robusta: 12 byte casuali (96 bit) in base64url.
+  const tempPassword = crypto.randomBytes(12).toString("base64url");
+  const hashedPassword = await bcrypt.hash(tempPassword, 12);
 
-  const admin = await prisma.admin.create({
-    data: {
-      username,
-      email,
-      password: hashedPassword,
-      mustChangePassword: true,
-    },
-  });
+  let admin;
+
+  try {
+    admin = await prisma.admin.create({
+      data: {
+        username,
+        email,
+        password: hashedPassword,
+        mustChangePassword: true,
+      },
+    });
+  } catch (err) {
+    // Race condition fra il controllo duplicati e l'INSERT.
+    console.error("Errore creazione admin:", err);
+    return NextResponse.json(
+      { error: "Impossibile creare l'utente: riprova." },
+      { status: 500 }
+    );
+  }
 
   // La password temporanea viene inviata via email all'indirizzo dell'utente.
   const emailResult = await sendEmail({
@@ -55,8 +89,8 @@ export async function POST(req: Request) {
         <h2>Benvenuto nello staff MyGesp</h2>
         <p>È stato creato un account amministratore per te.</p>
         <ul>
-          <li><strong>Nome utente:</strong> ${admin.username}</li>
-          <li><strong>Password temporanea:</strong> <code style="font-size: 16px;">${tempPassword}</code></li>
+          <li><strong>Nome utente:</strong> ${escapeHtml(admin.username)}</li>
+          <li><strong>Password temporanea:</strong> <code style="font-size: 16px;">${escapeHtml(tempPassword)}</code></li>
         </ul>
         <p>Al primo accesso ti verrà richiesto di scegliere una nuova password e di configurare la verifica in due passaggi.</p>
         <p style="color: #666; font-size: 13px;">Se non ti aspettavi questa email, contatta il responsabile del negozio.</p>
@@ -95,21 +129,28 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
+
+  try {
+    const admins = await prisma.admin.findMany({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        totpEnabled: true,
+        isManager: true,
+        mustChangePassword: true,
+      },
+      orderBy: { username: "asc" },
+    });
+
+    return NextResponse.json(admins);
+  } catch (err) {
+    console.error("Errore recupero utenti admin:", err);
+    return NextResponse.json(
+      { error: "Errore durante il recupero degli utenti" },
+      { status: 500 }
+    );
   }
-
-  const admins = await prisma.admin.findMany({
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      totpEnabled: true,
-      isManager: true,
-      mustChangePassword: true,
-    },
-  });
-
-  return NextResponse.json(admins);
 }

@@ -1,15 +1,11 @@
 import { prisma } from "@/lib/db";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
-import {
-  parseProductInput,
-  toFriendlyPrismaError,
-  type RawProductInput,
-} from "@/lib/product-input";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/prodotti
+// GET /api/prodotti — catalogo pubblico (usato dal menu mobile e dalla vetrina).
+// La creazione/modifica passa solo da /api/admin/prodotti, che è protetta dal
+// guard (password + 2FA); qui il vecchio POST duplicato è stato rimosso.
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
@@ -51,46 +47,6 @@ export async function GET(req: NextRequest) {
     console.error("Errore recupero prodotti:", err);
     return NextResponse.json(
       { error: "Errore durante il recupero dei prodotti" },
-      { status: 500 }
-    );
-  }
-}
-
-// POST /api/prodotti (riservato agli admin)
-export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session || (session.user as { role?: string })?.role !== "admin") {
-    return NextResponse.json({ error: "Non autorizzato" }, { status: 401 });
-  }
-
-  try {
-    const body = (await req.json()) as RawProductInput;
-    const parsed = parseProductInput(body);
-
-    if (!parsed.ok) {
-      return NextResponse.json({ error: parsed.error }, { status: 400 });
-    }
-
-    const product = await prisma.product.create({
-      data: {
-        ...parsed.data,
-        variants: {
-          create: parsed.variants.map((variant) => ({
-            size: variant.size,
-            sku: variant.sku,
-            priceCents: variant.priceCents,
-            stock: variant.stock,
-          })),
-        },
-      },
-      include: { variants: true },
-    });
-
-    return NextResponse.json(product, { status: 201 });
-  } catch (err) {
-    console.error("Errore salvataggio prodotto:", err);
-    return NextResponse.json(
-      { error: toFriendlyPrismaError(err) },
       { status: 500 }
     );
   }

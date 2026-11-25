@@ -49,7 +49,9 @@ export default function SetupOtpPage() {
         // fallita o sessione vecchia). Si torna alla verifica invece di
         // sovrascrivere un secret che sta funzionando.
         if (res.status === 409) {
-          await update({ totpEnabled: true, otpVerified: false });
+          // Il database sa che il 2FA è attivo: allineiamo solo il flag di UI
+          // (non è un'autorizzazione) e passiamo alla verifica.
+          await update({ totpEnabled: true });
           router.replace("/admin/2fa-verify");
           return;
         }
@@ -106,8 +108,9 @@ export default function SetupOtpPage() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        await update({ otpVerified: true, totpEnabled: true });
+        await update({ totpEnabled: true });
         router.push("/admin");
+        router.refresh();
         return;
       }
 

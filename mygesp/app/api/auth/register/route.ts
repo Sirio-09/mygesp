@@ -5,26 +5,46 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { rateLimitResponse } from "@/lib/rate-limiter";
+import { getSiteUrl } from "@/lib/stripe";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
+const MAX_PASSWORD_LENGTH = 72;
+
+/** Email già iscritta alla newsletter: la violazione dell'unique non è un errore. */
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: string }).code === "P2002"
+  );
+}
 
 export async function POST(req: Request) {
   try {
-    // Rate limiting: 3 registrazioni per 15 minuti per IP
+    // Rate limiting: 3 registrazioni per 15 minuti per IP. Il prefisso evita di
+    // condividere il contatore con gli altri endpoint pubblici (prima
+    // registrazione e recupero password usavano la stessa chiave `ip`).
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    const rateLimitRes = await rateLimitResponse(ip, 3, 15 * 60 * 1000);
+    const rateLimitRes = await rateLimitResponse(
+      `register:ip:${ip}`,
+      3,
+      15 * 60 * 1000
+    );
     if (rateLimitRes) return rateLimitRes;
 
-    const { email, password, name, acceptTerms, subscribeNewsletter } = await req.json();
+    const { email, password, name, acceptTerms, subscribeNewsletter } =
+      await req.json();
 
-    if (!email || !password) {
+    if (typeof email !== "string" || typeof password !== "string") {
       return NextResponse.json(
         { error: "Email e password obbligatorie." },
         { status: 400 }
       );
     }
 
-    if (password.length < 8) {
+    if (password.length < 8 || password.length > MAX_PASSWORD_LENGTH) {
       return NextResponse.json(
-        { error: "La password deve contenere almeno 8 caratteri." },
+        { error: "La password deve contenere da 8 a 72 caratteri." },
         { status: 400 }
       );
     }
@@ -38,6 +58,16 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanEmail.length > 254 || !EMAIL_PATTERN.test(cleanEmail)) {
+      return NextResponse.json(
+        { error: "Inserisci un indirizzo email valido." },
+        { status: 400 }
+      );
+    }
+
+    const cleanName =
+      name ? String(name).trim().slice(0, 80) || null : null;
 
     // 2. Controllo validità dominio e record MX
     const isValidDomain = await hasValidMxRecords(cleanEmail);
@@ -67,27 +97,22 @@ export async function POST(req: Request) {
       data: {
         email: cleanEmail,
         password: hashedPassword,
-        name: name ? name.trim() : null,
+        name: cleanName,
         isVerified: false,
       },
     });
 
-    const envUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      process.env.NEXTAUTH_URL ||
-      "http://localhost:3000";
-    const baseUrl = envUrl.startsWith("http") ? envUrl : `https://${envUrl}`;
+    const baseUrl = getSiteUrl();
 
-    // 5. Gestione iscrizione alla Newsletter (invoca l'endpoint dedicato senza dipendere dal modello Prisma)
+    // 5. Iscrizione alla Newsletter: scrittura diretta sul modello (niente
+    // chiamata HTTP verso se stessi, che su Vercel dipende dall'URL pubblico).
     if (subscribeNewsletter) {
       try {
-        await fetch(`${baseUrl}/api/newsletter`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail }),
-        });
+        await prisma.newsletter.create({ data: { email: cleanEmail } });
       } catch (err) {
-        console.error("Errore salvataggio newsletter:", err);
+        if (!isUniqueConstraintError(err)) {
+          console.error("Errore salvataggio newsletter:", err);
+        }
       }
     }
 
