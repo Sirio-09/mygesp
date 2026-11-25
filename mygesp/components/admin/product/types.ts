@@ -33,5 +33,5 @@ export type VariantInput = {
 };
 
 export type ProductFieldChangeEvent = ChangeEvent<
-  HTMLInputElement | HTMLTextAreaElement
+  HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 >;
