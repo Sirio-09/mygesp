@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { inter } from "./fonts";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import Navbar from "@/components/layout/Navbar";
@@ -7,12 +7,6 @@ import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/layout/CartDrawer";
 import SiteChrome from "@/components/layout/SiteChrome";
 import { Toaster } from "sonner";
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-sans",
-});
 
 // Fallback ultra-sicuro con try/catch per impedire qualsiasi crash di new URL()
 const getSafeMetadataBase = (): URL => {
