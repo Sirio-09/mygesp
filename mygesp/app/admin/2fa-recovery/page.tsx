@@ -163,17 +163,17 @@ export default function RecoveryOtpPage() {
             <AdminField
               label="Codice di recupero"
               required
-              hint="Formato XXXX-XXXX, come salvato durante la configurazione."
+              hint="Formato XXXXXX-XXXXXX (o XXXX-XXXX per i codici precedenti)."
             >
               <input
                 type="text"
-                maxLength={12}
+                maxLength={24}
                 disabled={isLocked}
                 value={recoveryCode}
                 onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
-                placeholder="XXXX-XXXX"
+                placeholder="XXXXXX-XXXXXX"
                 autoFocus
-                className={`${inputClass} text-center font-mono text-lg uppercase tracking-[0.3em]`}
+                className={`${inputClass} text-center font-mono text-lg uppercase tracking-[0.2em]`}
               />
             </AdminField>
 

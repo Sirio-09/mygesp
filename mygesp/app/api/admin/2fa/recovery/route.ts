@@ -5,14 +5,24 @@ import QRCode from "qrcode";
 import { findBackupCodeIndex } from "@/lib/backup-codes";
 import { encryptSecret } from "@/lib/secret-crypto";
 import { requireAdmin } from "@/lib/admin-guard";
-
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_MINUTES = 15;
+import { rateLimitResponse } from "@/lib/rate-limiter";
+import { getClientIp } from "@/lib/request-ip";
+import {
+  checkAdmin2faLockout,
+  recordFailed2faAttempt,
+} from "@/lib/admin-2fa-lockout";
 
 export async function POST(req: Request) {
   // Recupero d'emergenza: per definizione avviene senza prova 2FA attiva.
   const guard = await requireAdmin({ allowUnverified2fa: true });
   if (!guard.ok) return guard.response;
+
+  const limited = await rateLimitResponse(
+    `2fa-recovery:ip:${getClientIp(req)}`,
+    15,
+    15 * 60 * 1000
+  );
+  if (limited) return limited;
 
   let code: unknown;
 
@@ -36,70 +46,24 @@ export async function POST(req: Request) {
   }
 
   // 1. Blocco temporaneo attivo: nessun codice viene valutato.
-  const lockoutUntil = admin.lockoutUntil;
-  const now = Date.now();
-
-  if (lockoutUntil && lockoutUntil.getTime() > now) {
-    const minutesLeft = Math.ceil((lockoutUntil.getTime() - now) / (1000 * 60));
-    return NextResponse.json(
-      {
-        error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? "o" : "i"}.`,
-        lockedUntil: lockoutUntil.toISOString(),
-      },
-      { status: 429 }
-    );
+  const lockoutCheck = checkAdmin2faLockout(admin);
+  if (lockoutCheck.locked) {
+    return lockoutCheck.response;
   }
-
-  // Blocco scaduto: la finestra di tentativi riparte da zero, altrimenti il
-  // primo codice errato ri-bloccherebbe subito l'account per altri 15 minuti.
-  if (lockoutUntil) {
-    await prisma.admin.update({
-      where: { id: admin.id },
-      data: { failed2faAttempts: 0, lockoutUntil: null },
-    });
-  }
-
-  const priorAttempts = lockoutUntil ? 0 : admin.failed2faAttempts || 0;
 
   const backupIndex = findBackupCodeIndex(admin.backupCodes ?? [], code);
 
-  // 2. Se il codice di recupero è errato: incremento tentativi e blocco
+  // 2. Se il codice di recupero è errato: incremento atomico tentativi e blocco
   if (backupIndex === -1) {
-    const newAttempts = priorAttempts + 1;
-    const shouldLock = newAttempts >= MAX_ATTEMPTS;
-    const lockoutTime = shouldLock
-      ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
-      : null;
-
-    await prisma.admin.update({
-      where: { id: admin.id },
-      data: {
-        failed2faAttempts: newAttempts,
-        lockoutUntil: lockoutTime,
-      },
-    });
-
-    if (shouldLock) {
-      return NextResponse.json(
-        {
-          error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.`,
-          lockedUntil: lockoutTime ? lockoutTime.toISOString() : null,
-        },
-        { status: 429 }
-      );
-    }
-
-    const remainingAttempts = MAX_ATTEMPTS - newAttempts;
-    return NextResponse.json(
-      { error: `Codice di recupero non valido o già utilizzato. Tentativi rimasti: ${remainingAttempts}` },
-      { status: 400 }
+    return recordFailed2faAttempt(
+      admin,
+      lockoutCheck.priorAttempts,
+      "Codice di recupero non valido o già utilizzato"
     );
   }
 
-  // 3. Codice valido: rimuoviamo il codice usato dall'array
+  // 3. Generiamo il NUOVO segreto TOTP e il relativo QR Code
   const updatedBackupCodes = admin.backupCodes.filter((_, idx) => idx !== backupIndex);
-
-  // 4. Generiamo il NUOVO segreto TOTP e il relativo QR Code
   const otp = new OTP({ strategy: "totp" });
   const newSecret = otp.generateSecret();
   const otpauthUrl = otp.generateURI({
@@ -109,9 +73,13 @@ export async function POST(req: Request) {
   });
   const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
-  // 5. Aggiorniamo il DB e AZZERIAMO sia i tentativi che il blocco
-  await prisma.admin.update({
-    where: { id: admin.id },
+  // 4. Consumo atomico del codice di recupero + reset tentativi
+  const consumed = await prisma.admin.updateMany({
+    where: {
+      id: admin.id,
+      backupCodes: { equals: admin.backupCodes },
+      OR: [{ lockoutUntil: null }, { lockoutUntil: { lte: new Date() } }],
+    },
     data: {
       totpSecret: encryptSecret(newSecret),
       totpEnabled: false,
@@ -120,6 +88,13 @@ export async function POST(req: Request) {
       lockoutUntil: null,
     },
   });
+
+  if (consumed.count === 0) {
+    return NextResponse.json(
+      { error: "Codice già utilizzato o account temporaneamente bloccato. Riprova." },
+      { status: 409 }
+    );
+  }
 
   return NextResponse.json({
     success: true,

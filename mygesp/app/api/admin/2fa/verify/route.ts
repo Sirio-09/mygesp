@@ -4,15 +4,25 @@ import { OTP } from "otplib";
 import { findBackupCodeIndex } from "@/lib/backup-codes";
 import { decryptSecret, encryptSecret, isEncryptedSecret } from "@/lib/secret-crypto";
 import { grantAdmin2fa, requireAdmin } from "@/lib/admin-guard";
-
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_MINUTES = 15;
+import { rateLimitResponse } from "@/lib/rate-limiter";
+import { getClientIp } from "@/lib/request-ip";
+import {
+  checkAdmin2faLockout,
+  recordFailed2faAttempt,
+} from "@/lib/admin-2fa-lockout";
 
 export async function POST(req: Request) {
   // Endpoint di bootstrap: la verifica 2FA non è ancora stata fatta, quindi è
   // l'unico (insieme a setup/recovery) che può girare senza prova 2FA.
   const guard = await requireAdmin({ allowUnverified2fa: true });
   if (!guard.ok) return guard.response;
+
+  const limited = await rateLimitResponse(
+    `2fa-verify:ip:${getClientIp(req)}`,
+    20,
+    15 * 60 * 1000
+  );
+  if (limited) return limited;
 
   let code: unknown;
 
@@ -43,32 +53,11 @@ export async function POST(req: Request) {
   }
 
   // 1. Blocco temporaneo attivo: nessun codice viene valutato, nemmeno quello
-  //    corretto (è il comportamento voluto della protezione anti brute-force).
-  const lockoutUntil = admin.lockoutUntil;
-  const now = Date.now();
-
-  if (lockoutUntil && lockoutUntil.getTime() > now) {
-    const minutesLeft = Math.ceil((lockoutUntil.getTime() - now) / (1000 * 60));
-    return NextResponse.json(
-      {
-        error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? "o" : "i"}.`,
-        lockedUntil: lockoutUntil.toISOString(),
-      },
-      { status: 429 }
-    );
+  //    corretto (protezione anti brute-force).
+  const lockoutCheck = checkAdmin2faLockout(admin);
+  if (lockoutCheck.locked) {
+    return lockoutCheck.response;
   }
-
-  // Se il blocco è scaduto la finestra di tentativi riparte da zero: senza
-  // questo azzeramento `failed2faAttempts` resterebbe a 5 e il primo codice
-  // errato ri-bloccherebbe l'account per altri 15 minuti, all'infinito.
-  if (lockoutUntil) {
-    await prisma.admin.update({
-      where: { id: admin.id },
-      data: { failed2faAttempts: 0, lockoutUntil: null },
-    });
-  }
-
-  const priorAttempts = lockoutUntil ? 0 : admin.failed2faAttempts || 0;
 
   const cleanCode = code.trim().toUpperCase();
 
@@ -84,9 +73,8 @@ export async function POST(req: Request) {
   }
 
   // 3. Verifica del codice TOTP (6 cifre)
-  //    Tolleranza solo verso il passato: accettiamo la finestra precedente (per
-  //    orologi leggermente indietro e digitazioni a cavallo del cambio step) ma
-  //    non quella futura, che amplierebbe inutilmente la finestra di replay.
+  //    Tolleranza solo verso il passato: accettiamo la finestra precedente ma
+  //    non quella futura.
   const otp = new OTP({ strategy: "totp" });
   const result = await otp.verify({
     token: cleanCode,
@@ -101,15 +89,12 @@ export async function POST(req: Request) {
         totpEnabled: true,
         failed2faAttempts: 0,
         lockoutUntil: null,
-        // Migrazione trasparente: al primo accesso utile cifriamo i vecchi segreti in chiaro.
         ...(isEncryptedSecret(admin.totpSecret)
           ? {}
           : { totpSecret: encryptSecret(totpSecret) }),
       },
     });
 
-    // Prova 2FA firmata: da qui in avanti le API admin sono sbloccate per
-    // questa sessione (vedi lib/admin-guard.ts).
     return grantAdmin2fa(
       NextResponse.json({ success: true }),
       admin.id,
@@ -117,14 +102,18 @@ export async function POST(req: Request) {
     );
   }
 
-  // 4. Se il TOTP fallisce, verifica se è un codice di backup valido
+  // 4. Se il TOTP fallisce, verifica se è un codice di backup valido (consumo atomico)
   const backupIndex = findBackupCodeIndex(admin.backupCodes ?? [], cleanCode);
 
   if (backupIndex !== -1) {
     const updatedBackupCodes = admin.backupCodes.filter((_, idx) => idx !== backupIndex);
 
-    await prisma.admin.update({
-      where: { id: admin.id },
+    const consumed = await prisma.admin.updateMany({
+      where: {
+        id: admin.id,
+        backupCodes: { equals: admin.backupCodes },
+        OR: [{ lockoutUntil: null }, { lockoutUntil: { lte: new Date() } }],
+      },
       data: {
         totpEnabled: true,
         backupCodes: updatedBackupCodes,
@@ -135,6 +124,13 @@ export async function POST(req: Request) {
           : { totpSecret: encryptSecret(totpSecret) }),
       },
     });
+
+    if (consumed.count === 0) {
+      return NextResponse.json(
+        { error: "Richiesta concorrente o account bloccato. Riprova." },
+        { status: 409 }
+      );
+    }
 
     return grantAdmin2fa(
       NextResponse.json({
@@ -147,34 +143,6 @@ export async function POST(req: Request) {
     );
   }
 
-  // 5. Gestione tentativi errati e blocco temporaneo
-  const newAttempts = priorAttempts + 1;
-  const shouldLock = newAttempts >= MAX_ATTEMPTS;
-  const lockoutTime = shouldLock
-    ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
-    : null;
-
-  await prisma.admin.update({
-    where: { id: admin.id },
-    data: {
-      failed2faAttempts: newAttempts,
-      lockoutUntil: lockoutTime,
-    },
-  });
-
-  if (shouldLock) {
-    return NextResponse.json(
-      {
-        error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.`,
-        lockedUntil: lockoutTime ? lockoutTime.toISOString() : null,
-      },
-      { status: 429 }
-    );
-  }
-
-  const remainingAttempts = MAX_ATTEMPTS - newAttempts;
-  return NextResponse.json(
-    { error: `Codice non valido. Tentativi rimasti: ${remainingAttempts}` },
-    { status: 400 }
-  );
+  // 5. Gestione tentativi errati e blocco temporaneo (atomica)
+  return recordFailed2faAttempt(admin, lockoutCheck.priorAttempts, "Codice non valido");
 }

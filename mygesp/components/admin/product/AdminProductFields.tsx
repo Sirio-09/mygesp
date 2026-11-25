@@ -64,14 +64,18 @@ export default function AdminProductFields({
           </AdminField>
 
           <AdminField label="Categoria" required>
-            <input
+            <select
               name="category"
               value={form.category}
               onChange={onChange}
               required
-              placeholder="es. Giacche"
               className={inputClass}
-            />
+            >
+              <option value="" disabled>Seleziona una categoria</option>
+              <option value="abbigliamento">Abbigliamento</option>
+              <option value="stivali">Stivali</option>
+              <option value="attrezzature">Attrezzature</option>
+            </select>
           </AdminField>
 
           <AdminField

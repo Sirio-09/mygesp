@@ -29,7 +29,11 @@ model Product {
   discountPercent  Int?
   discountUntil    DateTime?
   createdAt        DateTime  @default(now())
+
+  @@index([category])
+  @@index([featured])
 }
+
 
 model Variant {
   id         String      @id @default(cuid())
@@ -61,6 +65,9 @@ model Order {
   stripeSessionId String?
   trackingCode    String?
   carrier         String?
+
+  @@index([trackingCode])
+  @@index([carrier])
   createdAt       DateTime    @default(now())
 }
 
@@ -114,7 +121,7 @@ model PasswordResetToken {
   id         String   @id @default(cuid())
   token      String   @unique
   customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   expiresAt  DateTime
   createdAt  DateTime @default(now())
 }
@@ -124,7 +131,7 @@ model Review {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   rating     Int
   comment    String
   createdAt  DateTime @default(now())

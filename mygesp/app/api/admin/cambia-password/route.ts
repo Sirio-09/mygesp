@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { rateLimitResponse } from "@/lib/rate-limiter";
 import { clearAdmin2fa, requireAdmin } from "@/lib/admin-guard";
+import { getClientIp } from "@/lib/request-ip";
+
+const MAX_PASSWORD_LENGTH = 72;
 
 export async function POST(req: Request) {
   // Unico endpoint (con il bootstrap del 2FA) accessibile anche quando la
@@ -16,10 +19,8 @@ export async function POST(req: Request) {
   const userId = guard.adminId;
 
   // Difesa in profondità: limita i tentativi di indovinare la password attuale.
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   const limited = await rateLimitResponse(
-    `password-change:${ip}`,
+    `password-change:${getClientIp(req)}`,
     10,
     15 * 60 * 1000
   );
@@ -43,9 +44,9 @@ export async function POST(req: Request) {
     );
   }
 
-  if (newPassword.length < 8) {
+  if (newPassword.length < 8 || newPassword.length > MAX_PASSWORD_LENGTH) {
     return NextResponse.json(
-      { error: "La password deve contenere almeno 8 caratteri" },
+      { error: "La password deve contenere da 8 a 72 caratteri" },
       { status: 400 }
     );
   }
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
 
   await prisma.admin.update({
     where: { id: userId },
