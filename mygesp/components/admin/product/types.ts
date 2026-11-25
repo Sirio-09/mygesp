@@ -1,5 +1,12 @@
 import type { ChangeEvent } from "react";
 
+export type ProductFormChangeHandler = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+
+export const parseNumber = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed === '' ? null : Number(trimmed);
+};
+
 /**
  * Tipi condivisi dai due form prodotto (creazione e modifica).
  * I valori numerici restano stringhe finché non si invia: così il campo

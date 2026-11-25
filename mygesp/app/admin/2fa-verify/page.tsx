@@ -14,6 +14,7 @@ export default function VerifyOtpPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { isLocked, remaining, lock } = useLockoutCountdown();
@@ -21,6 +22,7 @@ export default function VerifyOtpPage() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setNotice("");
     setLoading(true);
 
     try {
@@ -33,6 +35,18 @@ export default function VerifyOtpPage() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
+        if (data.reenroll2fa) {
+          // Codice di recupero accettato, ma il segreto TOTP salvato non è più
+          // leggibile con la chiave di cifratura attuale: senza una nuova
+          // configurazione il prossimo accesso richiederebbe di nuovo un codice
+          // di recupero. Il cookie di prova 2FA è comunque valido.
+          setNotice(
+            "Accesso consentito. Il segreto del tuo autenticatore non è più leggibile: reimposta il 2FA dall'area Account e sicurezza per continuare a usare i codici a 6 cifre."
+          );
+          setLoading(false);
+          return;
+        }
+
         // Il cookie firmato di prova 2FA è impostato dalla risposta: la
         // navigazione successiva passa dal proxy senza toccare il JWT.
         router.push("/admin");
@@ -76,6 +90,21 @@ export default function VerifyOtpPage() {
             {error}
           </AdminAlert>
         )
+      )}
+
+      {notice && (
+        <AdminAlert className="mt-6" tone="neutral" title="2FA da reimpostare">
+          {notice}
+          <span className="mt-2 block">
+            <Link
+              href="/admin/sicurezza"
+              className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-grass-deep hover:underline"
+            >
+              Vai ad Account e sicurezza
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </span>
+        </AdminAlert>
       )}
 
       <form onSubmit={handleVerify} className="mt-6 space-y-5">

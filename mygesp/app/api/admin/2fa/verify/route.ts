@@ -61,45 +61,53 @@ export async function POST(req: Request) {
 
   const cleanCode = code.trim().toUpperCase();
 
-  // 2. Decifriamo il segreto TOTP salvato a riposo (compatibile con i vecchi valori in chiaro).
-  let totpSecret: string;
+  // 2. Decifriamo il segreto TOTP salvato a riposo (compatibile con i vecchi
+  //    valori in chiaro). Se la chiave di cifratura è stata ruotata il segreto
+  //    è illeggibile: NON interrompiamo la richiesta con un 500, perché i
+  //    codici di recupero non dipendono dal segreto TOTP. Rispondere 500 qui
+  //    rendeva inutilizzabili anche i backup code e lasciava l'admin fuori dal
+  //    pannello senza vie d'uscita da questa pagina.
+  let totpSecret: string | null = null;
   try {
     totpSecret = decryptSecret(admin.totpSecret);
   } catch {
-    return NextResponse.json(
-      { error: "Impossibile leggere il segreto 2FA. Contatta l'amministratore." },
-      { status: 500 }
+    console.error(
+      "[2fa] Segreto TOTP non decifrabile con la chiave attuale " +
+        "(TOTP_ENCRYPTION_KEY/NEXTAUTH_SECRET cambiata?): proseguo con la " +
+        "sola verifica dei codici di recupero."
     );
   }
 
-  // 3. Verifica del codice TOTP (6 cifre)
+  // 3. Verifica del codice TOTP (6 cifre), solo se il segreto è leggibile.
   //    Tolleranza solo verso il passato: accettiamo la finestra precedente ma
   //    non quella futura.
-  const otp = new OTP({ strategy: "totp" });
-  const result = await otp.verify({
-    token: cleanCode,
-    secret: totpSecret,
-    epochTolerance: [30, 0],
-  });
-
-  if (result.valid) {
-    await prisma.admin.update({
-      where: { id: admin.id },
-      data: {
-        totpEnabled: true,
-        failed2faAttempts: 0,
-        lockoutUntil: null,
-        ...(isEncryptedSecret(admin.totpSecret)
-          ? {}
-          : { totpSecret: encryptSecret(totpSecret) }),
-      },
+  if (totpSecret) {
+    const otp = new OTP({ strategy: "totp" });
+    const result = await otp.verify({
+      token: cleanCode,
+      secret: totpSecret,
+      epochTolerance: [30, 0],
     });
 
-    return grantAdmin2fa(
-      NextResponse.json({ success: true }),
-      admin.id,
-      guard.sessionId
-    );
+    if (result.valid) {
+      await prisma.admin.update({
+        where: { id: admin.id },
+        data: {
+          totpEnabled: true,
+          failed2faAttempts: 0,
+          lockoutUntil: null,
+          ...(isEncryptedSecret(admin.totpSecret)
+            ? {}
+            : { totpSecret: encryptSecret(totpSecret) }),
+        },
+      });
+
+      return grantAdmin2fa(
+        NextResponse.json({ success: true }),
+        admin.id,
+        guard.sessionId
+      );
+    }
   }
 
   // 4. Se il TOTP fallisce, verifica se è un codice di backup valido (consumo atomico)
@@ -119,7 +127,10 @@ export async function POST(req: Request) {
         backupCodes: updatedBackupCodes,
         failed2faAttempts: 0,
         lockoutUntil: null,
-        ...(isEncryptedSecret(admin.totpSecret)
+        // Se il segreto è illeggibile (chiave ruotata) non lo sovrascriviamo con
+        // niente: va reimpostato dall'area Account, che lo ri-cifra con la chiave
+        // corrente. Sovrascriverlo qui richiederebbe il segreto in chiaro.
+        ...(isEncryptedSecret(admin.totpSecret) || !totpSecret
           ? {}
           : { totpSecret: encryptSecret(totpSecret) }),
       },
@@ -137,6 +148,9 @@ export async function POST(req: Request) {
         success: true,
         usedBackupCode: true,
         remainingCodes: updatedBackupCodes.length,
+        // Con il segreto illeggibile il prossimo accesso richiederebbe di nuovo
+        // un codice di recupero: il client invita a reimpostare il 2FA.
+        reenroll2fa: !totpSecret,
       }),
       admin.id,
       guard.sessionId
@@ -144,5 +158,11 @@ export async function POST(req: Request) {
   }
 
   // 5. Gestione tentativi errati e blocco temporaneo (atomica)
-  return recordFailed2faAttempt(admin, lockoutCheck.priorAttempts, "Codice non valido");
+  return recordFailed2faAttempt(
+    admin,
+    lockoutCheck.priorAttempts,
+    totpSecret
+      ? "Codice non valido"
+      : "Il segreto 2FA non è leggibile con la chiave attuale: usa un codice di recupero."
+  );
 }
