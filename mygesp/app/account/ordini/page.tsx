@@ -1,14 +1,18 @@
 // OrdiniPage.tsx
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Reveal from "@/components/motion/Reveal";
+import { formatEuro } from "@/lib/site";
+import { privatePageMetadata } from "@/lib/metadata";
+import {
+  ORDER_STATUS_BADGE_CLASSES,
+  ORDER_STATUS_TONES,
+  orderStatusLabel,
+} from "@/lib/order-status";
 
-const statusStyles: Record<string, string> = {
-  paid: "border-grass-deep/40 text-grass-deep",
-  pending: "border-soil/50 text-soil-deep",
-  canceled: "border-line text-ink-soft",
-};
+export const metadata: Metadata = privatePageMetadata("I miei ordini");
 
 export default async function OrdiniPage() {
   const session = await auth();
@@ -61,16 +65,18 @@ export default async function OrdiniPage() {
                   </span>
                   <span
                     className={`inline-block border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
-                      statusStyles[order.status] ?? "border-line text-ink-soft"
+                      ORDER_STATUS_BADGE_CLASSES[
+                        ORDER_STATUS_TONES[order.status] ?? "neutral"
+                      ]
                     }`}
                   >
-                    {order.status}
+                    {orderStatusLabel(order.status)}
                   </span>
                 </div>
               </div>
 
               <div className="mb-6 border-t border-line/50 pt-6 text-2xl font-light tabular-nums tracking-tight text-ink">
-                €{(order.totalCents / 100).toFixed(2)}
+                {formatEuro(order.totalCents)}
               </div>
 
               {order.shippingLine1 && (

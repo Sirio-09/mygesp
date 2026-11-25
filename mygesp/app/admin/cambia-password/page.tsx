@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import AdminAlert from "@/components/admin/ui/AdminAlert";
+import AdminButton from "@/components/admin/ui/AdminButton";
+import AdminField from "@/components/admin/ui/AdminField";
+import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
+import AdminSection from "@/components/admin/ui/AdminSection";
+import { inputClass } from "@/components/admin/ui/field-styles";
 
 export default function CambiaPasswordPage() {
   const { update } = useSession();
@@ -64,83 +70,75 @@ export default function CambiaPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-paper flex items-center justify-center px-4 py-12 selection:bg-grass selection:text-white">
-      <div className="w-full max-w-md bg-paper border border-line/40 p-8 sm:p-12">
-        
-        <div className="text-center mb-10">
-          <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-3 block">
-            Aggiornamento Sicurezza
-          </span>
-          <h1 className="text-3xl font-light text-ink mb-3 tracking-tight">
-            Nuova Password
-          </h1>
-          <p className="text-sm text-ink-soft font-light leading-relaxed">
-            Stai usando una password temporanea. È necessario impostarne una nuova prima di proseguire.
-          </p>
-        </div>
+    <>
+      <AdminPageHeader
+        eyebrow="Sicurezza"
+        title="Cambia password"
+        description="Se stai usando una password temporanea devi impostarne una nuova prima di proseguire."
+      />
 
-        {error && (
-          <div className="mb-6 p-4 text-xs font-medium text-center bg-line/5 text-red-600 border border-red-200">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
-              Password Attuale
-            </label>
+      <AdminSection
+        className="mt-8 max-w-xl"
+        label="Credenziali di accesso"
+        description="Minimo 8 caratteri, diversa da quella attuale."
+      >
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <AdminField label="Password attuale" required>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
               placeholder="Inserisci la password attuale"
               autoComplete="current-password"
               required
+              className={inputClass}
             />
-          </div>
+          </AdminField>
 
-          <div>
-            <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
-              Nuova Password
-            </label>
+          <AdminField
+            label="Nuova password"
+            required
+            hint="Almeno 8 caratteri, diversa da quella attuale."
+          >
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
               placeholder="Minimo 8 caratteri"
               autoComplete="new-password"
               required
+              className={inputClass}
             />
-          </div>
+          </AdminField>
 
-          <div>
-            <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
-              Conferma Password
-            </label>
+          <AdminField label="Conferma nuova password" required>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
               placeholder="Ripeti la password"
               autoComplete="new-password"
               required
+              className={inputClass}
             />
+          </AdminField>
+
+          {error && <AdminAlert tone="danger">{error}</AdminAlert>}
+
+          <div className="flex flex-col gap-4 border-t border-line/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-light leading-relaxed text-ink-soft">
+              Al termine verrai riportato alla dashboard.
+            </p>
+            <AdminButton
+              type="submit"
+              disabled={loading}
+              className="shrink-0"
+            >
+              {loading ? "Aggiornamento in corso..." : "Salva password"}
+            </AdminButton>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed mt-2"
-          >
-            {loading ? "Aggiornamento in corso..." : "Salva e Accedi"}
-          </button>
         </form>
-
-      </div>
-    </main>
+      </AdminSection>
+    </>
   );
 }

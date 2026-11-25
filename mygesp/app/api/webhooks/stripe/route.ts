@@ -7,6 +7,7 @@ import {
   isStripeConfigured,
 } from "@/lib/stripe";
 import { sendEmail } from "@/lib/resend";
+import { formatEuro } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -229,7 +230,7 @@ async function sendOrderConfirmation(
             ${item.quantity}
           </td>
           <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
-            €${((item.priceCents * item.quantity) / 100).toFixed(2)}
+            ${formatEuro(item.priceCents * item.quantity)}
           </td>
         </tr>
       `
@@ -275,7 +276,7 @@ async function sendOrderConfirmation(
         </table>
 
         <div style="text-align: right; margin-top: 20px;">
-          <h3 style="margin: 0;">Totale Pagato: €${(order.totalCents / 100).toFixed(2)}</h3>
+          <h3 style="margin: 0;">Totale Pagato: ${formatEuro(order.totalCents)}</h3>
         </div>
 
         ${invoiceButtonHtml}

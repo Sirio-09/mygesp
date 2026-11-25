@@ -1,10 +1,24 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+import type { Metadata } from "next";
 import ProductCard from "@/components/product/ProductCard";
 import Reveal from "@/components/motion/Reveal";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const { q } = await searchParams;
+  const query = q?.trim() ?? "";
+
+  return {
+    title: query ? `Ricerca: ${query} — MyGesp` : "Ricerca — MyGesp",
+    // La ricerca interna è già coperta da /prodotti?q=: non va indicizzata.
+    robots: { index: false, follow: true },
+  };
 }
 
 export default async function CercaPage({ searchParams }: PageProps) {

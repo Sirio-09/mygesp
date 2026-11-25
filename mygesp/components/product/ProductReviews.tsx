@@ -9,7 +9,8 @@ type Review = {
   rating: number;
   comment: string;
   createdAt: string;
-  customer: { name: string | null; email: string };
+  // Il nome del cliente non è più esposto dall'API: campo opzionale
+  customer?: { name: string | null; email: string } | null;
 };
 
 function Stars({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
@@ -31,7 +32,14 @@ function Stars({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
   );
 }
 
-export default function ProductReviews({ productId }: { productId: string }) {
+export default function ProductReviews({
+  productId,
+  initialReviews,
+}: {
+  productId: string;
+  /** Recensioni già calcolate sul server: niente fetch né skeleton al primo paint */
+  initialReviews?: Review[];
+}) {
   const { data: session, status } = useSession();
   const isLoadingSession = status === "loading";
 
@@ -39,8 +47,8 @@ export default function ProductReviews({ productId }: { productId: string }) {
     session?.user && (session.user as { role?: string })?.role === "customer"
   );
 
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<Review[]>(initialReviews ?? []);
+  const [loading, setLoading] = useState(!initialReviews);
   const [showForm, setShowForm] = useState(false);
 
   const [hasPurchased, setHasPurchased] = useState<boolean | null>(null);
@@ -87,8 +95,11 @@ export default function ProductReviews({ productId }: { productId: string }) {
   }, [isCustomer, productId]);
 
   useEffect(() => {
+    // Con le recensioni dal server il fetch iniziale è superfluo:
+    // resta attivo per il refresh dopo l'invio di una nuova recensione.
+    if (initialReviews) return;
     loadReviews();
-  }, [loadReviews]);
+  }, [initialReviews, loadReviews]);
 
   useEffect(() => {
     if (isCustomer) {

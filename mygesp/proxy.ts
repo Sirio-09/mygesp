@@ -45,11 +45,10 @@ export default auth((req) => {
     return;
   }
 
-  if (!mustChangePassword && isCambiaPasswordPage) {
-    return NextResponse.redirect(new URL("/admin", req.nextUrl));
-  }
-
   // 4. PRIORITÀ 2: VERIFICA / SETUP / RECUPERO 2FA
+  // Nota: /admin/cambia-password non è escluso qui apposta. Chi ha già
+  // completato il 2FA può aprirla quando vuole (self-service); chi non l'ha
+  // ancora fatto ricade in questo ramo e viene rimandato al flusso forzato.
   if (!otpVerified) {
     if (is2faRecoveryPage) return;
 

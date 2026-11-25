@@ -28,20 +28,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Utente non trovato" }, { status: 404 });
   }
 
-  // 1. Controllo se l'account è temporaneamente bloccato
-  if (admin.lockoutUntil && admin.lockoutUntil > new Date()) {
-    const minutesLeft = Math.ceil((admin.lockoutUntil.getTime() - Date.now()) / (1000 * 60));
+  // 1. Blocco temporaneo attivo: nessun codice viene valutato.
+  const lockoutUntil = admin.lockoutUntil;
+  const now = Date.now();
+
+  if (lockoutUntil && lockoutUntil.getTime() > now) {
+    const minutesLeft = Math.ceil((lockoutUntil.getTime() - now) / (1000 * 60));
     return NextResponse.json(
-      { error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? 'o' : 'i'}.` },
+      {
+        error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? "o" : "i"}.`,
+        lockedUntil: lockoutUntil.toISOString(),
+      },
       { status: 429 }
     );
   }
+
+  // Blocco scaduto: la finestra di tentativi riparte da zero, altrimenti il
+  // primo codice errato ri-bloccherebbe subito l'account per altri 15 minuti.
+  if (lockoutUntil) {
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { failed2faAttempts: 0, lockoutUntil: null },
+    });
+  }
+
+  const priorAttempts = lockoutUntil ? 0 : admin.failed2faAttempts || 0;
 
   const backupIndex = findBackupCodeIndex(admin.backupCodes ?? [], code);
 
   // 2. Se il codice di recupero è errato: incremento tentativi e blocco
   if (backupIndex === -1) {
-    const newAttempts = (admin.failed2faAttempts || 0) + 1;
+    const newAttempts = priorAttempts + 1;
     const shouldLock = newAttempts >= MAX_ATTEMPTS;
     const lockoutTime = shouldLock
       ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
@@ -57,7 +74,10 @@ export async function POST(req: Request) {
 
     if (shouldLock) {
       return NextResponse.json(
-        { error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.` },
+        {
+          error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.`,
+          lockedUntil: lockoutTime ? lockoutTime.toISOString() : null,
+        },
         { status: 429 }
       );
     }

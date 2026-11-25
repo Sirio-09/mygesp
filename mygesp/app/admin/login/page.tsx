@@ -1,7 +1,13 @@
 "use client";
+
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import AdminAlert from "@/components/admin/ui/AdminAlert";
+import AdminButton from "@/components/admin/ui/AdminButton";
+import AdminField from "@/components/admin/ui/AdminField";
+import { inputClass } from "@/components/admin/ui/field-styles";
+import { ArrowLeft } from "@/components/admin/ui/icons";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -31,77 +37,66 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-paper flex flex-col items-center justify-center px-4 py-12 selection:bg-grass selection:text-white">
-      <div className="w-full max-w-md space-y-6">
-        
-        <div className="bg-paper border border-line/40 p-8 sm:p-12">
-          <div className="text-center mb-10">
-            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-3 block">
-              Accesso Riservato
-            </span>
-            <h1 className="text-3xl font-light text-ink mb-3 tracking-tight">
-              Area Tecnica
-            </h1>
-            <p className="text-sm text-ink-soft font-light leading-relaxed">
-              Inserisci le tue credenziali per accedere al pannello di amministrazione.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
-                Nome utente
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                placeholder="Admin username"
-                className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold text-ink uppercase tracking-widest mb-3">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="w-full bg-transparent border border-line/40 px-4 py-4 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light tracking-widest"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              {loading ? "Verifica in corso..." : "Accedi"}
-            </button>
-
-            {error && (
-              <p className="text-[10px] text-red-600 uppercase tracking-widest text-center font-medium pt-6 border-t border-line/40">
-                {error}
-              </p>
-            )}
-          </form>
-        </div>
-
-        <div className="text-center">
-          <Link 
-            href="/" 
-            className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors"
-          >
-            &larr; Torna al sito pubblico
-          </Link>
-        </div>
-
+    <div>
+      <div className="text-center">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-grass-deep">
+          Accesso riservato
+        </p>
+        <h1 className="text-3xl font-light tracking-tight text-ink">
+          Area tecnica
+        </h1>
+        <p className="mt-3 text-sm font-light leading-relaxed text-ink-soft">
+          Inserisci le tue credenziali per accedere al pannello di
+          amministrazione.
+        </p>
       </div>
-    </main>
+
+      <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <AdminField label="Nome utente" required>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+            placeholder="es. mario.rossi"
+            className={inputClass}
+          />
+        </AdminField>
+
+        <AdminField label="Password" required>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className={`${inputClass} tracking-[0.2em]`}
+          />
+        </AdminField>
+
+        {error && <AdminAlert tone="danger">{error}</AdminAlert>}
+
+        <AdminButton
+          type="submit"
+          disabled={loading}
+          arrow={!loading}
+          className="w-full"
+        >
+          {loading ? "Verifica in corso..." : "Accedi"}
+        </AdminButton>
+      </form>
+
+      <div className="mt-8 border-t border-line/60 pt-6 text-center">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft transition-colors duration-300 ease-out-expo hover:text-ink"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Torna al sito pubblico
+        </Link>
+      </div>
+    </div>
   );
 }

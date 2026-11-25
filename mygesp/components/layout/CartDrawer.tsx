@@ -1,6 +1,7 @@
 "use client";
 
 import { useCartStore } from "@/lib/cart-store";
+import { FREE_SHIPPING_THRESHOLD_CENTS, formatEuro } from "@/lib/site";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -16,10 +17,9 @@ export default function CartDrawer() {
   const [mounted, setMounted] = useState(false);
 
   // Logica Spedizione Gratuita
-  const freeShippingThresholdCents = 9900;
   const currentTotalCents = totalCents();
-  const missingForFreeShippingCents = Math.max(0, freeShippingThresholdCents - currentTotalCents);
-  const progressPercent = Math.min(100, (currentTotalCents / freeShippingThresholdCents) * 100);
+  const missingForFreeShippingCents = Math.max(0, FREE_SHIPPING_THRESHOLD_CENTS - currentTotalCents);
+  const progressPercent = Math.min(100, (currentTotalCents / FREE_SHIPPING_THRESHOLD_CENTS) * 100);
 
   useEffect(() => {
     setMounted(true);
@@ -47,7 +47,7 @@ export default function CartDrawer() {
 
   if (!mounted) return null;
 
-  const totalFormatted = (currentTotalCents / 100).toFixed(2);
+  const totalFormatted = formatEuro(currentTotalCents);
   const itemCount = items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
@@ -111,7 +111,7 @@ export default function CartDrawer() {
                       <span>
                         Mancano{" "}
                         <strong className="font-semibold tabular-nums text-grass-deep">
-                          €{(missingForFreeShippingCents / 100).toFixed(2)}
+                          {formatEuro(missingForFreeShippingCents)}
                         </strong>
                       </span>
                       <span className="flex items-center gap-1.5">
@@ -237,7 +237,7 @@ export default function CartDrawer() {
                           </button>
                         </div>
                         <span className="text-[13px] font-medium tabular-nums text-ink">
-                          €{((item.priceCents * item.quantity) / 100).toFixed(2)}
+                          {formatEuro(item.priceCents * item.quantity)}
                         </span>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ export default function CartDrawer() {
             <div className="shrink-0 space-y-4 border-t border-line/40 bg-paper p-5">
               <div className="flex items-end justify-between text-ink">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">Subtotale</span>
-                <span className="text-xl font-light tabular-nums tracking-tight">€{totalFormatted}</span>
+                <span className="text-xl font-light tabular-nums tracking-tight">{totalFormatted}</span>
               </div>
               <p className="text-[10px] font-light text-ink-soft">
                 Spese di spedizione calcolate al checkout.

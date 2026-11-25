@@ -5,6 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useCartStore } from '@/lib/cart-store'
 import type { CartItem } from '@/lib/cart-store'
+import {
+  FREE_SHIPPING_THRESHOLD_CENTS,
+  calculateShippingCents,
+  formatEuro,
+} from '@/lib/site'
 
 export default function CheckoutPage() {
   const { items } = useCartStore()
@@ -28,17 +33,15 @@ export default function CheckoutPage() {
     0
   )
 
-  const isFreeShipping = subtotalCents >= 9900
+  const isFreeShipping = subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS
 
   const shippingEstimate = useMemo(() => {
     if (isFreeShipping) return 0
-    if (cap.trim().length === 5) {
-      const prefix2 = cap.substring(0, 2)
-      const isSpecialZone = ['90', '91', '92', '93', '94', '95', '96', '97', '98', '07', '08', '09'].includes(prefix2) || cap.startsWith('301')
-      return isSpecialZone ? 990 : 690
-    }
-    return null
-  }, [cap, isFreeShipping])
+    const cleanCap = cap.trim()
+    if (cleanCap.length !== 5) return null
+    // Stessa funzione usata dall'API: l'anteprima non può divergere dal totale reale.
+    return calculateShippingCents(subtotalCents, cleanCap)
+  }, [cap, isFreeShipping, subtotalCents])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -275,7 +278,7 @@ export default function CheckoutPage() {
                       <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-soft">Taglia: {item.size}</p>
                     </div>
                     <p className="text-[13px] font-medium tabular-nums text-ink">
-                      {(((item.priceCents || 0) * item.quantity) / 100).toFixed(2)} €
+                      {formatEuro((item.priceCents || 0) * item.quantity)}
                     </p>
                   </li>
                 ))}
@@ -284,7 +287,7 @@ export default function CheckoutPage() {
               <dl className="space-y-3 border-t border-line/70 pt-6 text-sm">
                 <div className="flex justify-between text-ink-soft">
                   <dt className="font-light">Subtotale</dt>
-                  <dd className="font-medium tabular-nums text-ink">{(subtotalCents / 100).toFixed(2)} €</dd>
+                  <dd className="font-medium tabular-nums text-ink">{formatEuro(subtotalCents)}</dd>
                 </div>
 
                 <div className="flex items-center justify-between text-ink-soft">
@@ -293,7 +296,7 @@ export default function CheckoutPage() {
                     {isFreeShipping ? (
                       <span className="bg-grass/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-grass-deep">Gratuita</span>
                     ) : shippingEstimate !== null ? (
-                      <span className="font-medium tabular-nums text-ink">{(shippingEstimate / 100).toFixed(2)} €</span>
+                      <span className="font-medium tabular-nums text-ink">{formatEuro(shippingEstimate)}</span>
                     ) : (
                       <span className="text-[10px] uppercase tracking-[0.14em] text-ink-soft">Calcolata con CAP</span>
                     )}
@@ -302,7 +305,7 @@ export default function CheckoutPage() {
 
                 <div className="mt-4 flex items-end justify-between border-t border-line/70 pt-4">
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">Da pagare</dt>
-                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink">{(finalTotalCents / 100).toFixed(2)} €</dd>
+                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink">{formatEuro(finalTotalCents)}</dd>
                 </div>
               </dl>
 

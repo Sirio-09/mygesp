@@ -24,8 +24,8 @@ function ResetPasswordForm() {
       return
     }
 
-    if (password.length < 6) {
-      setError('La password deve contenere almeno 6 caratteri.')
+    if (password.length < 8) {
+      setError('La password deve contenere almeno 8 caratteri.')
       return
     }
 
@@ -37,7 +37,8 @@ function ResetPasswordForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/auth/reimposta-password', {
+      // Route reale: /api/auth/reset-password (la vecchia URL italiana non esisteva)
+      const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password }),
@@ -103,7 +104,7 @@ function ResetPasswordForm() {
           <input
             type={showPassword ? "text" : "password"}
             required
-            minLength={6}
+            minLength={8}
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -127,7 +128,7 @@ function ResetPasswordForm() {
         <input
           type={showPassword ? "text" : "password"}
           required
-          minLength={6}
+          minLength={8}
           autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}

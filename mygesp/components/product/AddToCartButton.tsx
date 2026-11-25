@@ -1,7 +1,12 @@
 // AddToCartButton.tsx
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
+import {
+  FREE_SHIPPING_THRESHOLD_CENTS,
+  formatEuro,
+  formatEuroCompact,
+} from "@/lib/site";
 
 type Variant = {
   id: string;
@@ -26,6 +31,8 @@ export default function AddToCartButton({
   const [selectedSize, setSelectedSize] = useState(variants[0]?.size ?? "");
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const ctaRef = useRef<HTMLDivElement>(null);
   const addItem = useCartStore((state) => state.addItem);
 
   // Conferma transitoria dopo l'aggiunta
@@ -35,6 +42,37 @@ export default function AddToCartButton({
     return () => clearTimeout(timeout);
   }, [added]);
 
+  // Barra mobile: visibile solo dopo che il CTA principale è uscito dallo schermo
+  // e finché il footer non entra in vista, così non ne copre i link.
+  useEffect(() => {
+    const node = ctaRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+
+    let ctaAboveViewport = false;
+    let footerInView = false;
+    const sync = () => setShowStickyBar(ctaAboveViewport && !footerInView);
+
+    const ctaObserver = new IntersectionObserver(([entry]) => {
+      ctaAboveViewport = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+      sync();
+    });
+    ctaObserver.observe(node);
+
+    const footer = document.querySelector<HTMLElement>("footer");
+    const footerObserver = footer
+      ? new IntersectionObserver(([entry]) => {
+          footerInView = entry.isIntersecting;
+          sync();
+        })
+      : null;
+    if (footer && footerObserver) footerObserver.observe(footer);
+
+    return () => {
+      ctaObserver.disconnect();
+      footerObserver?.disconnect();
+    };
+  }, []);
+
   const selectedVariant = variants.find((v) => v.size === selectedSize);
   const finalPriceCents =
     selectedVariant && discountPercent
@@ -43,6 +81,7 @@ export default function AddToCartButton({
 
   const isSoldOut = !selectedVariant || selectedVariant.stock === 0;
   const maxQuantity = selectedVariant?.stock ?? 1;
+  const subtotalCents = (finalPriceCents ?? selectedVariant?.priceCents ?? 0) * quantity;
 
   const handleAdd = () => {
     if (!selectedVariant) return;
@@ -64,27 +103,37 @@ export default function AddToCartButton({
     <div className="flex flex-col gap-6">
       {/* Prezzo: sempre visibile, sincronizzato con la taglia selezionata */}
       {selectedVariant && (
-        <div className="flex items-baseline gap-4 border-b border-line/50 pb-6 tabular-nums">
-          {discountPercent ? (
-            <>
+        <div className="flex flex-col gap-2 border-b border-line/50 pb-6">
+          <div className="flex items-baseline gap-4 tabular-nums">
+            {discountPercent ? (
+              <>
+                <span
+                  key={`${selectedSize}-sconto`}
+                  className="animate-fade-in text-3xl font-light tracking-tight text-ink sm:text-4xl"
+                >
+                  {formatEuro((finalPriceCents ?? 0) * quantity)}
+                </span>
+                <span className="text-sm font-light text-ink-soft line-through">
+                  {formatEuro(selectedVariant.priceCents * quantity)}
+                </span>
+              </>
+            ) : (
               <span
-                key={`${selectedSize}-sconto`}
+                key={`${selectedSize}-pieno`}
                 className="animate-fade-in text-3xl font-light tracking-tight text-ink sm:text-4xl"
               >
-                €{(((finalPriceCents ?? 0) * quantity) / 100).toFixed(2)}
+                {formatEuro(selectedVariant.priceCents * quantity)}
               </span>
-              <span className="text-sm font-light text-ink-soft line-through">
-                €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
-              </span>
-            </>
-          ) : (
-            <span
-              key={`${selectedSize}-pieno`}
-              className="animate-fade-in text-3xl font-light tracking-tight text-ink sm:text-4xl"
-            >
-              €{((selectedVariant.priceCents * quantity) / 100).toFixed(2)}
-            </span>
-          )}
+            )}
+          </div>
+
+          {/* Trasparenza prezzo: IVA e soglia spedizione, senza aspettare il checkout */}
+          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink-soft">
+            IVA inclusa ·{" "}
+            {subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS
+              ? "spedizione gratuita"
+              : `spedizione gratuita da ${formatEuroCompact(FREE_SHIPPING_THRESHOLD_CENTS)}`}
+          </p>
         </div>
       )}
 
@@ -171,7 +220,7 @@ export default function AddToCartButton({
       </div>
 
       {/* Pulsante Acquisto */}
-      <div>
+      <div ref={ctaRef}>
         <div className="flex flex-col gap-3">
           <button
             onClick={handleAdd}
@@ -227,6 +276,43 @@ export default function AddToCartButton({
                 ? `Ultimi ${selectedVariant.stock} pezzi disponibili`
                 : "Disponibile in pronta consegna"}
           </p>
+        </div>
+      </div>
+
+      {/* Barra acquisto mobile: stessa istanza del componente, quindi taglia e
+          quantità restano sincronizzate con il selettore in pagina */}
+      <div
+        aria-hidden={!showStickyBar}
+        className={`fixed inset-x-0 bottom-0 z-30 border-t border-line/60 bg-paper/95 backdrop-blur-md transition-transform duration-300 ease-out-expo lg:hidden ${
+          showStickyBar ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="flex items-center justify-between gap-4 px-4 py-3">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
+              {productName}
+              {selectedSize ? ` · ${selectedSize}` : ""}
+            </p>
+            <p className="text-base font-medium tabular-nums text-ink">
+              {selectedVariant ? formatEuro(subtotalCents) : "—"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={isSoldOut}
+            tabIndex={showStickyBar ? 0 : -1}
+            className={`shrink-0 px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors duration-300 ease-out-expo ${
+              isSoldOut
+                ? "cursor-not-allowed border border-line text-ink-soft/60"
+                : added
+                  ? "bg-grass text-white"
+                  : "bg-ink text-white hover:bg-grass"
+            }`}
+          >
+            {isSoldOut ? "Esaurito" : added ? "Aggiunto" : "Aggiungi"}
+          </button>
         </div>
       </div>
     </div>

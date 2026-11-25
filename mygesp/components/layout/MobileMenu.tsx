@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
+import { formatEuro } from "@/lib/site";
 
 type Variant = {
   priceCents: number;
@@ -192,7 +193,7 @@ export default function MobileMenu() {
                         item.variants && item.variants.length > 0
                           ? item.variants[0].priceCents
                           : 0;
-                      const formattedPrice = (priceCents / 100).toFixed(2);
+                      const formattedPrice = formatEuro(priceCents);
 
                       return (
                         <Link
@@ -226,7 +227,7 @@ export default function MobileMenu() {
                               {item.name}
                             </p>
                             <p className="self-start text-[11px] font-medium tabular-nums text-ink-soft">
-                              €{formattedPrice}
+                              {formattedPrice}
                             </p>
                           </div>
                         </Link>

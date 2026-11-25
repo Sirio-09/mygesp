@@ -1,10 +1,33 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+import type { Metadata } from "next";
 import ProductCard from "@/components/product/ProductCard";
 import Reveal from "@/components/motion/Reveal";
 
 interface ProductsPageProps {
   searchParams: Promise<{ q?: string }>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: ProductsPageProps): Promise<Metadata> {
+  const { q } = await searchParams;
+  const query = q?.trim() || "";
+
+  // Risultati di ricerca interna: contenuto effimero, fuori dall'indice.
+  if (query) {
+    return {
+      title: `Ricerca: ${query} — MyGesp`,
+      robots: { index: false, follow: true },
+    };
+  }
+
+  return {
+    title: "Catalogo Prodotti — MyGesp",
+    description:
+      "Abbigliamento impermeabile, stivali termici e attrezzature professionali per agricoltura e allevamento: scopri il catalogo completo MyGesp.",
+    alternates: { canonical: "/prodotti" },
+  };
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {

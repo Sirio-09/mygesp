@@ -2,6 +2,7 @@
 // Card prodotto unica per home, categoria, catalogo, ricerca e correlati.
 import Link from "next/link";
 import Image from "next/image";
+import { formatEuro } from "@/lib/site";
 
 export type ProductCardProps = {
   name: string;
@@ -39,8 +40,8 @@ export default function ProductCard({
       ? Math.round((priceCents * (100 - discountPercent)) / 100)
       : priceCents;
 
-  const formattedPrice = (discountedPriceCents / 100).toFixed(2);
-  const formattedFullPrice = (priceCents / 100).toFixed(2);
+  const formattedPrice = formatEuro(discountedPriceCents);
+  const formattedFullPrice = formatEuro(priceCents);
 
   return (
     <Link href={`/prodotto/${slug}`} className="group flex h-full flex-col">
@@ -117,15 +118,15 @@ export default function ProductCard({
             {isDiscountActive ? (
               <>
                 <span className="text-sm font-medium text-grass-deep">
-                  €{formattedPrice}
+                  {formattedPrice}
                 </span>
                 <span className="text-xs font-light text-ink-soft line-through">
-                  €{formattedFullPrice}
+                  {formattedFullPrice}
                 </span>
               </>
             ) : (
               <span className="text-sm font-medium text-ink-soft">
-                €{formattedPrice}
+                {formattedPrice}
               </span>
             )}
           </div>

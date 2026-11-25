@@ -6,6 +6,7 @@ import {
   getStripeClient,
   isStripeConfigured,
 } from "@/lib/stripe";
+import { calculateShippingCents, getShippingLabel } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -63,21 +64,6 @@ function normalizeItems(rawItems: unknown): IncomingItem[] | null {
   }));
 
   return items.length > 0 ? items : null;
-}
-
-function calculateShippingCents(subtotalCents: number, cap: string): number {
-  if (subtotalCents >= 9900) return 0;
-
-  const prefix2 = cap.substring(0, 2);
-
-  const isSicilyOrSardinia = [
-    "90", "91", "92", "93", "94", "95", "96", "97", "98",
-    "07", "08", "09",
-  ].includes(prefix2);
-
-  const isVeniceLagoon = cap.startsWith("301");
-
-  return isSicilyOrSardinia || isVeniceLagoon ? 990 : 690;
 }
 
 export async function POST(req: Request) {
@@ -224,12 +210,7 @@ export async function POST(req: Request) {
                 amount: shippingCostCents,
                 currency: "eur",
               },
-              display_name:
-                shippingCostCents === 0
-                  ? "Spedizione Gratuita"
-                  : shippingCostCents === 990
-                  ? "Spedizione Isole e Zone Disagiate"
-                  : "Spedizione Standard Italia",
+              display_name: getShippingLabel(shippingCostCents),
             },
           },
         ],

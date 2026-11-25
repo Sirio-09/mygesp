@@ -3,7 +3,14 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import LogoutButton from "@/components/layout/LogoutButton";
+import Reveal from "@/components/motion/Reveal";
+import AdminBadge from "@/components/admin/ui/AdminBadge";
+import AdminButton from "@/components/admin/ui/AdminButton";
+import AdminEmptyState from "@/components/admin/ui/AdminEmptyState";
+import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
+import AdminSection from "@/components/admin/ui/AdminSection";
+import { ArrowRight, Package, Plus } from "@/components/admin/ui/icons";
+import { formatEuro } from "@/lib/site";
 
 export default async function AdminHome() {
   const session = await auth();
@@ -28,161 +35,169 @@ export default async function AdminHome() {
     (p) => p.variants.reduce((s, v) => s + v.stock, 0) === 0
   ).length;
 
+  const kpis = [
+    {
+      label: "Prodotti a catalogo",
+      value: products.length,
+      hint: "schede pubblicate",
+      tone: "text-ink",
+    },
+    {
+      label: "Giacenza totale",
+      value: totalStock,
+      hint: "pezzi disponibili",
+      tone: "text-ink",
+    },
+    {
+      label: "Ordini ricevuti",
+      value: totalOrders,
+      hint: "tutti gli stati",
+      tone: "text-ink",
+    },
+    {
+      label: "Esauriti",
+      value: outOfStockCount,
+      hint: outOfStockCount > 0 ? "da riassortire" : "tutto disponibile",
+      tone: outOfStockCount > 0 ? "text-soil-deep" : "text-grass-deep",
+    },
+  ];
+
   return (
-    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
-      <div className="max-w-5xl mx-auto space-y-10">
-        
-        {/* Header Dashboard */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-line/40 pb-8">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-2 block">
-              Area Tecnica
-            </span>
-            <h1 className="text-3xl font-light text-ink tracking-tight">
-              Pannello Admin
-            </h1>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <Link
-              href="/admin/ordini"
-              className="text-[10px] font-semibold text-ink-soft hover:text-ink uppercase tracking-widest transition-colors"
-            >
+    <>
+      <AdminPageHeader
+        eyebrow="Area tecnica"
+        title="Pannello di controllo"
+        description="Catalogo, giacenze e ordini in un'unica vista. Da qui si entra in ogni sezione riservata."
+        actions={
+          <>
+            <AdminButton href="/admin/ordini" variant="secondary">
               Ordini
-            </Link>
-            <span className="text-line/40">|</span>
-            <Link
-              href="/admin/utenti"
-              className="text-[10px] font-semibold text-ink-soft hover:text-ink uppercase tracking-widest transition-colors"
+            </AdminButton>
+            <AdminButton href="/admin/nuovo-prodotto">
+              Nuovo prodotto
+              <Plus className="h-3.5 w-3.5" />
+            </AdminButton>
+          </>
+        }
+      />
+
+      <Reveal
+        variant="fade"
+        className="mt-10 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-4"
+      >
+        {kpis.map((kpi) => (
+          <div key={kpi.label} className="bg-paper p-5 sm:p-6">
+            <p className="text-[10px] font-semibold uppercase leading-4 tracking-[0.18em] text-ink-soft">
+              {kpi.label}
+            </p>
+            <p
+              className={`mt-6 text-3xl font-light tabular-nums tracking-tight sm:text-4xl ${kpi.tone}`}
             >
-              Staff
-            </Link>
-            <span className="text-line/40">|</span>
-            <div className="flex items-center gap-4 pl-2">
-              <Link
-                href="/admin/nuovo-prodotto"
-                className="bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-3 px-6 transition-colors"
-              >
-                Nuovo Prodotto
-              </Link>
-              {/* Assicurati che LogoutButton supporti il passaggio di stili minimal o lo erediti naturalmente */}
-              <LogoutButton /> 
-            </div>
+              {kpi.value}
+            </p>
+            <p className="mt-2 text-[10px] font-light uppercase tracking-[0.14em] text-ink-soft">
+              {kpi.hint}
+            </p>
           </div>
-        </div>
+        ))}
+      </Reveal>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-          <div className="bg-transparent border border-line/40 p-6 flex flex-col justify-between h-32">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
-              Prodotti Attivi
-            </span>
-            <span className="text-4xl font-light text-ink tracking-tight">
-              {products.length}
-            </span>
+      <AdminSection
+        className="mt-10"
+        label="Catalogo recente"
+        description={products.length === 1 ? "1 prodotto" : `${products.length} prodotti`}
+        flush
+        actions={
+          <AdminButton href="/admin/nuovo-prodotto" variant="ghost">
+            Aggiungi
+            <Plus className="h-3 w-3" />
+          </AdminButton>
+        }
+      >
+        {products.length === 0 ? (
+          <div className="p-5 sm:p-6">
+            <AdminEmptyState
+              icon={<Package className="h-5 w-5" />}
+              title="Nessun prodotto a catalogo"
+              description="Inserisci il primo articolo per iniziare a vendere: immagini, specifiche, taglie e giacenze."
+              action={
+                <AdminButton href="/admin/nuovo-prodotto" arrow>
+                  Crea il primo prodotto
+                </AdminButton>
+              }
+            />
           </div>
-          <div className="bg-transparent border border-line/40 p-6 flex flex-col justify-between h-32">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
-              Giacenza Totale
-            </span>
-            <span className="text-4xl font-light text-ink tracking-tight">
-              {totalStock}
-            </span>
-          </div>
-          <div className="bg-transparent border border-line/40 p-6 flex flex-col justify-between h-32">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
-              Ordini Ricevuti
-            </span>
-            <span className="text-4xl font-light text-ink tracking-tight">
-              {totalOrders}
-            </span>
-          </div>
-          <div className="bg-transparent border border-line/40 p-6 flex flex-col justify-between h-32">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
-              Esauriti
-            </span>
-            <span className={`text-4xl font-light tracking-tight ${outOfStockCount > 0 ? "text-ink" : "text-grass"}`}>
-              {outOfStockCount}
-            </span>
-          </div>
-        </div>
+        ) : (
+          <Reveal as="ul" variant="fade" className="divide-y divide-line/60">
+            {products.map((product) => {
+              const stock = product.variants.reduce((s, v) => s + v.stock, 0);
+              const firstPriceCents = product.variants[0]?.priceCents;
+              const cover = product.images[0];
 
-        {/* Elenco Prodotti */}
-        <div>
-          <div className="mb-4">
-             <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
-               Catalogo Recente
-             </span>
-          </div>
-          
-          {products.length === 0 ? (
-            <div className="bg-transparent border border-line/40 p-16 text-center space-y-4">
-              <p className="text-sm font-light text-ink-soft">Nessun prodotto a catalogo.</p>
-              <Link
-                href="/admin/nuovo-prodotto"
-                className="inline-block text-[10px] font-semibold uppercase tracking-widest text-ink hover:text-grass transition-colors"
-              >
-                Aggiungi il tuo primo prodotto &rarr;
-              </Link>
-            </div>
-          ) : (
-            <div className="bg-transparent border border-line/40 divide-y divide-line/40">
-              {products.map((product) => {
-                const stock = product.variants.reduce((s, v) => s + v.stock, 0);
-                const firstPriceCents = product.variants[0]?.priceCents;
-
-                return (
+              return (
+                <li key={product.id}>
                   <Link
-                    key={product.id}
                     href={`/admin/prodotti/${product.id}`}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-6 hover:bg-line/5 transition-colors gap-6 group"
+                    className="group flex items-center gap-4 px-5 py-5 transition-colors duration-300 ease-out-expo hover:bg-paper-warm/40 sm:gap-6 sm:px-6"
                   >
-                    <div className="flex items-center gap-6 min-w-0">
-                      <div className="w-16 h-16 border border-line/40 relative flex-shrink-0 bg-transparent overflow-hidden">
-                        {product.images[0] ? (
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[8px] text-ink-soft uppercase tracking-widest text-center px-1">
-                            No Img
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 space-y-1">
-                        <p className="text-base font-light text-ink truncate group-hover:text-grass transition-colors">
-                          {product.name}
-                        </p>
-                        <p className="text-xs font-light text-ink-soft">
-                          {product.brand} &mdash; {product.category} ({product.variants.length} Taglie)
-                        </p>
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden border border-line bg-paper-warm/40">
+                      {cover ? (
+                        <Image
+                          src={cover}
+                          alt=""
+                          fill
+                          sizes="64px"
+                          className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+                        />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-[8px] uppercase tracking-[0.14em] text-ink-soft">
+                          No img
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-light text-ink transition-colors duration-300 group-hover:text-grass-deep">
+                        {product.name}
+                      </p>
+                      <p className="mt-1 truncate text-xs font-light text-ink-soft">
+                        {product.brand} &mdash; {product.category} &middot;{" "}
+                        {product.variants.length} taglie
+                      </p>
+
+                      <div className="mt-2 flex items-center gap-3 sm:hidden">
+                        <span className="font-mono text-xs tabular-nums text-ink">
+                          {firstPriceCents !== undefined
+                            ? formatEuro(firstPriceCents)
+                            : "—"}
+                        </span>
+                        <AdminBadge tone={stock === 0 ? "neutral" : "grass"}>
+                          {stock === 0 ? "Esaurito" : `${stock} pz`}
+                        </AdminBadge>
                       </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center flex-shrink-0 gap-2 sm:gap-1 pl-22 sm:pl-0 border-t border-line/40 sm:border-0 pt-4 sm:pt-0">
-                      <p className="text-sm font-light text-ink">
+                    <div className="hidden shrink-0 flex-col items-end gap-2 sm:flex">
+                      <p className="text-sm font-light tabular-nums text-ink">
                         {firstPriceCents !== undefined
-                          ? `€ ${(firstPriceCents / 100).toFixed(2)}`
+                          ? formatEuro(firstPriceCents)
                           : "—"}
                       </p>
-                      <p
-                        className={`text-[10px] uppercase tracking-widest font-semibold ${
-                          stock === 0 ? "text-ink-soft" : "text-grass"
-                        }`}
-                      >
-                        {stock === 0 ? "Esaurito" : `${stock} pz disponibili`}
-                      </p>
+                      <AdminBadge tone={stock === 0 ? "neutral" : "grass"}>
+                        {stock === 0 ? "Esaurito" : `${stock} pz`}
+                      </AdminBadge>
                     </div>
+
+                    <ArrowRight className="h-4 w-4 shrink-0 text-line transition-all duration-300 ease-out-expo group-hover:translate-x-1 group-hover:text-ink" />
+
                   </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </main>
+                </li>
+              );
+            })}
+          </Reveal>
+        )}
+      </AdminSection>
+    </>
   );
 }
+

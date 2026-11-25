@@ -1,38 +1,22 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-function OrdersSkeleton() {
-  return (
-    <div className="space-y-6 animate-pulse">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-transparent border border-line/40 p-6 space-y-6">
-          <div className="flex justify-between items-end border-b border-line/40 pb-4">
-            <div className="space-y-3">
-              <div className="h-3 w-32 bg-line/20 rounded-none"></div>
-              <div className="h-2 w-24 bg-line/20 rounded-none"></div>
-            </div>
-            <div className="h-6 w-28 bg-line/20 rounded-none"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <div className="h-2 w-16 bg-line/20 rounded-none"></div>
-              <div className="h-3 w-48 bg-line/20 rounded-none"></div>
-              <div className="h-3 w-40 bg-line/20 rounded-none"></div>
-            </div>
-            <div className="md:text-right space-y-3">
-              <div className="h-2 w-12 bg-line/20 rounded-none md:ml-auto"></div>
-              <div className="h-6 w-20 bg-line/20 rounded-none md:ml-auto"></div>
-            </div>
-          </div>
-          <div className="h-16 bg-line/10 rounded-none"></div>
-        </div>
-      ))}
-    </div>
-  );
-}
+import AdminBadge from "@/components/admin/ui/AdminBadge";
+import AdminButton from "@/components/admin/ui/AdminButton";
+import AdminEmptyState from "@/components/admin/ui/AdminEmptyState";
+import AdminField from "@/components/admin/ui/AdminField";
+import AdminModal from "@/components/admin/ui/AdminModal";
+import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
+import AdminSkeleton from "@/components/admin/ui/AdminSkeleton";
+import { inputClass, labelClass, selectClass } from "@/components/admin/ui/field-styles";
+import { ChevronDown, Package, Search } from "@/components/admin/ui/icons";
+import {
+  ORDER_STATUS_OPTIONS,
+  ORDER_STATUS_TONES,
+  orderStatusLabel,
+} from "@/lib/order-status";
+import { formatEuro } from "@/lib/site";
 
 type OrderItem = {
   id: string;
@@ -61,18 +45,30 @@ type Order = {
   items: OrderItem[];
 };
 
+const CARRIERS = [
+  "BRT Bartolini",
+  "DHL Express",
+  "GLS Italy",
+  "Poste Italiane / Crono",
+  "SDA Express Courier",
+  "UPS",
+];
+
 export default function AdminOrdiniPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filtri e Ricerca
+  // Filtri e ricerca
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Modal Tracking
-  const [selectedOrderForShipping, setSelectedOrderForShipping] = useState<string | null>(null);
+  // Modale tracking
+  const [selectedOrderForShipping, setSelectedOrderForShipping] = useState<
+    string | null
+  >(null);
   const [trackingCode, setTrackingCode] = useState("");
-  const [carrier, setCarrier] = useState("BRT");
+  const [trackingError, setTrackingError] = useState("");
+  const [carrier, setCarrier] = useState(CARRIERS[0]);
 
   const fetchOrders = async () => {
     try {
@@ -130,18 +126,37 @@ export default function AdminOrdiniPage() {
 
   const handleStatusSelect = (orderId: string, newStatus: string) => {
     if (newStatus === "shipped") {
+      setTrackingError("");
       setSelectedOrderForShipping(orderId);
     } else {
       updateOrderStatus(orderId, newStatus);
     }
   };
 
+  const closeShippingModal = () => {
+    setSelectedOrderForShipping(null);
+    setTrackingError("");
+  };
+
   const confirmShipping = () => {
-    if (selectedOrderForShipping) {
-      updateOrderStatus(selectedOrderForShipping, "shipped", trackingCode, carrier);
-      setSelectedOrderForShipping(null);
-      setTrackingCode("");
+    if (!selectedOrderForShipping) return;
+
+    if (!trackingCode.trim()) {
+      setTrackingError(
+        "Inserisci il codice di tracciamento per confermare la spedizione."
+      );
+      return;
     }
+
+    updateOrderStatus(
+      selectedOrderForShipping,
+      "shipped",
+      trackingCode.trim(),
+      carrier
+    );
+    setSelectedOrderForShipping(null);
+    setTrackingCode("");
+    setTrackingError("");
   };
 
   const filteredOrders = useMemo(() => {
@@ -160,221 +175,278 @@ export default function AdminOrdiniPage() {
     });
   }, [orders, statusFilter, searchTerm]);
 
-  return (
-    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-line/40 pb-8 mb-10">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-2 block">
-              Gestione Operativa
-            </span>
-            <h1 className="text-3xl font-light text-ink tracking-tight mb-2">
-              Ordini Ricevuti
-            </h1>
-            <p className="text-sm text-ink-soft font-light">
-              Monitora gli acquisti, aggiorna lo stato e gestisci le spedizioni.
-            </p>
-          </div>
-          <Link
-            href="/admin"
-            className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors mb-1"
-          >
-            &larr; Torna al Catalogo
-          </Link>
-        </div>
+  const hasActiveFilters = searchTerm.trim() !== "" || statusFilter !== "all";
 
-        {/* Controlli di Filtro e Ricerca */}
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between mb-8">
-          <div className="relative flex-1">
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+  };
+
+  return (
+    <>
+      <AdminPageHeader
+        eyebrow="Gestione operativa"
+        title="Ordini ricevuti"
+        description="Monitora gli acquisti, aggiorna lo stato e registra i dati di spedizione."
+        actions={
+          <AdminButton variant="secondary" onClick={fetchOrders}>
+            Aggiorna elenco
+          </AdminButton>
+        }
+      />
+
+      {/* Ricerca e filtro stato */}
+      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end">
+        <div className="sm:max-w-sm sm:flex-1">
+          <label htmlFor="order-search" className={`${labelClass} mb-2`}>
+            Cerca
+          </label>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
             <input
+              id="order-search"
               type="text"
-              placeholder="Cerca per ID, Email o Nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light font-mono"
+              placeholder="ID ordine, email o nome"
+              className={`${inputClass} pl-10`}
             />
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <label className="text-[10px] font-semibold uppercase tracking-widest text-ink-soft">
-              Stato
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent border border-line/40 text-ink text-sm font-light px-4 py-3 focus:outline-none focus:border-grass transition-colors appearance-none min-w-[160px]"
-            >
-              <option value="all">Tutti ({orders.length})</option>
-              <option value="paid">Pagati</option>
-              <option value="processing">In Lavorazione</option>
-              <option value="shipped">Spediti</option>
-              <option value="delivered">Consegnati</option>
-              <option value="canceled">Annullati</option>
-            </select>
           </div>
         </div>
 
-        {loading ? (
-          <OrdersSkeleton />
-        ) : filteredOrders.length === 0 ? (
-          <div className="border border-line/40 p-12 text-center text-sm font-light text-ink-soft bg-transparent">
-            Nessun ordine trovato con i filtri attuali.
+        <div>
+          <label htmlFor="order-status-filter" className={`${labelClass} mb-2`}>
+            Stato
+          </label>
+          <div className="relative">
+            <select
+              id="order-status-filter"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className={`${selectClass} min-w-[11rem]`}
+            >
+              <option value="all">Tutti ({orders.length})</option>
+              {ORDER_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
           </div>
+        </div>
+      </div>
+
+      {!loading && (
+        <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+          {filteredOrders.length} di {orders.length} ordini
+        </p>
+      )}
+
+      <div className="mt-4">
+        {loading ? (
+          <AdminSkeleton rows={3} />
+        ) : filteredOrders.length === 0 ? (
+          <AdminEmptyState
+            icon={<Package className="h-5 w-5" />}
+            title={
+              hasActiveFilters ? "Nessun ordine con questi filtri" : "Nessun ordine ricevuto"
+            }
+            description={
+              hasActiveFilters
+                ? "Prova a cambiare stato o a svuotare la ricerca."
+                : "Gli ordini compariranno qui appena un cliente completa il pagamento."
+            }
+            action={
+              hasActiveFilters ? (
+                <AdminButton variant="secondary" onClick={resetFilters}>
+                  Azzera filtri
+                </AdminButton>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="space-y-6">
             {filteredOrders.map((order) => (
-              <div key={order.id} className="bg-transparent border border-line/40 p-6 space-y-6">
-                
-                {/* Riga Superiore */}
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-line/40 pb-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] uppercase font-semibold tracking-widest text-ink-soft block">
-                      ID Ordine
-                    </span>
-                    <p className="font-mono text-sm text-ink">#{order.id}</p>
-                    <p className="text-xs font-mono text-ink-soft">
+              <article key={order.id} className="border border-line bg-paper">
+                <header className="flex flex-col gap-4 border-b border-line/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft">
+                      Ordine
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                      <p className="truncate font-mono text-sm text-ink">
+                        #{order.id}
+                      </p>
+                      <AdminBadge
+                        tone={ORDER_STATUS_TONES[order.status] ?? "neutral"}
+                      >
+                        {orderStatusLabel(order.status)}
+                      </AdminBadge>
+                    </div>
+                    <p className="mt-1.5 font-mono text-[11px] tabular-nums text-ink-soft">
                       {new Date(order.createdAt).toLocaleString("it-IT")}
                     </p>
                   </div>
-                  <div className="flex flex-col gap-1 sm:text-right">
-                    <label className="text-[10px] uppercase font-semibold tracking-widest text-ink-soft">
-                      Stato Attuale
-                    </label>
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleStatusSelect(order.id, e.target.value)}
-                      className="bg-transparent border-b border-line/40 text-ink text-sm font-semibold pb-1 focus:outline-none focus:border-grass transition-colors cursor-pointer"
-                    >
-                      <option value="paid">Pagato</option>
-                      <option value="processing">In Lavorazione</option>
-                      <option value="shipped">Spedito</option>
-                      <option value="delivered">Consegnato</option>
-                      <option value="canceled">Annullato</option>
-                    </select>
-                  </div>
-                </div>
 
-                {/* Dettagli */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-light text-ink">
-                  <div className="space-y-2">
-                    <span className="text-[10px] uppercase font-semibold tracking-widest text-ink block mb-3">
-                      Dettagli Spedizione
-                    </span>
-                    <p><strong className="font-medium">Email:</strong> {order.customerEmail}</p>
-                    <p><strong className="font-medium">Nome:</strong> {order.shippingName || "N/D"}</p>
-                    <p className="leading-relaxed">
-                      <strong className="font-medium">Indirizzo:</strong><br/>
-                      {order.shippingLine1 || "N/D"}<br/>
-                      {order.shippingZip || ""} {order.shippingCity || ""} ({order.shippingCountry || "IT"})
-                    </p>
+                  <div className="shrink-0">
+                    <label
+                      htmlFor={`order-status-${order.id}`}
+                      className={`${labelClass} mb-2`}
+                    >
+                      Aggiorna stato
+                    </label>
+                    <div className="relative">
+                      <select
+                        id={`order-status-${order.id}`}
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusSelect(order.id, e.target.value)
+                        }
+                        className={`${selectClass} min-w-[10rem] py-2`}
+                      >
+                        {!ORDER_STATUS_OPTIONS.some(
+                          (option) => option.value === order.status
+                        ) && (
+                          <option value={order.status}>
+                            {orderStatusLabel(order.status)}
+                          </option>
+                        )}
+                        {ORDER_STATUS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
+                    </div>
                   </div>
-                  <div className="md:text-right flex flex-col justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-semibold tracking-widest text-ink block mb-2">
-                        Totale Ordine
-                      </span>
-                      <p className="text-2xl font-light text-ink tracking-tight">
-                        € {(order.totalCents / 100).toFixed(2)}
+                </header>
+
+                <div className="grid grid-cols-1 gap-6 px-5 py-6 sm:px-6 md:grid-cols-2">
+                  <div>
+                    <p className={labelClass}>Spedizione</p>
+                    <div className="mt-3 space-y-1 text-sm font-light leading-relaxed text-ink">
+                      <p className="font-medium">
+                        {order.shippingName || "Nome non disponibile"}
+                      </p>
+                      <p className="text-ink-soft">{order.customerEmail}</p>
+                      <p>{order.shippingLine1 || "Indirizzo non disponibile"}</p>
+                      <p>
+                        {order.shippingZip || "—"} {order.shippingCity || ""} (
+                        {order.shippingCountry || "IT"})
                       </p>
                     </div>
                   </div>
-                </div>
 
-                {/* Articoli */}
-                <div className="pt-2">
-                  <span className="text-[10px] uppercase font-semibold tracking-widest text-ink block mb-3">
-                    Articoli ({order.items.length})
-                  </span>
-                  <div className="border border-line/40 divide-y divide-line/40 bg-line/5">
-                    {order.items.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center text-sm p-4">
-                        <div>
-                          <span className="font-medium text-ink block">
-                            {item.variant.product.name}
-                          </span>
-                          <span className="text-xs text-ink-soft">
-                            Taglia: {item.variant.size} — SKU: {item.variant.sku}
-                          </span>
-                        </div>
-                        <div className="font-mono text-right text-ink">
-                          <span className="text-ink-soft mr-4 text-xs">x{item.quantity}</span>
-                          € {((item.priceCents * item.quantity) / 100).toFixed(2)}
-                        </div>
-                      </div>
-                    ))}
+                  <div className="md:text-right">
+                    <p className={labelClass}>Totale ordine</p>
+                    <p className="mt-3 text-2xl font-light tabular-nums tracking-tight text-ink">
+                      {formatEuro(order.totalCents)}
+                    </p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+                      {order.items.length}{" "}
+                      {order.items.length === 1 ? "articolo" : "articoli"}
+                    </p>
                   </div>
                 </div>
-              </div>
+
+                <div className="border-t border-line/60 px-5 py-6 sm:px-6">
+                  <p className={labelClass}>Articoli</p>
+                  <ul className="mt-3 divide-y divide-line/60 border border-line/60">
+                    {order.items.map((item) => (
+                      <li
+                        key={item.id}
+                        className="flex items-start justify-between gap-4 px-4 py-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-light text-ink">
+                            {item.variant.product.name}
+                          </p>
+                          <p className="mt-0.5 text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+                            Taglia {item.variant.size} &middot; SKU{" "}
+                            {item.variant.sku}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right font-mono text-xs tabular-nums text-ink">
+                          <span className="mr-3 text-ink-soft">
+                            &times;{item.quantity}
+                          </span>
+                          {formatEuro(item.priceCents * item.quantity)}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+              </article>
             ))}
           </div>
         )}
+      </div>
 
-        {/* Modal Tracking */}
-        {selectedOrderForShipping && (
-          <div className="fixed inset-0 bg-ink/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-paper border border-line/40 p-8 max-w-md w-full shadow-2xl">
-              <div className="mb-8">
-                <h2 className="text-xl font-light text-ink tracking-tight mb-2">
-                  Dati di Spedizione
-                </h2>
-                <p className="text-sm font-light text-ink-soft">
-                  Inserisci il codice di tracciamento per confermare la spedizione dell'ordine.
-                </p>
-              </div>
-
-              <div className="space-y-6 mb-8">
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2">
-                    Corriere
-                  </label>
-                  <select
-                    value={carrier}
-                    onChange={(e) => setCarrier(e.target.value)}
-                    className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm text-ink focus:border-grass outline-none transition-colors appearance-none"
-                  >
-                    <option value="BRT">BRT Bartolini</option>
-                    <option value="DHL">DHL Express</option>
-                    <option value="GLS">GLS Italy</option>
-                    <option value="Poste Italiane">Poste Italiane / Crono</option>
-                    <option value="SDA">SDA Express Courier</option>
-                    <option value="UPS">UPS</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2">
-                    Codice di Tracciamento
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Es: 123456789IT"
-                    value={trackingCode}
-                    onChange={(e) => setTrackingCode(e.target.value)}
-                    className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm font-mono text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-sans"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-4 pt-4 border-t border-line/40">
-                <button
-                  type="button"
-                  onClick={() => setSelectedOrderForShipping(null)}
-                  className="text-[10px] font-semibold text-ink-soft hover:text-ink uppercase tracking-widest transition-colors"
-                >
-                  Annulla
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmShipping}
-                  className="bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-3 px-6 transition-colors"
-                >
-                  Conferma
-                </button>
-              </div>
+      <AdminModal
+        open={selectedOrderForShipping !== null}
+        onClose={closeShippingModal}
+        title="Dati di spedizione"
+        description="Registra corriere e codice di tracciamento: lo stato passerà a «Spedito»."
+        footer={
+          <>
+            <AdminButton variant="secondary" onClick={closeShippingModal}>
+              Annulla
+            </AdminButton>
+            <AdminButton onClick={confirmShipping}>
+              Conferma spedizione
+            </AdminButton>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div>
+            <label
+              htmlFor="shipping-carrier"
+              className={`${labelClass} mb-2`}
+            >
+              Corriere
+            </label>
+            <div className="relative">
+              <select
+                id="shipping-carrier"
+                value={carrier}
+                onChange={(e) => setCarrier(e.target.value)}
+                className={selectClass}
+              >
+                {CARRIERS.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
             </div>
           </div>
-        )}
-      </div>
-    </main>
+
+          <AdminField
+            label="Codice di tracciamento"
+            required
+            error={trackingError}
+            hint="Lo fornisce il corriere alla presa in carico del pacco."
+          >
+            <input
+              type="text"
+              value={trackingCode}
+              onChange={(e) => {
+                setTrackingCode(e.target.value);
+                if (trackingError) setTrackingError("");
+              }}
+              placeholder="es. 123456789IT"
+              className={`${inputClass} font-mono`}
+            />
+          </AdminField>
+        </div>
+      </AdminModal>
+
+    </>
   );
 }
+

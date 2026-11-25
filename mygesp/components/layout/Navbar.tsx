@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FREE_SHIPPING_THRESHOLD_CENTS, formatEuroCompact } from "@/lib/site";
 import CartIcon from "./CartIcon";
 import AccountMenu from "./AccountMenu";
 import SearchBar from "./SearchBar";
@@ -19,7 +20,7 @@ export default function Navbar() {
       <div className="bg-ink">
         <div className="mx-auto flex max-w-[1280px] items-center justify-center px-4 py-2 text-center sm:px-6 lg:px-10">
           <p className="text-[10px] font-medium uppercase leading-none tracking-[0.18em] text-white/90">
-            Spedizione gratuita sopra i 99€ ·{" "}
+            Spedizione gratuita sopra i {formatEuroCompact(FREE_SHIPPING_THRESHOLD_CENTS)} ·{" "}
             <span className="hidden text-white/60 sm:inline">
               consegna in tutta Italia e in Europa
             </span>

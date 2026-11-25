@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -7,11 +8,36 @@ import ProductGallery from "@/components/product/ProductGallery";
 import ProductReviews from "@/components/product/ProductReviews";
 import ProductCard from "@/components/product/ProductCard";
 import Reveal from "@/components/motion/Reveal";
+import { getBaseUrl } from "@/lib/baseUrl";
+import {
+  FREE_SHIPPING_THRESHOLD_CENTS,
+  RETURN_WINDOW_DAYS,
+  formatEuroCompact,
+} from "@/lib/site";
 
 type DescriptionBlock = {
   title: string;
   text: string;
 };
+
+/**
+ * React cache(): generateMetadata e la pagina eseguono la stessa query,
+ * quindi il prodotto viene letto dal database una sola volta per richiesta.
+ * Le recensioni sono incluse qui perché servono sia al JSON-LD sia al render
+ * server-side della sezione recensioni (niente skeleton al primo paint).
+ */
+const getProductBySlug = cache(async (slug: string) =>
+  prisma.product.findUnique({
+    where: { slug },
+    include: {
+      variants: true,
+      reviews: {
+        select: { id: true, rating: true, comment: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  })
+);
 
 export async function generateMetadata({
   params,
@@ -20,9 +46,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-  });
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     return { title: "Prodotto non trovato — MyGesp" };
@@ -34,10 +58,22 @@ export async function generateMetadata({
   return {
     title: `${product.name} — ${product.brand} | MyGesp`,
     description: firstText,
+    alternates: {
+      canonical: `/prodotto/${product.slug}`,
+    },
     openGraph: {
+      type: "website",
       title: product.name,
       description: firstText,
-      images: product.images[0] ? [product.images[0]] : [],
+      url: `/prodotto/${product.slug}`,
+      images: product.images[0]
+        ? [{ url: product.images[0], alt: product.name }]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: firstText,
     },
   };
 }
@@ -49,10 +85,7 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: { variants: true },
-  });
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -101,8 +134,116 @@ export default async function ProductPage({
     specs.push({ label: "Temp. minima", value: `${product.minTemp}°C` });
   }
 
+  // === RECENSIONI: aggregato calcolato sul server ===
+  const reviewCount = product.reviews.length;
+  const reviewAverage =
+    reviewCount > 0
+      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+      : null;
+  const reviewAverageLabel = reviewAverage !== null ? reviewAverage.toFixed(1) : null;
+  const roundedRating = reviewAverage !== null ? Math.round(reviewAverage) : 0;
+  const reviewCountLabel = `${reviewCount} ${
+    reviewCount === 1 ? "recensione" : "recensioni"
+  }`;
+
+  // === DATI STRUTTURATI (JSON-LD) ===
+  const baseUrl = getBaseUrl();
+  const productUrl = `${baseUrl}/prodotto/${product.slug}`;
+  const absoluteImages = product.images.map((image) =>
+    image.startsWith("http")
+      ? image
+      : `${baseUrl}${image.startsWith("/") ? image : `/${image}`}`
+  );
+
+  const productDescription =
+    product.shortDescription ?? descriptionBlocks?.[0]?.text ?? product.name;
+
+  const activeDiscountPercent = isDiscountActive ? product.discountPercent ?? 0 : 0;
+
+  const offers = product.variants.map((variant) => {
+    const priceCents = isDiscountActive
+      ? Math.round(variant.priceCents * (1 - activeDiscountPercent / 100))
+      : variant.priceCents;
+
+    return {
+      "@type": "Offer",
+      sku: variant.sku,
+      name: `${product.name} — ${variant.size}`,
+      url: productUrl,
+      priceCurrency: "EUR",
+      price: (priceCents / 100).toFixed(2),
+      availability:
+        variant.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      // Stessa finestra di reso citata in scheda e nei Termini (art. 52)
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "IT",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: RETURN_WINDOW_DAYS,
+        returnMethod: "https://schema.org/ReturnByMail",
+        returnFees: "https://schema.org/ReturnShippingFees",
+      },
+      ...(isDiscountActive && product.discountUntil
+        ? { priceValidUntil: new Date(product.discountUntil).toISOString().slice(0, 10) }
+        : {}),
+    };
+  });
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        name: product.name,
+        description: productDescription,
+        image: absoluteImages,
+        brand: { "@type": "Brand", name: product.brand },
+        category: product.category,
+        url: productUrl,
+        ...(product.variants[0] ? { sku: product.variants[0].sku } : {}),
+        ...(offers.length > 0 ? { offers } : {}),
+        ...(reviewCount > 0 && reviewAverageLabel
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: reviewAverageLabel,
+                reviewCount,
+                bestRating: 5,
+                worstRating: 1,
+              },
+            }
+          : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${baseUrl}/` },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: product.category,
+            item: `${baseUrl}/categoria/${product.category}`,
+          },
+          { "@type": "ListItem", position: 3, name: product.name, item: productUrl },
+        ],
+      },
+    ],
+  };
+
+  // JSON.stringify può produrre la sequenza "</script>": escape dei "<".
+  const jsonLdString = JSON.stringify(jsonLd).replace(/</g, "\\u003c");
+
   return (
     <main className="min-h-screen bg-paper pb-24 text-ink selection:bg-grass selection:text-white sm:pb-32">
+      {/* DATI STRUTTURATI: Product (+ Offer/AggregateRating) e BreadcrumbList */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString }}
+      />
+
       {/* BREADCRUMB */}
       <div className="container-page pt-8 sm:pt-10">
         <nav
@@ -155,6 +296,32 @@ export default async function ProductPage({
               {product.name}
             </h1>
 
+            {/* Rating compatto, renderizzato sul server: àncora alla sezione recensioni */}
+            {reviewAverageLabel !== null && reviewCount > 0 && (
+              <a
+                href="#recensioni"
+                className="mt-4 flex w-fit items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-soft transition-colors duration-300 hover:text-ink"
+                aria-label={`${reviewAverageLabel} su 5 da ${reviewCountLabel}: vai alle recensioni`}
+              >
+                <span className="flex items-center gap-0.5" aria-hidden="true">
+                  {[1, 2, 3, 4, 5].map((step) => (
+                    <svg
+                      key={step}
+                      className={`h-3 w-3 ${step <= roundedRating ? "text-ink" : "text-line"}`}
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 2.6l2.86 6.05 6.64.79-4.93 4.6 1.31 6.56L12 17.4l-5.88 3.2 1.31-6.56L2.5 9.44l6.64-.79L12 2.6z" />
+                    </svg>
+                  ))}
+                </span>
+                <span>
+                  {`${reviewAverageLabel} · ${reviewCountLabel}`}
+                </span>
+              </a>
+            )}
+
             {(product.shortTitle || product.shortDescription) && (
               <div className="mt-6 max-w-[46ch]">
                 {product.shortTitle && (
@@ -204,7 +371,7 @@ export default async function ProductPage({
                     Reso Facile
                   </p>
                   <p className="mt-1 text-xs font-light leading-relaxed text-ink-soft">
-                    30 giorni per cambi o restituzioni.
+                    {RETURN_WINDOW_DAYS} giorni per cambi o restituzioni.
                   </p>
                 </div>
               </li>
@@ -217,7 +384,7 @@ export default async function ProductPage({
                     Spedizione
                   </p>
                   <p className="mt-1 text-xs font-light leading-relaxed text-ink-soft">
-                    Gratuita per ordini superiori a 99€.
+                    Gratuita sopra i {formatEuroCompact(FREE_SHIPPING_THRESHOLD_CENTS)}.
                   </p>
                 </div>
               </li>
@@ -361,8 +528,19 @@ export default async function ProductPage({
       )}
 
       {/* RECENSIONI */}
-      <section className="container-page pt-20 sm:pt-28">
-        <ProductReviews productId={product.id} />
+      <section
+        id="recensioni"
+        className="container-page scroll-mt-[var(--sticky-top)] pt-20 sm:pt-28"
+      >
+        <ProductReviews
+          productId={product.id}
+          initialReviews={product.reviews.map((review) => ({
+            id: review.id,
+            rating: review.rating,
+            comment: review.comment,
+            createdAt: review.createdAt.toISOString(),
+          }))}
+        />
       </section>
     </main>
   );

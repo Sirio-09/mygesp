@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Reveal from "@/components/motion/Reveal";
 import { useCartStore, type CartItem } from "@/lib/cart-store";
+import { FREE_SHIPPING_THRESHOLD_CENTS, formatEuro } from "@/lib/site";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity } = useCartStore();
@@ -12,12 +13,10 @@ export default function CartPage() {
     (acc: number, item: CartItem) => acc + item.priceCents * item.quantity,
     0
   );
-  const totalEuro = (totalCents / 100).toFixed(2);
+  const totalEuro = formatEuro(totalCents);
 
-  const freeShippingThresholdCents = 9900;
-  const missingForFreeShippingCents = Math.max(0, freeShippingThresholdCents - totalCents);
-  const missingForFreeShippingEuro = (missingForFreeShippingCents / 100).toFixed(2);
-  const progressPercent = Math.min(100, (totalCents / freeShippingThresholdCents) * 100);
+  const missingForFreeShippingCents = Math.max(0, FREE_SHIPPING_THRESHOLD_CENTS - totalCents);
+  const progressPercent = Math.min(100, (totalCents / FREE_SHIPPING_THRESHOLD_CENTS) * 100);
 
   const handleClearCart = () => {
     if (window.confirm("Sei sicuro di voler svuotare il carrello?")) {
@@ -82,7 +81,7 @@ export default function CartPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7h10v9H3zM13 10h4l3 3v3h-7zM7 19a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM17 19a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                 </svg>
                 Aggiungi{" "}
-                <span className="font-semibold tabular-nums text-grass-deep">€{missingForFreeShippingEuro}</span>{" "}
+                <span className="font-semibold tabular-nums text-grass-deep">{formatEuro(missingForFreeShippingCents)}</span>{" "}
                 per la Spedizione Gratuita!
               </span>
             ) : (
@@ -108,7 +107,7 @@ export default function CartPage() {
           <div className="lg:col-span-8">
             <div className="divide-y divide-line/50 border-y border-line/50">
               {items.map((item: CartItem) => {
-                const itemTotalEuro = ((item.priceCents * item.quantity) / 100).toFixed(2);
+                const itemTotalEuro = formatEuro(item.priceCents * item.quantity);
                 const imageUrl = item.image ?? null;
 
                 return (
@@ -176,7 +175,7 @@ export default function CartPage() {
                       </div>
 
                       <div className="flex flex-col items-end gap-1.5">
-                        <span className="text-lg font-light tabular-nums text-ink">€{itemTotalEuro}</span>
+                        <span className="text-lg font-light tabular-nums text-ink">{itemTotalEuro}</span>
                         <button
                           type="button"
                           onClick={() => removeItem(item.variantId)}
@@ -227,7 +226,7 @@ export default function CartPage() {
               <dl className="space-y-4 text-sm">
                 <div className="flex justify-between text-ink-soft">
                   <dt className="font-light">Subtotale ({items.length} articoli)</dt>
-                  <dd className="font-medium tabular-nums text-ink">€{totalEuro}</dd>
+                  <dd className="font-medium tabular-nums text-ink">{totalEuro}</dd>
                 </div>
                 <div className="flex justify-between text-ink-soft">
                   <dt className="font-light">Costi di Spedizione</dt>
@@ -239,7 +238,7 @@ export default function CartPage() {
                   <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
                     Totale stimato
                   </dt>
-                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink">€{totalEuro}</dd>
+                  <dd className="text-2xl font-light tabular-nums tracking-tight text-ink">{totalEuro}</dd>
                 </div>
               </dl>
 

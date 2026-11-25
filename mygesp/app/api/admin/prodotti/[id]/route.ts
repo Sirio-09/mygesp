@@ -9,6 +9,7 @@ import {
 } from "@/lib/product-input";
 import { sendEmail, isEmailConfigured } from "@/lib/resend";
 import { getSiteUrl } from "@/lib/stripe";
+import { formatEuro } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +40,8 @@ async function notifyPriceDrop(
         subject: `Sconto su ${productName}`,
         html: `
           <h2>${productName} ora costa meno</h2>
-          <p>Prezzo precedente: €${(oldMinPrice / 100).toFixed(2)}</p>
-          <p>Nuovo prezzo: €${(newMinPrice / 100).toFixed(2)}</p>
+          <p>Prezzo precedente: ${formatEuro(oldMinPrice)}</p>
+          <p>Nuovo prezzo: ${formatEuro(newMinPrice)}</p>
           <p><a href="${productUrl}">Vai al prodotto</a></p>
         `,
       })

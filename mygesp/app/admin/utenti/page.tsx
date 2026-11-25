@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { toast } from "sonner";
+import AdminAlert from "@/components/admin/ui/AdminAlert";
+import AdminBadge from "@/components/admin/ui/AdminBadge";
+import AdminButton from "@/components/admin/ui/AdminButton";
+import AdminEmptyState from "@/components/admin/ui/AdminEmptyState";
+import AdminField from "@/components/admin/ui/AdminField";
+import AdminModal from "@/components/admin/ui/AdminModal";
+import AdminPageHeader from "@/components/admin/ui/AdminPageHeader";
+import AdminSection from "@/components/admin/ui/AdminSection";
+import AdminSkeleton from "@/components/admin/ui/AdminSkeleton";
+import { inputClass } from "@/components/admin/ui/field-styles";
+import { Copy, Users } from "@/components/admin/ui/icons";
 
 type AdminUser = {
   id: string;
@@ -13,6 +24,12 @@ type AdminUser = {
   mustChangePassword?: boolean;
 };
 
+type PendingAction = {
+  type: "reset" | "delete";
+  id: string;
+  username: string;
+};
+
 export default function UtentiAdminPage() {
   const { data: session } = useSession();
   const isManager = (session?.user as { isManager?: boolean })?.isManager;
@@ -21,13 +38,13 @@ export default function UtentiAdminPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loadingAdmins, setLoadingAdmins] = useState(true);
 
-  // Form stato nuova utenza
+  // Form nuova utenza
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Stato visualizzazione password temporanea generata
+  // Password temporanea da comunicare
   const [tempPasswordData, setTempPasswordData] = useState<{
     username: string;
     tempPassword: string;
@@ -35,6 +52,7 @@ export default function UtentiAdminPage() {
   } | null>(null);
 
   const [resettingId, setResettingId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
   const loadAdmins = useCallback(async () => {
     try {
@@ -46,6 +64,7 @@ export default function UtentiAdminPage() {
       }
     } catch {
       setError("Errore durante il caricamento della lista utenti.");
+      toast.error("Impossibile caricare la lista utenti");
     } finally {
       setLoadingAdmins(false);
     }
@@ -77,6 +96,7 @@ export default function UtentiAdminPage() {
           tempPassword: data.tempPassword ?? "",
           message: data.message,
         });
+        toast.success("Utenza creata");
         await loadAdmins();
       } else {
         setError(data.error || "Errore durante la creazione dell'utente.");
@@ -88,276 +108,332 @@ export default function UtentiAdminPage() {
     }
   };
 
-  const handleResetPassword = async (id: string, targetUsername: string) => {
-    if (!confirm(`Generare una nuova password temporanea per "${targetUsername}"?`)) {
-      return;
-    }
+  const copyTempPassword = async () => {
+    if (!tempPasswordData?.tempPassword) return;
 
+    try {
+      await navigator.clipboard.writeText(tempPasswordData.tempPassword);
+      toast.success("Password copiata negli appunti");
+    } catch {
+      toast.error("Copia non riuscita: seleziona il testo manualmente");
+    }
+  };
+
+  const runResetPassword = async (id: string, targetUsername: string) => {
     try {
       setResettingId(id);
       const res = await fetch(`/api/admin/utenti/${id}/reset-password`, {
         method: "POST",
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (res.ok) {
         setTempPasswordData({
           username: targetUsername,
-          tempPassword: data.tempPassword ?? "",
-          message: data.message,
+          tempPassword: data?.tempPassword ?? "",
+          message: data?.message,
         });
+        toast.success("Password temporanea generata");
         await loadAdmins();
       } else {
-        alert(data.error || "Errore durante il reset della password.");
+        toast.error(data?.error || "Errore durante il reset della password.");
       }
     } catch {
-      alert("Errore di rete durante il reset della password.");
+      toast.error("Errore di rete durante il reset della password.");
     } finally {
       setResettingId(null);
     }
   };
 
-  const handleDelete = async (id: string, targetUsername: string) => {
-    if (!confirm(`Eliminare l'utente "${targetUsername}"? L'azione non è reversibile.`)) {
-      return;
-    }
-
+  const runDelete = async (id: string, targetUsername: string) => {
     try {
       const res = await fetch(`/api/admin/utenti/${id}`, { method: "DELETE" });
+
       if (res.ok) {
+        toast.success(`Utente "${targetUsername}" eliminato`);
         await loadAdmins();
       } else {
-        const data = await res.json();
-        alert(data.error || "Errore durante l'eliminazione.");
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error || "Errore durante l'eliminazione.");
       }
     } catch {
-      alert("Si è verificato un errore durante l'eliminazione.");
+      toast.error("Si è verificato un errore durante l'eliminazione.");
+    }
+  };
+
+  const confirmPendingAction = async () => {
+    if (!pendingAction) return;
+
+    const action = pendingAction;
+    setPendingAction(null);
+
+    if (action.type === "reset") {
+      await runResetPassword(action.id, action.username);
+    } else {
+      await runDelete(action.id, action.username);
     }
   };
 
   return (
-    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
-      <div className="max-w-4xl mx-auto space-y-10">
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-line/40 pb-8">
-          <div>
-            <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-grass mb-2 block">
-              Sicurezza & Accessi
-            </span>
-            <h1 className="text-3xl font-light text-ink tracking-tight mb-2">
-              Gestione Staff
-            </h1>
-            <p className="text-sm text-ink-soft font-light">
-              Amministra gli accessi e le credenziali del personale abilitato al pannello.
-            </p>
-          </div>
-          <Link
-            href="/admin"
-            className="text-[10px] font-semibold text-ink-soft hover:text-grass uppercase tracking-widest transition-colors mb-1"
-          >
-            &larr; Torna alla Dashboard
-          </Link>
-        </div>
+    <>
+      <AdminPageHeader
+        eyebrow="Sicurezza e accessi"
+        title="Gestione staff"
+        description="Amministra gli accessi e le credenziali del personale abilitato al pannello."
+      />
 
-        {/* Box Password Temporanea Generata */}
-        {tempPasswordData && (
-          <div className="bg-transparent border border-line/40 p-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-line/40 pb-4">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-ink">
-                Password Temporanea Generata
-              </span>
-              <button
-                onClick={() => setTempPasswordData(null)}
-                className="text-[10px] uppercase tracking-widest font-semibold text-ink-soft hover:text-ink transition-colors"
-              >
-                Chiudi ✕
-              </button>
-            </div>
-            <p className="text-sm font-light text-ink-soft leading-relaxed">
+      {tempPasswordData && (
+        <AdminSection
+          className="mt-8"
+          label="Password temporanea generata"
+          actions={
+            <AdminButton
+              variant="ghost"
+              onClick={() => setTempPasswordData(null)}
+            >
+              Chiudi
+            </AdminButton>
+          }
+        >
+          <div className="space-y-5" aria-live="polite">
+            <p className="text-sm font-light leading-relaxed text-ink-soft">
               {tempPasswordData.tempPassword ? (
                 <>
                   Comunica questa password a{" "}
                   <strong className="font-medium text-ink">
                     {tempPasswordData.username}
                   </strong>
-                  . Al suo prossimo accesso gli verrà richiesto il cambio
+                  . Al prossimo accesso gli verrà richiesto il cambio
                   obbligatorio.
                 </>
               ) : (
                 <>{tempPasswordData.message}</>
               )}
             </p>
+
             {tempPasswordData.tempPassword && (
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-                <code className="bg-transparent border border-line/40 px-6 py-4 font-mono text-lg font-light text-ink select-all flex-1 text-center sm:text-left">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <code className="flex-1 select-all border border-line bg-paper-warm/40 px-4 py-3 text-center font-mono text-base tabular-nums tracking-[0.1em] text-ink sm:text-left">
                   {tempPasswordData.tempPassword}
                 </code>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      tempPasswordData.tempPassword
-                    );
-                    alert("Password temporanea copiata negli appunti!");
-                  }}
-                  className="bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors"
-                >
+                <AdminButton variant="secondary" onClick={copyTempPassword}>
+                  <Copy className="h-3.5 w-3.5" />
                   Copia
-                </button>
+                </AdminButton>
               </div>
             )}
+
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
+              La password viene mostrata una sola volta
+            </p>
           </div>
-        )}
+        </AdminSection>
+      )}
 
-        {/* Lista Staff */}
-        <div className="bg-transparent border border-line/40 p-8 space-y-8">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block">
-              Membri Staff Attuali
-            </span>
-            <span className="text-[10px] uppercase tracking-widest text-ink-soft font-mono">
-              {admins.length} {admins.length === 1 ? "Utente" : "Utenti"}
-            </span>
+      <AdminSection
+        className="mt-8"
+        label="Membri staff"
+        description="Ruoli, stato del 2FA e credenziali di ogni account."
+        flush
+        actions={
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-soft">
+            {admins.length} {admins.length === 1 ? "utente" : "utenti"}
+          </span>
+        }
+      >
+        {loadingAdmins ? (
+          <div className="p-5 sm:p-6">
+            <AdminSkeleton rows={2} />
           </div>
-
-          {loadingAdmins ? (
-            <div className="py-12 text-center text-sm font-light text-ink-soft animate-pulse">
-              Caricamento utenti in corso...
-            </div>
-          ) : admins.length === 0 ? (
-            <div className="py-12 text-center text-sm font-light text-ink-soft border border-line/40">
-              Nessun utente staff trovato.
-            </div>
-          ) : (
-            <div className="divide-y divide-line/40 border-t border-b border-line/40">
-              {admins.map((admin) => (
-                <div key={admin.id} className="py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="text-base font-light text-ink">{admin.username}</span>
-                      {admin.isManager && (
-                        <span className="text-[9px] font-semibold border border-line/40 text-ink px-2 py-0.5 uppercase tracking-widest">
-                          Manager
-                        </span>
-                      )}
-                      {admin.id === currentUserId && (
-                        <span className="text-[9px] font-semibold border border-grass/40 text-grass px-2 py-0.5 uppercase tracking-widest">
-                          Tu
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs font-light text-ink-soft">
-                      <span>{admin.email}</span>
-                      <span className="text-line/40">|</span>
-                      <span className={admin.totpEnabled ? "text-grass" : ""}>
-                        2FA {admin.totpEnabled ? "Attivo" : "Disattivo"}
-                      </span>
-                      {admin.mustChangePassword && (
-                        <>
-                          <span className="text-line/40">|</span>
-                          <span className="text-ink">Psw Temporanea</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {isManager && (
-                    <div className="flex items-center gap-4 pt-2 sm:pt-0">
-                      <button
-                        type="button"
-                        disabled={resettingId === admin.id}
-                        onClick={() => handleResetPassword(admin.id, admin.username)}
-                        className="text-[10px] font-semibold text-ink-soft hover:text-ink uppercase tracking-widest transition-colors disabled:opacity-30"
-                      >
-                        {resettingId === admin.id ? "Generazione..." : "Reset Psw"}
-                      </button>
-
-                      {admin.id !== currentUserId && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(admin.id, admin.username)}
-                          className="text-[10px] font-semibold text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors"
-                        >
-                          Elimina
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Creazione Nuovo Utente (Solo per Manager) */}
-        {isManager ? (
-          <div className="bg-transparent border border-line/40 p-8 space-y-8">
-            <div className="border-b border-line/40 pb-6">
-              <span className="text-[10px] font-semibold text-ink uppercase tracking-widest block mb-2">
-                Nuova Utenza
-              </span>
-              <h2 className="text-xl font-light text-ink">Aggiungi membro dello staff</h2>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2">
-                    Nome Utente *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="es. mario.rossi"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] uppercase font-semibold tracking-widest text-ink mb-2">
-                    Indirizzo Email *
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="es. mario@azienda.it"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-transparent border border-line/40 px-4 py-3 text-sm text-ink focus:border-grass outline-none transition-colors placeholder:text-line placeholder:font-light"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <p className="text-xs text-ink-soft font-light leading-relaxed flex-1">
-                  Verrà generata automaticamente una password temporanea. Al primo accesso l'utente sarà obbligato a impostare una propria password personale prima di configurare il token 2FA.
-                </p>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto bg-ink hover:bg-grass text-white text-[10px] font-medium uppercase tracking-widest py-4 px-8 transition-colors disabled:opacity-30 shrink-0"
-                >
-                  {loading ? "Generazione..." : "Crea Utente"}
-                </button>
-              </div>
-
-              {error && (
-                <p className="text-[10px] font-medium text-red-600 uppercase tracking-widest text-center pt-2">
-                  {error}
-                </p>
-              )}
-            </form>
+        ) : admins.length === 0 ? (
+          <div className="p-5 sm:p-6">
+            <AdminEmptyState
+              icon={<Users className="h-5 w-5" />}
+              title="Nessun utente staff"
+              description="Crea la prima utenza per dare accesso all'area tecnica."
+            />
           </div>
         ) : (
-          <div className="p-8 bg-transparent border border-line/40 text-sm font-light text-ink-soft text-center">
-            Nota: Soltanto i profili con privilegi di Manager possono aggiungere o modificare gli account dello staff.
-          </div>
+          <ul className="divide-y divide-line/60">
+            {admins.map((admin) => (
+              <li
+                key={admin.id}
+                className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-[15px] font-light text-ink">
+                      {admin.username}
+                    </p>
+                    {admin.isManager && (
+                      <AdminBadge tone="neutral">Manager</AdminBadge>
+                    )}
+                    {admin.id === currentUserId && (
+                      <AdminBadge tone="grass">Tu</AdminBadge>
+                    )}
+                  </div>
+
+                  <p className="mt-1 truncate text-xs font-light text-ink-soft">
+                    {admin.email}
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <AdminBadge tone={admin.totpEnabled ? "grass" : "neutral"}>
+                      2FA {admin.totpEnabled ? "attivo" : "disattivo"}
+                    </AdminBadge>
+                    {admin.mustChangePassword && (
+                      <AdminBadge tone="soil">Password temporanea</AdminBadge>
+                    )}
+                  </div>
+                </div>
+
+                {isManager && (
+                  <div className="flex shrink-0 flex-wrap items-center gap-5">
+                    <AdminButton
+                      variant="ghost"
+                      disabled={resettingId === admin.id}
+                      onClick={() =>
+                        setPendingAction({
+                          type: "reset",
+                          id: admin.id,
+                          username: admin.username,
+                        })
+                      }
+                    >
+                      {resettingId === admin.id
+                        ? "Generazione..."
+                        : "Reset password"}
+                    </AdminButton>
+
+                    {admin.id !== currentUserId && (
+                      <AdminButton
+                        variant="danger"
+                        onClick={() =>
+                          setPendingAction({
+                            type: "delete",
+                            id: admin.id,
+                            username: admin.username,
+                          })
+                        }
+                      >
+                        Elimina
+                      </AdminButton>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
-      </div>
-    </main>
+      </AdminSection>
+
+      {isManager ? (
+        <AdminSection
+          className="mt-8"
+          label="Nuova utenza"
+          description="La password temporanea viene generata automaticamente."
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <AdminField
+                label="Nome utente"
+                required
+                hint="Identificativo usato per l'accesso."
+              >
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  autoComplete="off"
+                  placeholder="es. mario.rossi"
+                  className={inputClass}
+                />
+              </AdminField>
+
+              <AdminField
+                label="Indirizzo email"
+                required
+                hint="Serve per le comunicazioni interne."
+              >
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="off"
+                  placeholder="es. mario@azienda.it"
+                  className={inputClass}
+                />
+              </AdminField>
+            </div>
+
+            {error && <AdminAlert tone="danger">{error}</AdminAlert>}
+
+            <div className="flex flex-col gap-4 border-t border-line/60 pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <p className="max-w-md text-xs font-light leading-relaxed text-ink-soft">
+                Al primo accesso l&apos;utente dovrà impostare una password
+                personale e configurare il token 2FA.
+              </p>
+              <AdminButton
+                type="submit"
+                disabled={loading}
+                className="shrink-0"
+              >
+                {loading ? "Generazione..." : "Crea utente"}
+              </AdminButton>
+            </div>
+          </form>
+        </AdminSection>
+      ) : (
+        <AdminAlert
+          className="mt-8"
+          tone="neutral"
+          title="Permessi insufficienti"
+        >
+          Solo i profili Manager possono aggiungere o modificare gli account
+          dello staff.
+        </AdminAlert>
+      )}
+
+      <AdminModal
+        open={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+        title={
+          pendingAction?.type === "delete"
+            ? "Eliminare l'utente?"
+            : "Generare una nuova password?"
+        }
+        description={
+          pendingAction
+            ? pendingAction.type === "delete"
+              ? `L'account "${pendingAction.username}" verrà rimosso definitivamente.`
+              : `La password attuale di "${pendingAction.username}" verrà invalidata subito.`
+            : undefined
+        }
+        footer={
+          <>
+            <AdminButton
+              variant="secondary"
+              onClick={() => setPendingAction(null)}
+            >
+              Annulla
+            </AdminButton>
+            <AdminButton
+              variant={
+                pendingAction?.type === "delete" ? "destructive" : "primary"
+              }
+              onClick={confirmPendingAction}
+            >
+              {pendingAction?.type === "delete"
+                ? "Elimina utente"
+                : "Genera password"}
+            </AdminButton>
+          </>
+        }
+      />
+    </>
   );
 }
+

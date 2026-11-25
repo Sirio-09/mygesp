@@ -1,22 +1,22 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { LogOut } from "@/components/admin/ui/icons";
 
+/**
+ * Uscita dall'area tecnica.
+ * Stile allineato ai link della topbar: niente ombre né angoli arrotondati,
+ * solo testo 10px con tracking largo e icona con stroke 1.5.
+ */
 export default function LogoutButton() {
   return (
     <button
+      type="button"
       onClick={() => signOut({ callbackUrl: "/" })}
-      className="group flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-ink-soft hover:text-soil-deep hover:bg-soil-deep/10 rounded-md transition-all w-full sm:w-auto"
+      className="group inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-soft transition-colors duration-300 ease-out-expo hover:text-soil-deep"
       title="Esci dal tuo account"
     >
-      <svg 
-        className="w-4 h-4 transition-transform group-hover:-translate-x-1" 
-        fill="none" 
-        viewBox="0 0 24 24" 
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-      </svg>
+      <LogOut className="h-3.5 w-3.5 transition-transform duration-300 ease-out-expo group-hover:-translate-x-0.5" />
       Esci
     </button>
   );

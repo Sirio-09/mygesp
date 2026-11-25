@@ -20,8 +20,8 @@ export default function RegistratiPage() {
     e.preventDefault();
     setError("");
 
-    if (form.password.length < 6) {
-      setError("La password deve contenere almeno 6 caratteri.");
+    if (form.password.length < 8) {
+      setError("La password deve contenere almeno 8 caratteri.");
       return;
     }
 
@@ -105,13 +105,13 @@ export default function RegistratiPage() {
           />
           <input
             type="password"
-            placeholder="Password (min. 6 caratteri)"
+            placeholder="Password (min. 8 caratteri)"
             aria-label="Password"
             autoComplete="new-password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
-            minLength={6}
+            minLength={8}
             className="w-full border border-line/70 bg-transparent px-4 py-3.5 text-sm font-light text-ink outline-none transition-colors duration-200 placeholder:text-ink-soft/70 focus:border-ink"
           />
         </div>

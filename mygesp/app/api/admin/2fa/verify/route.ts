@@ -27,14 +27,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "2FA non configurato" }, { status: 400 });
   }
 
-  // 1. Controllo se l'account è temporaneamente bloccato
-  if (admin.lockoutUntil && admin.lockoutUntil > new Date()) {
-    const minutesLeft = Math.ceil((admin.lockoutUntil.getTime() - Date.now()) / (1000 * 60));
+  // 1. Blocco temporaneo attivo: nessun codice viene valutato, nemmeno quello
+  //    corretto (è il comportamento voluto della protezione anti brute-force).
+  const lockoutUntil = admin.lockoutUntil;
+  const now = Date.now();
+
+  if (lockoutUntil && lockoutUntil.getTime() > now) {
+    const minutesLeft = Math.ceil((lockoutUntil.getTime() - now) / (1000 * 60));
     return NextResponse.json(
-      { error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? 'o' : 'i'}.` },
+      {
+        error: `Troppi tentativi falliti. Riprova tra ${minutesLeft} minut${minutesLeft === 1 ? "o" : "i"}.`,
+        lockedUntil: lockoutUntil.toISOString(),
+      },
       { status: 429 }
     );
   }
+
+  // Se il blocco è scaduto la finestra di tentativi riparte da zero: senza
+  // questo azzeramento `failed2faAttempts` resterebbe a 5 e il primo codice
+  // errato ri-bloccherebbe l'account per altri 15 minuti, all'infinito.
+  if (lockoutUntil) {
+    await prisma.admin.update({
+      where: { id: admin.id },
+      data: { failed2faAttempts: 0, lockoutUntil: null },
+    });
+  }
+
+  const priorAttempts = lockoutUntil ? 0 : admin.failed2faAttempts || 0;
 
   const cleanCode = code.trim().toUpperCase();
 
@@ -50,8 +69,15 @@ export async function POST(req: Request) {
   }
 
   // 3. Verifica del codice TOTP (6 cifre)
+  //    `epochTolerance: 30` = uno step RFC 6238 di tolleranza: senza, un codice
+  //    corretto viene rifiutato se l'orologio del telefono è disallineato o se
+  //    la digitazione cade a cavallo del cambio di finestra.
   const otp = new OTP({ strategy: "totp" });
-  const result = await otp.verify({ token: cleanCode, secret: totpSecret });
+  const result = await otp.verify({
+    token: cleanCode,
+    secret: totpSecret,
+    epochTolerance: 30,
+  });
 
   if (result.valid) {
     await prisma.admin.update({
@@ -96,7 +122,7 @@ export async function POST(req: Request) {
   }
 
   // 5. Gestione tentativi errati e blocco temporaneo
-  const newAttempts = (admin.failed2faAttempts || 0) + 1;
+  const newAttempts = priorAttempts + 1;
   const shouldLock = newAttempts >= MAX_ATTEMPTS;
   const lockoutTime = shouldLock
     ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
@@ -112,7 +138,10 @@ export async function POST(req: Request) {
 
   if (shouldLock) {
     return NextResponse.json(
-      { error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.` },
+      {
+        error: `Account bloccato per troppi tentativi errati. Riprova tra ${LOCKOUT_MINUTES} minuti.`,
+        lockedUntil: lockoutTime ? lockoutTime.toISOString() : null,
+      },
       { status: 429 }
     );
   }

@@ -24,11 +24,5 @@ export default async function EditProductPage({
     notFound();
   }
 
-  return (
-    <main className="min-h-screen bg-paper py-12 px-4 sm:px-6 lg:px-8 selection:bg-grass selection:text-white">
-      <div className="max-w-4xl mx-auto">
-        <EditProductForm product={product} />
-      </div>
-    </main>
-  );
+  return <EditProductForm product={product} />;
 }

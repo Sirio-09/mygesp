@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // I lockfile del repository sono due (root del workspace e progetto): senza
+  // questa riga Turbopack infersce come root la cartella superiore e il file
+  // tracing include file estranei al progetto.
+  turbopack: {
+    root: process.cwd(),
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
